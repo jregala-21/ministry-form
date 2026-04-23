@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ministry Form</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            /* Aligned Gradient with your other pages */
+            background: linear-gradient(135deg, #4f46e5, #6d28d9);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .card {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            width: 350px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            text-align: center;
+        }
+
+        .icon-circle {
+            background: #f0eeff;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            font-size: 30px;
+        }
+
+        h2 {
+            margin-bottom: 10px;
+            color: #1a1a1a;
+            font-size: 24px;
+        }
+
+        p.subtitle {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 25px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0;
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            outline: none;
+            transition: 0.3s;
+            box-sizing: border-box; /* Ensures padding doesn't break width */
+            font-size: 14px;
+        }
+
+        input:focus, select:focus {
+            border-color: #4f46e5;
+            box-shadow: 0 0 5px rgba(79, 70, 229, 0.3);
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            margin-top: 15px;
+            background: #4f46e5;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        button:hover {
+            background: #4338ca;
+            box-shadow: 0 4px 15px rgba(79, 70, 229, 0.4);
+        }
+
+        #status {
+            margin-top: 15px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #4f46e5;
+        }
+
+        .back-link {
+            display: block;
+            margin-top: 20px;
+            text-decoration: none;
+            color: #999;
+            font-size: 13px;
+            transition: 0.2s;
+        }
+
+        .back-link:hover {
+            color: #4f46e5;
+        }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <div class="icon-circle">📋</div>
+    <h2>Ministry Form</h2>
+    <p class="subtitle">Please fill out your details below.</p>
+
+    <input id="name" type="text" placeholder="Full Name">
+
+    <select id="ministry">
+        <option value="">Select Ministry</option>
+        <option value="JAM">JAM</option>
+        <option value="VIA">VIA</option>
+        <option value="TEAM">TEAM</option>
+        <option value="MAN">MAN</option>
+    </select>
+
+    <input id="email" type="email" placeholder="Email Address">
+
+    <button id="submitBtn" onclick="saveData()">Submit Registration</button>
+
+    <p id="status"></p>
+
+    <a href="index1.html" class="back-link">← Back to Home</a>
+</div>
+
+<script>
+// Updated URL to your current deployment
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxxxSsYzOtOUQE7Tl4G_uaee3ba8p8VcvNZGAZjQhDVzXK19ibi2pPvgAm7HafyEvU/exec";
+
+async function saveData() {
+    let name = document.getElementById("name").value;
+    let ministry = document.getElementById("ministry").value;
+    let email = document.getElementById("email").value;
+    let btn = document.getElementById("submitBtn");
+    let status = document.getElementById("status");
+
+    if (!name || !ministry || !email) {
+        alert("Please fill all fields");
+        return;
+    }
+
+    // UI Feedback
+    status.innerText = "⏳ Processing...";
+    btn.disabled = true;
+    btn.style.opacity = "0.7";
+
+    try {
+        const response = await fetch(SCRIPT_URL, {
+            method: "POST",
+            body: new URLSearchParams({
+                name,
+                ministry,
+                email
+            })
+        });
+
+        const text = await response.text();
+        
+        if (text.trim() === "SUCCESS") {
+            status.style.color = "#059669"; // Success Green
+            status.innerText = "✅ Saved successfully!";
+            
+            // Clear fields
+            document.getElementById("name").value = "";
+            document.getElementById("ministry").value = "";
+            document.getElementById("email").value = "";
+        } else {
+            status.style.color = "#dc2626"; // Error Red
+            status.innerText = "⚠️ Server error: " + text;
+        }
+
+    } catch (error) {
+        status.style.color = "#dc2626";
+        status.innerText = "❌ Network error. Please try again.";
+    } finally {
+        btn.disabled = false;
+        btn.style.opacity = "1";
+    }
+}
+</script>
+
+</body>
+</html>

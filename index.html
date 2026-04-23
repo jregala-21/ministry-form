@@ -1,139 +1,211 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Ministry Form</title>
+  <title>ANNOUNCEMENT SENDER</title>
+  <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
 
   <style>
     body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: linear-gradient(135deg, #1e3c72, #2a5298);
-      height: 100vh;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #4f46e5, #6d28d9);
       display: flex;
       justify-content: center;
       align-items: center;
+      height: 100vh;
+      margin: 0;
     }
 
-    .card {
-      background: white;
+    .container {
+      background: #ffffff;
       padding: 30px;
-      border-radius: 15px;
-      width: 320px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-      text-align: center;
+      border-radius: 16px;
+      width: 380px;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+      text-align: center; /* Center the heading and status */
     }
 
-    h2 {
+    h3 {
       margin-bottom: 20px;
-      color: #2a5298;
+      color: #333;
     }
 
-    input, select {
-      width: 90%;
+    textarea {
+      width: 100%;
       padding: 10px;
-      margin: 8px 0;
-      border: 1px solid #ccc;
+      margin: 6px 0;
       border-radius: 8px;
-      outline: none;
-      transition: 0.3s;
+      border: 1px solid #ddd;
+      font-size: 14px;
+      box-sizing: border-box;
+      resize: none;
+      height: 80px;
     }
 
-    input:focus, select:focus {
-      border-color: #2a5298;
-      box-shadow: 0 0 5px rgba(42,82,152,0.5);
+    textarea:focus {
+      border-color: #4f46e5;
+      outline: none;
+      box-shadow: 0 0 0 2px rgba(79,70,229,0.1);
     }
 
     button {
-      width: 95%;
-      padding: 10px;
+      width: 100%;
+      padding: 11px;
       margin-top: 10px;
-      background: #2a5298;
+      background: #4f46e5;
       color: white;
       border: none;
       border-radius: 8px;
       cursor: pointer;
-      font-size: 16px;
-      transition: 0.3s;
+      font-weight: 600;
+      font-size: 15px;
+      transition: 0.2s;
     }
 
     button:hover {
-      background: #1e3c72;
+      background: #4338ca;
+      box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
     }
 
-    #status {
+    .email-list {
+      max-height: 140px;
+      overflow-y: auto;
+      background: #f9fafb;
+      padding: 10px;
       margin-top: 10px;
+      border-radius: 8px;
+      border: 1px solid #eee;
+      text-align: left; /* Keep list items left-aligned */
+    }
+
+    .email-item, .select-all-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between; 
+      padding: 6px 0;
       font-size: 14px;
-      color: #333;
+    }
+
+    input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      margin: 0;
+      accent-color: #4f46e5;
+      cursor: pointer;
+    }
+
+    .status {
+      margin-top: 12px;
+      font-size: 14px;
+      font-weight: 500;
+      color: #059669; /* Success green */
+    }
+
+    /* BACK TO HOME LINK */
+    .back-link {
+      display: inline-block;
+      margin-top: 20px;
+      text-decoration: none;
+      color: #999;
+      font-size: 13px;
+      font-weight: 600;
+      transition: 0.2s;
+    }
+
+    .back-link:hover {
+      color: #4f46e5;
     }
   </style>
 </head>
 
 <body>
 
-<div class="card">
-  <h2>Ministry Form</h2>
+<div class="container">
+  <h3>📧 Announcement Sender</h3>
 
-  <input id="name" placeholder="Name"><br>
+  <textarea id="caption" placeholder="Write your caption here..."></textarea>
 
-  <!-- DROPDOWN ADDED HERE -->
-  <select id="ministry">
-    <option value="">Select Ministry</option>
-    <option value="JAM">JAM</option>
-    <option value="VIA">VIA</option>
-    <option value="TEAM">TEAM</option>
-    <option value="MAN">MAN</option>
-  </select><br>
+  <label class="select-all-row">
+    <span>Select All Recipients</span>
+    <input type="checkbox" onclick="toggleAll(this)">
+  </label>
 
-  <input id="email" placeholder="Email"><br>
+  <div class="email-list" id="emailList"></div>
 
-  <button onclick="saveData()">Submit</button>
+  <button onclick="sendEmail()">Send to Selected Recipients</button>
 
-  <p id="status"></p>
+  <p class="status" id="status"></p>
+
+  <a href="index1.html" class="back-link">← Back to Homepage</a>
 </div>
 
 <script>
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxxxSsYzOtOUQE7Tl4G_uaee3ba8p8VcvNZGAZjQhDVzXK19ibi2pPvgAm7HafyEvU/exec";
+(function(){
+  emailjs.init("EklYONd-KHgKN-1HA");
+})();
 
-async function saveData() {
-  let name = document.getElementById("name").value;
-  let ministry = document.getElementById("ministry").value;
-  let email = document.getElementById("email").value;
+let emails = [];
 
-  if (!name || !ministry || !email) {
-    alert("Please fill all fields");
-    return;
-  }
-
-  document.getElementById("status").innerText = "Saving...";
-
+async function loadEmailsFromSheet() {
   try {
-    const response = await fetch(SCRIPT_URL, {
-      method: "POST",
-      body: new URLSearchParams({
-        name,
-        ministry,
-        email
-      })
-    });
-
-    const text = await response.text();
-    console.log("SERVER RESPONSE:", text);
-
-    if (text.trim() === "SUCCESS") {
-      document.getElementById("status").innerText = "Saved successfully!";
-    } else {
-      document.getElementById("status").innerText = "Server returned: " + text;
-    }
-
-    document.getElementById("name").value = "";
-    document.getElementById("ministry").value = "";
-    document.getElementById("email").value = "";
-
+    const response = await fetch("https://script.google.com/macros/s/AKfycbz7xG5gki0Jr8TidIbKKpT8YM52XDxTK_6JN2XcX7xESn8ABgdp98E_Q9WS2D8geKfB/exec");
+    emails = await response.json();
+    renderEmails();
   } catch (error) {
-    console.log("FETCH ERROR:", error);
-    document.getElementById("status").innerText = "Network error: " + error.message;
+    console.error("Error loading emails:", error);
   }
 }
+
+function renderEmails() {
+  const container = document.getElementById("emailList");
+  container.innerHTML = "";
+
+  emails.forEach((email) => {
+    container.innerHTML += `
+      <div class="email-item">
+        <span>${email}</span>
+        <input type="checkbox" class="emailCheck" value="${email}">
+      </div>
+    `;
+  });
+}
+
+function toggleAll(source) {
+  const checkboxes = document.querySelectorAll(".emailCheck");
+  checkboxes.forEach(cb => cb.checked = source.checked);
+}
+
+function sendEmail() {
+  const caption = document.getElementById("caption").value;
+  const selected = document.querySelectorAll(".emailCheck:checked");
+  const status = document.getElementById("status");
+
+  if (selected.length === 0) {
+    return alert("Please select at least one recipient.");
+  }
+
+  status.innerText = "⏳ Sending...";
+  status.style.color = "#4f46e5";
+
+  selected.forEach(cb => {
+    const params = {
+      to_email: cb.value,
+      message: caption
+    };
+
+    emailjs.send("service_0d1cw4d", "template_kuw3ryv", params)
+      .then(() => {
+        status.innerText = "✅ Sent successfully!";
+        status.style.color = "#059669";
+      })
+      .catch((err) => {
+        console.error("EmailJS Error:", err);
+        status.innerText = "❌ Failed to send.";
+        status.style.color = "#dc2626";
+      });
+  });
+}
+
+loadEmailsFromSheet();
 </script>
 
 </body>
