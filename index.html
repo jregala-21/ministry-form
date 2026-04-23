@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Ministry Form</title>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #1e3c72, #2a5298);
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .card {
+      background: white;
+      padding: 30px;
+      border-radius: 15px;
+      width: 320px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+      text-align: center;
+    }
+
+    h2 {
+      margin-bottom: 20px;
+      color: #2a5298;
+    }
+
+    input, select {
+      width: 90%;
+      padding: 10px;
+      margin: 8px 0;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      outline: none;
+      transition: 0.3s;
+    }
+
+    input:focus, select:focus {
+      border-color: #2a5298;
+      box-shadow: 0 0 5px rgba(42,82,152,0.5);
+    }
+
+    button {
+      width: 95%;
+      padding: 10px;
+      margin-top: 10px;
+      background: #2a5298;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: 0.3s;
+    }
+
+    button:hover {
+      background: #1e3c72;
+    }
+
+    #status {
+      margin-top: 10px;
+      font-size: 14px;
+      color: #333;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="card">
+  <h2>Ministry Form</h2>
+
+  <input id="name" placeholder="Name"><br>
+
+  <!-- DROPDOWN ADDED HERE -->
+  <select id="ministry">
+    <option value="">Select Ministry</option>
+    <option value="JAM">JAM</option>
+    <option value="VIA">VIA</option>
+    <option value="TEAM">TEAM</option>
+    <option value="MAN">MAN</option>
+  </select><br>
+
+  <input id="email" placeholder="Email"><br>
+
+  <button onclick="saveData()">Submit</button>
+
+  <p id="status"></p>
+</div>
+
+<script>
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxxxSsYzOtOUQE7Tl4G_uaee3ba8p8VcvNZGAZjQhDVzXK19ibi2pPvgAm7HafyEvU/exec";
+
+async function saveData() {
+  let name = document.getElementById("name").value;
+  let ministry = document.getElementById("ministry").value;
+  let email = document.getElementById("email").value;
+
+  if (!name || !ministry || !email) {
+    alert("Please fill all fields");
+    return;
+  }
+
+  document.getElementById("status").innerText = "Saving...";
+
+  try {
+    const response = await fetch(SCRIPT_URL, {
+      method: "POST",
+      body: new URLSearchParams({
+        name,
+        ministry,
+        email
+      })
+    });
+
+    const text = await response.text();
+    console.log("SERVER RESPONSE:", text);
+
+    if (text.trim() === "SUCCESS") {
+      document.getElementById("status").innerText = "Saved successfully!";
+    } else {
+      document.getElementById("status").innerText = "Server returned: " + text;
+    }
+
+    document.getElementById("name").value = "";
+    document.getElementById("ministry").value = "";
+    document.getElementById("email").value = "";
+
+  } catch (error) {
+    console.log("FETCH ERROR:", error);
+    document.getElementById("status").innerText = "Network error: " + error.message;
+  }
+}
+</script>
+
+</body>
+</html>
