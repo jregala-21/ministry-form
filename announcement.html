@@ -8,107 +8,75 @@
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background: linear-gradient(135deg, #4f46e5, #6d28d9);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-      margin: 0;
-      padding: 20px;
+      display: flex; justify-content: center; align-items: center;
+      min-height: 100vh; margin: 0; padding: 20px;
     }
 
     .container {
-      background: #ffffff;
-      padding: 30px;
-      border-radius: 16px;
-      width: 380px;
-      box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+      background: #ffffff; padding: 30px; border-radius: 16px;
+      width: 380px; box-shadow: 0 15px 35px rgba(0,0,0,0.15);
       text-align: center;
     }
 
     h3 { margin-bottom: 20px; color: #333; }
 
     textarea {
-      width: 100%;
-      padding: 12px;
-      margin: 6px 0;
-      border-radius: 8px;
-      border: 1px solid #ddd;
-      font-size: 14px;
-      font-family: inherit;
-      box-sizing: border-box;
-      resize: vertical;
-      min-height: 80px;
-      max-height: 250px;
-      overflow-y: hidden;
+      width: 100%; padding: 12px; margin: 6px 0;
+      border-radius: 8px; border: 1px solid #ddd;
+      font-size: 14px; font-family: inherit; box-sizing: border-box;
+      resize: vertical; min-height: 80px;
+    }
+
+    /* Styles for File Input */
+    .file-input-wrapper {
+      margin: 10px 0; text-align: left;
+    }
+    .file-label {
+      font-size: 11px; font-weight: 700; color: #4f46e5;
+      display: block; text-transform: uppercase; margin-bottom: 5px;
+    }
+    input[type="file"] {
+      font-size: 13px; color: #666;
     }
 
     .notice-text {
-      display: block;
-      font-size: 11px;
-      color: #6366f1;
-      text-align: left;
-      margin-bottom: 2px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
+      display: block; font-size: 11px; color: #6366f1;
+      text-align: left; margin-top: 15px; margin-bottom: 2px;
+      font-weight: 600; text-transform: uppercase;
+    }
+
+    .select-all-row {
+      display: flex; align-items: center; justify-content: space-between; 
+      font-size: 14px; padding: 5px 0;
     }
 
     button {
-      width: 100%;
-      padding: 11px;
-      margin-top: 10px;
-      background: #4f46e5;
-      color: white;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      font-weight: 600;
-      transition: 0.2s;
+      width: 100%; padding: 11px; margin-top: 10px;
+      background: #4f46e5; color: white; border: none;
+      border-radius: 8px; cursor: pointer; font-weight: 600; transition: 0.2s;
     }
 
     button:hover { background: #4338ca; }
     button:disabled { background: #a5a2e1; cursor: not-allowed; }
 
     .email-list {
-      max-height: 140px;
-      overflow-y: auto;
-      background: #f9fafb;
-      padding: 10px;
-      margin-top: 10px;
-      border-radius: 8px;
-      border: 1px solid #eee;
-      text-align: left;
+      max-height: 120px; overflow-y: auto; background: #f9fafb;
+      padding: 10px; margin-top: 10px; border-radius: 8px;
+      border: 1px solid #eee; text-align: left;
     }
 
-    .email-item, .select-all-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between; 
-      padding: 6px 0;
-      font-size: 14px;
-    }
-
-    input[type="checkbox"] {
-      width: 18px;
-      height: 18px;
-      accent-color: #4f46e5;
-      cursor: pointer;
+    .email-item {
+      display: flex; align-items: center; justify-content: space-between; 
+      padding: 4px 0; font-size: 14px;
     }
 
     .status { margin-top: 12px; font-size: 14px; font-weight: 500; min-height: 20px; }
 
     .footer-links {
-      display: flex;
-      justify-content: space-between;
-      margin-top: 20px;
+      display: flex; justify-content: space-between; margin-top: 20px;
     }
 
-    .back-link {
-      text-decoration: none;
-      color: #999;
-      font-size: 13px;
-      font-weight: 600;
-    }
+    .back-link { text-decoration: none; color: #999; font-size: 13px; font-weight: 600; }
   </style>
 </head>
 
@@ -119,7 +87,12 @@
 
   <textarea id="caption" placeholder="Write your caption here..." oninput="autoGrow(this)"></textarea>
 
-  <span class="notice-text">Sending sequentially</span>
+  <div class="file-input-wrapper">
+      <label class="file-label">📎 Attach PDF Lineup (Optional)</label>
+      <input type="file" id="pdfFile" accept="application/pdf">
+  </div>
+
+  <span class="notice-text">Recipient Settings</span>
   <label class="select-all-row">
     <span>Select All Recipients</span>
     <input type="checkbox" id="selectAllBox" onclick="toggleAll(this)">
@@ -127,7 +100,7 @@
 
   <div class="email-list" id="emailList"></div>
   
-  <button id="sendBtn" onclick="sendEmail()">Send to Selected</button>
+  <button id="sendBtn" onclick="processAndSend()">Send Announcement</button>
 
   <p class="status" id="status"></p>
 
@@ -138,17 +111,13 @@
 </div>
 
 <script>
-// --- 1. SECURITY GATE (Must stay at the top) ---
-if (sessionStorage.getItem("isAllowed") !== "true") {
-    window.location.href = "login.html"; // Redirects if not logged in
-}
+if (sessionStorage.getItem("isAllowed") !== "true") { window.location.href = "login.html"; }
 
 function logout() {
     sessionStorage.removeItem("isAllowed");
     window.location.href = "login.html";
 }
 
-// --- 2. EMAIL SENDER LOGIC ---
 (function(){ emailjs.init("EklYONd-KHgKN-1HA"); })();
 
 function autoGrow(element) {
@@ -184,19 +153,34 @@ function toggleAll(source) {
   checkboxes.forEach(cb => cb.checked = source.checked);
 }
 
-async function sendEmail() {
-  const captionBox = document.getElementById("caption");
-  const caption = captionBox.value;
+// Helper to convert File to Base64
+function getBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = error => reject(error);
+  });
+}
+
+async function processAndSend() {
+  const caption = document.getElementById("caption").value;
+  const fileInput = document.getElementById("pdfFile");
   const selected = Array.from(document.querySelectorAll(".emailCheck:checked"));
   const status = document.getElementById("status");
   const sendBtn = document.getElementById("sendBtn");
-  const selectAllBox = document.getElementById("selectAllBox");
 
   if (selected.length === 0) return alert("Select at least one recipient.");
   if (!caption) return alert("Please enter a caption.");
 
   sendBtn.disabled = true;
   status.style.color = "#4f46e5";
+
+  let base64File = null;
+  if (fileInput.files.length > 0) {
+      status.innerText = "⚙️ Preparing attachment...";
+      base64File = await getBase64(fileInput.files[0]);
+  }
 
   let successCount = 0;
   let errorCount = 0;
@@ -206,10 +190,14 @@ async function sendEmail() {
     status.innerText = `⏳ Sending ${i + 1} of ${selected.length}...`;
 
     try {
-      await emailjs.send("service_0d1cw4d", "template_kuw3ryv", {
+      // Data to send to EmailJS
+      const templateParams = {
         to_email: email,
-        message: caption
-      });
+        message: caption,
+        content: base64File // This is the Base64 string of the PDF
+      };
+
+      await emailjs.send("service_0d1cw4d", "template_kuw3ryv", templateParams);
       successCount++;
     } catch (error) {
       console.error(`Failed to send to ${email}:`, error);
@@ -217,21 +205,15 @@ async function sendEmail() {
     }
   }
 
-  if (errorCount === 0) {
-    status.innerText = `✅ All ${successCount} sent successfully!`;
-    status.style.color = "#059669";
-  } else {
-    status.innerText = `⚠️ Sent: ${successCount} | Failed: ${errorCount}`;
-    status.style.color = "#d97706";
-  }
+  status.innerText = errorCount === 0 ? `✅ All ${successCount} sent successfully!` : `⚠️ Sent: ${successCount} | Failed: ${errorCount}`;
+  status.style.color = errorCount === 0 ? "#059669" : "#d97706";
 
   if (successCount > 0) {
-    captionBox.value = "";
-    captionBox.style.height = "80px";
+    document.getElementById("caption").value = "";
+    fileInput.value = "";
     selected.forEach(cb => cb.checked = false);
-    if (selectAllBox) selectAllBox.checked = false;
+    document.getElementById("selectAllBox").checked = false;
   }
-
   sendBtn.disabled = false;
 }
 
