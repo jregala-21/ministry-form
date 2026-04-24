@@ -22,6 +22,7 @@
         .sidebar.collapsed { width: 60px; }
         .sidebar.collapsed .sidebar-header h2, 
         .sidebar.collapsed .upload-section, 
+        .sidebar.collapsed .search-section,
         .sidebar.collapsed .back-btn,
         .sidebar.collapsed .song-item span { display: none; }
         .sidebar.collapsed .song-item { text-align: center; padding: 15px 0; }
@@ -42,6 +43,26 @@
             padding: 15px; border-bottom: 1px solid #eee; background: #f0f4ff;
             overflow: hidden;
         }
+
+        /* Search Section Styling */
+        .search-section {
+            padding: 10px 15px;
+            background: #fff;
+            border-bottom: 1px solid #eee;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 2px solid #f0f4ff;
+            border-radius: 20px;
+            font-size: 14px;
+            outline: none;
+            box-sizing: border-box;
+            transition: 0.2s;
+        }
+
+        .search-input:focus { border-color: #4f46e5; }
 
         .upload-section label {
             display: block; font-size: 11px; font-weight: bold; margin-bottom: 3px; color: #4f46e5; text-transform: uppercase;
@@ -104,6 +125,10 @@
             
             <button class="btn-add" id="uploadBtn" onclick="addNewSong()">Add to Chords Library</button>
         </div>
+
+        <div class="search-section">
+            <input type="text" id="searchInput" class="search-input" placeholder="🔍 Search library..." oninput="filterSongs()">
+        </div>
         
         <div class="song-list" id="songList"></div>
     </div>
@@ -144,13 +169,22 @@
             try {
                 const response = await fetch(GOOGLE_SCRIPT_URL);
                 myLibrary = await response.json();
-                renderList();
+                renderList(myLibrary); // Pass initial library
                 placeholder.innerHTML = myLibrary.length === 0 ? 
                     "<h1>🎸</h1><p>Library is empty.</p>" : "<h1>🎸</h1><p>Select a song.</p>";
             } catch (error) {
                 listDiv.innerHTML = '<p style="padding:10px; color:red;">Failed to connect.</p>';
             }
         };
+
+        // NEW FILTER FUNCTION
+        function filterSongs() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const filtered = myLibrary.filter(song => 
+                song.title.toLowerCase().includes(query)
+            );
+            renderList(filtered);
+        }
 
         async function addNewSong() {
             const title = document.getElementById('songTitle').value;
@@ -185,7 +219,8 @@
 
                 if (result.result === "success") {
                     myLibrary.push({ title, pdfUrl: result.pdfUrl, audioUrl: result.audioUrl });
-                    renderList();
+                    document.getElementById('songTitle').value = ""; // Clear title
+                    renderList(myLibrary);
                     alert("Uploaded successfully!");
                 }
             } catch (error) {
@@ -196,13 +231,19 @@
             }
         }
 
-        function renderList() {
+        // UPDATED RENDER FUNCTION TO TAKE A LIST
+        function renderList(listToRender) {
             const listDiv = document.getElementById('songList');
             listDiv.innerHTML = '';
-            myLibrary.forEach(song => {
+            
+            if (listToRender.length === 0) {
+                listDiv.innerHTML = '<p style="font-size:12px; color:#999; text-align:center;">No songs found</p>';
+                return;
+            }
+
+            listToRender.forEach(song => {
                 const item = document.createElement('div');
                 item.className = 'song-item';
-                // Wrap text in span to hide it when collapsed
                 item.innerHTML = `📄 <span>${song.title}</span>`;
                 item.onclick = () => selectSong(song, item);
                 listDiv.appendChild(item);
