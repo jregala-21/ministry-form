@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Service Lineup Creator</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #4f46e5, #6d28d9);
+            display: flex; justify-content: center; align-items: flex-start;
+            min-height: 100vh; margin: 0; padding: 40px 20px;
+            box-sizing: border-box;
+        }
+
+        .card {
+            background: white; padding: 40px; border-radius: 20px;
+            width: 100%; max-width: 850px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+
+        h2 { text-align: center; color: #333; margin-bottom: 10px; font-size: 28px; }
+        p.subtitle { text-align: center; color: #666; margin-bottom: 30px; font-size: 14px; }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .full-width { grid-column: span 2; }
+        .input-group { margin-bottom: 15px; display: flex; flex-direction: column; }
+
+        label {
+            font-size: 12px; font-weight: bold;
+            color: #4f46e5; text-transform: uppercase; margin-bottom: 6px;
+            letter-spacing: 0.5px;
+        }
+
+        input, textarea {
+            width: 100%; padding: 12px; border: 2px solid #f0f0f0;
+            border-radius: 10px; font-size: 15px; box-sizing: border-box;
+            font-family: inherit; transition: 0.3s;
+        }
+
+        textarea { resize: none; min-height: 60px; overflow: hidden; }
+        input:focus, textarea:focus { outline: none; border-color: #4f46e5; background: #f9f9ff; }
+
+        .highlight-input { border: 2px solid #4f46e5; background: #f0f4ff; font-weight: bold; }
+
+        .btn-container { 
+            display: flex; gap: 15px; margin-top: 30px; 
+            justify-content: center;
+        }
+
+        button {
+            padding: 14px 24px; border: none; border-radius: 10px;
+            font-weight: 700; cursor: pointer; transition: 0.2s;
+            font-size: 15px; display: flex; align-items: center; gap: 8px;
+        }
+
+        .btn-copy { background: #4f46e5; color: white; }
+        .btn-pdf { background: #059669; color: white; }
+        .btn-clear { background: #f3f4f6; color: #4b5563; }
+        
+        button:hover { opacity: 0.9; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+
+        .back-link {
+            display: block; text-align: center; margin-top: 30px;
+            text-decoration: none; color: #aaa; font-size: 14px;
+        }
+
+        @media (max-width: 650px) {
+            .main-grid { grid-template-columns: 1fr; }
+            .full-width { grid-column: span 1; }
+            .btn-container { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>📝 Service Lineup Creator</h2>
+    <p class="subtitle">Enter your service details to copy or download your lineup.</p>
+
+    <div class="main-grid">
+        <div class="input-group">
+            <label>📅 Service Date</label>
+            <input type="text" id="serviceDate" class="highlight-input" placeholder="e.g., Oct 27, 2024">
+        </div>
+        <div class="input-group">
+            <label>🎤 Worship Leader</label>
+            <input type="text" id="leaderName" class="highlight-input" placeholder="Name of leader...">
+        </div>
+
+        <div class="input-group full-width">
+            <label>📖 Theme Verse</label>
+            <textarea id="verse" placeholder="Reference and full text..." oninput="autoGrow(this)"></textarea>
+        </div>
+
+        <div class="input-group full-width">
+            <label>🎵 Intro Song</label>
+            <input type="text" id="intro" placeholder="Opening track...">
+        </div>
+
+        <div class="input-group"><label>🙌 Praise 1</label><input type="text" id="praise1"></div>
+        <div class="input-group"><label>🙌 Praise 2</label><input type="text" id="praise2"></div>
+
+        <div class="input-group"><label>🙏 Worship 1</label><input type="text" id="worship1"></div>
+        <div class="input-group"><label>🙏 Worship 2</label><input type="text" id="worship2"></div>
+
+        <div class="input-group"><label>🎤 Ministerial</label><input type="text" id="ministerial"></div>
+        <div class="input-group"><label>🏆 Victory Song</label><input type="text" id="victory"></div>
+
+        <div class="input-group"><label>🚪 Closing 1</label><input type="text" id="closing1"></div>
+        <div class="input-group"><label>🚪 Closing 2</label><input type="text" id="closing2"></div>
+    </div>
+
+    <div class="btn-container">
+        <button class="btn-clear" onclick="clearForm()">🗑️ Clear</button>
+        <button class="btn-copy" onclick="copyLineup()">📋 Copy Text</button>
+        <button class="btn-pdf" onclick="downloadPDF()">📥 Download PDF</button>
+    </div>
+
+    <a href="index.html" class="back-link">← Back to Main Menu</a>
+</div>
+
+<script>
+    const { jsPDF } = window.jspdf;
+
+    function autoGrow(element) {
+        element.style.height = "5px";
+        element.style.height = (element.scrollHeight) + "px";
+    }
+
+    function getFormValues() {
+        const getValue = (id) => document.getElementById(id).value.trim();
+        return {
+            date: getValue('serviceDate'),
+            leader: getValue('leaderName'),
+            verse: getValue('verse'),
+            intro: getValue('intro'),
+            praise1: getValue('praise1'),
+            praise2: getValue('praise2'),
+            worship1: getValue('worship1'),
+            worship2: getValue('worship2'),
+            ministerial: getValue('ministerial'),
+            victory: getValue('victory'),
+            closing1: getValue('closing1'),
+            closing2: getValue('closing2')
+        };
+    }
+
+    function downloadPDF() {
+        const data = getFormValues();
+        if (!data.date || !data.leader) {
+            alert("Please provide both the Service Date and Worship Leader.");
+            return;
+        }
+        const doc = new jsPDF();
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(24);
+        doc.setTextColor(79, 70, 229);
+        doc.text("SERVICE LINEUP", 20, 25);
+        doc.setFontSize(11);
+        doc.setTextColor(100);
+        doc.text(`Date: ${data.date}`, 190, 20, { align: "right" });
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(79, 70, 229);
+        doc.text(`Leader: ${data.leader}`, 190, 27, { align: "right" });
+        doc.setDrawColor(220);
+        doc.line(20, 32, 190, 32);
+
+        let y = 45;
+        const addLongText = (label, value) => {
+            if (!value) return;
+            doc.setFontSize(10); doc.setTextColor(150); doc.text(label.toUpperCase(), 20, y);
+            y += 7; doc.setFontSize(12); doc.setTextColor(0);
+            const splitText = doc.splitTextToSize(value, 170);
+            doc.text(splitText, 20, y); y += (splitText.length * 7) + 8;
+        };
+        const addSection = (label, song1, song2) => {
+            if (!song1 && !song2) return;
+            doc.setFontSize(10); doc.setTextColor(150); doc.text(label.toUpperCase(), 20, y);
+            y += 7; doc.setFontSize(13); doc.setTextColor(0);
+            if (song1) { doc.text(`• ${song1}`, 25, y); y += 8; }
+            if (song2) { doc.text(`• ${song2}`, 25, y); y += 8; }
+            y += 4;
+        };
+
+        addLongText("Theme Verse", data.verse);
+        addLongText("Intro Song", data.intro);
+        addSection("Praise Songs", data.praise1, data.praise2);
+        addSection("Worship Songs", data.worship1, data.worship2);
+        if (data.ministerial) addLongText("Ministerial", data.ministerial);
+        if (data.victory) addLongText("Victory Song", data.victory);
+        addSection("Closing Songs", data.closing1, data.closing2);
+        doc.save(`Lineup_${data.date}.pdf`);
+    }
+
+    function copyLineup() {
+        const data = getFormValues();
+        let text = `✨ *SERVICE LINEUP* ✨\n`;
+        
+        if (data.date) text += `📅 Date: ${data.date}\n`;
+        if (data.leader) text += `🎤 Leader: ${data.leader}\n`;
+        text += `────────────────────\n\n`;
+        
+        if (data.verse) text += `📖 *Theme Verse:*\n${data.verse}\n\n`;
+        if (data.intro) text += `🎵 *Intro Song:*\n- ${data.intro}\n\n`;
+        
+        if (data.praise1 || data.praise2) {
+            text += `🙌 *Praise Songs:*\n`;
+            if (data.praise1) text += `- ${data.praise1}\n`;
+            if (data.praise2) text += `- ${data.praise2}\n`;
+            text += `\n`;
+        }
+
+        if (data.worship1 || data.worship2) {
+            text += `🙏 *Worship Songs:*\n`;
+            if (data.worship1) text += `- ${data.worship1}\n`;
+            if (data.worship2) text += `- ${data.worship2}\n`;
+            text += `\n`;
+        }
+
+        if (data.ministerial) text += `🎤 *Ministerial:*\n- ${data.ministerial}\n\n`;
+        if (data.victory) text += `🏆 *Victory Song:*\n- ${data.victory}\n\n`;
+        
+        if (data.closing1 || data.closing2) {
+            text += `🚪 *Closing Songs:*\n`;
+            if (data.closing1) text += `- ${data.closing1}\n`;
+            if (data.closing2) text += `- ${data.closing2}\n`;
+        }
+
+        navigator.clipboard.writeText(text).then(() => {
+            alert("Lineup copied in vertical format! ✅");
+        });
+    }
+
+    function clearForm() {
+        if(confirm("Clear all entries?")) {
+            document.querySelectorAll('input, textarea').forEach(el => {
+                el.value = '';
+                if(el.tagName === 'TEXTAREA') el.style.height = "60px";
+            });
+        }
+    }
+</script>
+
+</body>
+</html>
