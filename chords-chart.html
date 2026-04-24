@@ -15,12 +15,32 @@
         .sidebar {
             width: 320px; background: white; display: flex; flex-direction: column;
             box-shadow: 2px 0 15px rgba(0,0,0,0.2); z-index: 10;
+            transition: width 0.3s ease; position: relative;
         }
 
-        .sidebar-header { padding: 20px; background: #f8f9fa; border-bottom: 1px solid #eee; }
+        /* Minimized State */
+        .sidebar.collapsed { width: 60px; }
+        .sidebar.collapsed .sidebar-header h2, 
+        .sidebar.collapsed .upload-section, 
+        .sidebar.collapsed .back-btn,
+        .sidebar.collapsed .song-item span { display: none; }
+        .sidebar.collapsed .song-item { text-align: center; padding: 15px 0; }
+
+        /* Toggle Button */
+        .toggle-btn {
+            position: absolute; right: -15px; top: 20px;
+            width: 30px; height: 30px; background: #4f46e5;
+            color: white; border: none; border-radius: 50%;
+            cursor: pointer; z-index: 11; font-weight: bold;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        .sidebar-header { padding: 20px; background: #f8f9fa; border-bottom: 1px solid #eee; overflow: hidden; white-space: nowrap; }
         
         .upload-section {
             padding: 15px; border-bottom: 1px solid #eee; background: #f0f4ff;
+            overflow: hidden;
         }
 
         .upload-section label {
@@ -41,6 +61,7 @@
         .song-item {
             padding: 12px; margin-bottom: 8px; border-radius: 8px; cursor: pointer;
             background: #fff; border: 1px solid #eee; transition: 0.2s; font-size: 14px;
+            white-space: nowrap; overflow: hidden;
         }
 
         .song-item:hover { background: #f0eeff; }
@@ -63,7 +84,9 @@
 </head>
 <body>
 
-    <div class="sidebar">
+    <div class="sidebar" id="sidebar">
+        <button class="toggle-btn" onclick="toggleSidebar()" id="tglIcon">◀</button>
+        
         <div class="sidebar-header">
             <a href="index.html" class="back-btn">← Back to Menu</a>
             <h2 style="margin:0; font-size: 20px;">🎵 Chords Library</h2>
@@ -82,15 +105,14 @@
             <button class="btn-add" id="uploadBtn" onclick="addNewSong()">Add to Chords Library</button>
         </div>
         
-        <div class="song-list" id="songList">
-            </div>
+        <div class="song-list" id="songList"></div>
     </div>
 
     <div class="main-content">
         <div class="viewer-area" id="viewerArea">
             <div class="no-selection" id="placeholder">
                 <h1 style="font-size: 40px;">☁️</h1>
-                <p>Loading your library from Google Drive...</p>
+                <p>Loading your library...</p>
             </div>
             <iframe id="pdfViewer" style="display: none;"></iframe>
         </div>
@@ -104,12 +126,17 @@
     </div>
 
     <script>
-        // 1. SET YOUR URL HERE
         const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzRsxz074A8laQ4BG0S4ORPpyIWzbqbeMOT-O-JJzdO80tuVk0-9FEDIm2t5fxAfY5YZg/exec";
-        
         let myLibrary = [];
 
-        // 2. AUTO-LOAD FROM DRIVE ON STARTUP
+        // Toggle Sidebar Function
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const btn = document.getElementById('tglIcon');
+            sidebar.classList.toggle('collapsed');
+            btn.innerText = sidebar.classList.contains('collapsed') ? "▶" : "◀";
+        }
+
         window.onload = async function() {
             const listDiv = document.getElementById('songList');
             const placeholder = document.getElementById('placeholder');
@@ -118,19 +145,13 @@
                 const response = await fetch(GOOGLE_SCRIPT_URL);
                 myLibrary = await response.json();
                 renderList();
-                
-                if (myLibrary.length === 0) {
-                    placeholder.innerHTML = "<h1>🎸</h1><p>Library is empty. Upload a song!</p>";
-                } else {
-                    placeholder.innerHTML = "<h1>🎸</h1><p>Select a song from the list.</p>";
-                }
+                placeholder.innerHTML = myLibrary.length === 0 ? 
+                    "<h1>🎸</h1><p>Library is empty.</p>" : "<h1>🎸</h1><p>Select a song.</p>";
             } catch (error) {
-                console.error("Load Error:", error);
-                listDiv.innerHTML = '<p style="padding:10px; color:red;">Failed to connect to Cloud.</p>';
+                listDiv.innerHTML = '<p style="padding:10px; color:red;">Failed to connect.</p>';
             }
         };
 
-        // 3. UPLOAD FUNCTION
         async function addNewSong() {
             const title = document.getElementById('songTitle').value;
             const pdfFile = document.getElementById('pdfFile').files[0];
@@ -163,18 +184,14 @@
                 const result = await response.json();
 
                 if (result.result === "success") {
-                    myLibrary.push({
-                        title: title,
-                        pdfUrl: result.pdfUrl,
-                        audioUrl: result.audioUrl
-                    });
+                    myLibrary.push({ title, pdfUrl: result.pdfUrl, audioUrl: result.audioUrl });
                     renderList();
                     alert("Uploaded successfully!");
                 }
             } catch (error) {
-                alert("Upload failed. Check Google Script deployment.");
+                alert("Upload failed.");
             } finally {
-                btn.innerText = "Add to Cloud Library";
+                btn.innerText = "Add to Chords Library";
                 btn.disabled = false;
             }
         }
@@ -185,7 +202,8 @@
             myLibrary.forEach(song => {
                 const item = document.createElement('div');
                 item.className = 'song-item';
-                item.innerHTML = `📄 ${song.title}`;
+                // Wrap text in span to hide it when collapsed
+                item.innerHTML = `📄 <span>${song.title}</span>`;
                 item.onclick = () => selectSong(song, item);
                 listDiv.appendChild(item);
             });
