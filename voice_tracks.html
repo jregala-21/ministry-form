@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Key Finder & Recorder</title>
+    
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #4f46e5, #6d28d9);
+            display: flex; justify-content: center; align-items: flex-start;
+            min-height: 100vh; margin: 0; padding: 40px 20px;
+            box-sizing: border-box;
+        }
+
+        .card {
+            background: white; padding: 40px; border-radius: 20px;
+            width: 100%; max-width: 600px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+
+        h2 { color: #333; margin-bottom: 5px; }
+        .subtitle { color: #666; font-size: 14px; margin-bottom: 30px; }
+
+        /* Key Display Section */
+        .display-container {
+            background: #f8fafc;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 25px;
+            border: 2px solid #e2e8f0;
+        }
+
+        .current-note {
+            font-size: 48px;
+            font-weight: 800;
+            color: #4f46e5;
+            margin: 0;
+        }
+
+        .detected-key {
+            font-size: 18px;
+            color: #6d28d9;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+
+        /* Folder/File UI Style */
+        .drive-ui {
+            text-align: left;
+            background: #fff;
+            border: 1px solid #eee;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 25px;
+        }
+
+        .folder-header {
+            font-size: 12px;
+            font-weight: bold;
+            color: #94a3b8;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .file-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            background: #f1f5f9;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #475569;
+            margin-bottom: 5px;
+        }
+
+        /* Controls */
+        .btn-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        button {
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.2s;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn-record { background: #ef4444; color: white; }
+        .btn-record.recording { background: #b91c1c; animation: pulse 1.5s infinite; }
+        .btn-save { background: #4f46e5; color: white; }
+        .btn-save:disabled { background: #cbd5e1; cursor: not-allowed; }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+
+        .back-link {
+            display: block; text-align: center; margin-top: 30px;
+            text-decoration: none; color: #aaa; font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>🎵 Key Detector & Recorder</h2>
+    <p class="subtitle">Sing or play a song to find its key and record the audio.</p>
+
+    <div class="display-container">
+        <p style="font-size: 12px; color: #94a3b8; margin: 0;">CURRENT NOTE</p>
+        <div class="current-note" id="noteDisplay">--</div>
+        <div class="detected-key" id="keyDisplay">Key: Detecting...</div>
+    </div>
+
+    <div class="drive-ui">
+        <div class="folder-header">📁 My Recordings / Weekly Services</div>
+        <div id="fileList">
+            <div class="file-item" id="emptyMsg">No recordings yet.</div>
+        </div>
+    </div>
+
+    <div class="btn-container">
+        <button id="recordBtn" class="btn-record" onclick="toggleRecording()">
+            <span>🎤</span> Start Recording
+        </button>
+        <button id="saveBtn" class="btn-save" onclick="saveToDrive()" disabled>
+            <span>☁️</span> Save to Drive
+        </button>
+    </div>
+
+    <a href="index.html" class="back-link">← Back to Main Menu</a>
+</div>
+
+<script>
+    let audioContext;
+    let analyser;
+    let microphone;
+    let javascriptNode;
+    let mediaRecorder;
+    let audioChunks = [];
+    let isRecording = false;
+    let recordedBlob = null;
+
+    const noteStrings = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+
+    async function toggleRecording() {
+        if (!isRecording) {
+            startAudio();
+        } else {
+            stopAudio();
+        }
+    }
+
+    async function startAudio() {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            analyser = audioContext.createAnalyser();
+            microphone = audioContext.createMediaStreamSource(stream);
+            
+            analyser.fftSize = 2048;
+            microphone.connect(analyser);
+
+            // Setup Recording
+            mediaRecorder = new MediaRecorder(stream);
+            mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+            mediaRecorder.onstop = () => {
+                recordedBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                document.getElementById('saveBtn').disabled = false;
+                updateFileList();
+            };
+
+            mediaRecorder.start();
+            isRecording = true;
+            audioChunks = [];
+            
+            document.getElementById('recordBtn').innerHTML = "<span>⏹️</span> Stop Recording";
+            document.getElementById('recordBtn').classList.add('recording');
+            document.getElementById('saveBtn').disabled = true;
+
+            updatePitch();
+        } catch (err) {
+            alert("Microphone access denied or not found.");
+        }
+    }
+
+    function stopAudio() {
+        isRecording = false;
+        mediaRecorder.stop();
+        audioContext.close();
+        document.getElementById('recordBtn').innerHTML = "<span>🎤</span> Start Recording";
+        document.getElementById('recordBtn').classList.remove('recording');
+        document.getElementById('noteDisplay').innerText = "--";
+    }
+
+    function updatePitch() {
+        if (!isRecording) return;
+
+        const buffer = new Float32Array(analyser.fftSize);
+        analyser.getFloatTimeDomainData(buffer);
+        
+        const pitch = autoCorrelate(buffer, audioContext.sampleRate);
+
+        if (pitch !== -1) {
+            const note = noteFromPitch(pitch);
+            const noteName = noteStrings[note % 12];
+            document.getElementById('noteDisplay').innerText = noteName;
+            document.getElementById('keyDisplay').innerText = `Estimated Key: ${noteName} Major`;
+        }
+
+        requestAnimationFrame(updatePitch);
+    }
+
+    function autoCorrelate(buf, sampleRate) {
+        let SIZE = buf.length;
+        let rms = 0;
+        for (let i = 0; i < SIZE; i++) {
+            val = buf[i];
+            rms += val * val;
+        }
+        rms = Math.sqrt(rms / SIZE);
+        if (rms < 0.01) return -1; // Too quiet
+
+        let r1 = 0, r2 = SIZE - 1, thres = 0.2;
+        for (let i = 0; i < SIZE / 2; i++) if (Math.abs(buf[i]) < thres) { r1 = i; break; }
+        for (let i = 1; i < SIZE / 2; i++) if (Math.abs(buf[SIZE - i]) < thres) { r2 = SIZE - i; break; }
+
+        buf = buf.slice(r1, r2);
+        SIZE = buf.length;
+
+        let c = new Array(SIZE).fill(0);
+        for (let i = 0; i < SIZE; i++)
+            for (let j = 0; j < SIZE - i; j++)
+                c[i] = c[i] + buf[j] * buf[j + i];
+
+        let d = 0; while (c[d] > c[d + 1]) d++;
+        let maxval = -1, maxpos = -1;
+        for (let i = d; i < SIZE; i++) {
+            if (c[i] > maxval) {
+                maxval = c[i];
+                maxpos = i;
+            }
+        }
+        return sampleRate / maxpos;
+    }
+
+    function noteFromPitch(frequency) {
+        const noteNum = 12 * (Math.log(frequency / 440) / Math.log(2));
+        return Math.round(noteNum) + 69;
+    }
+
+    function updateFileList() {
+        const list = document.getElementById('fileList');
+        const empty = document.getElementById('emptyMsg');
+        if (empty) empty.remove();
+
+        const timestamp = new Date().toLocaleTimeString();
+        const item = document.createElement('div');
+        item.className = 'file-item';
+        item.innerHTML = `📄 recording_${timestamp.replace(/ /g, '')}.wav`;
+        list.prepend(item);
+    }
+
+    function saveToDrive() {
+        if (!recordedBlob) return;
+        
+        // This simulates saving by downloading. 
+        // For actual Drive API integration, you would need a client ID and OAuth.
+        const url = URL.createObjectURL(recordedBlob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = `Service_Recording_${new Date().getTime()}.wav`;
+        document.body.appendChild(a);
+        a.click();
+        
+        alert("Audio file generated! Save this to your Google Drive folder.");
+    }
+</script>
+
+</body>
+</html>
