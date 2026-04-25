@@ -34,15 +34,22 @@
         .input-group { margin-bottom: 15px; display: flex; flex-direction: column; }
 
         label {
-            font-size: 12px; font-weight: bold;
-            color: #4f46e5; text-transform: uppercase; margin-bottom: 6px;
+            font-size: 11px; font-weight: bold;
+            color: #4f46e5; text-transform: uppercase; margin-bottom: 4px;
             letter-spacing: 0.5px;
         }
 
         input, textarea {
-            width: 100%; padding: 12px; border: 2px solid #f0f0f0;
-            border-radius: 10px; font-size: 15px; box-sizing: border-box;
+            width: 100%; padding: 10px; border: 2px solid #f0f0f0;
+            border-radius: 8px; font-size: 14px; box-sizing: border-box;
             font-family: inherit; transition: 0.3s;
+        }
+
+        .link-input {
+            margin-top: 5px;
+            font-size: 12px;
+            border-color: #e0e7ff;
+            color: #4338ca;
         }
 
         textarea { resize: none; min-height: 60px; overflow: hidden; }
@@ -83,7 +90,7 @@
 
 <div class="card">
     <h2>📝 Service Lineup Creator</h2>
-    <p class="subtitle">Enter your service details to copy or download your lineup.</p>
+    <p class="subtitle">Separate multiple songs or links with a comma ( , ).</p>
 
     <div class="main-grid">
         <div class="input-group">
@@ -102,20 +109,39 @@
 
         <div class="input-group full-width">
             <label>🎵 Intro Song</label>
-            <input type="text" id="intro" placeholder="Opening track...">
+            <input type="text" id="intro" placeholder="Song 1, Song 2">
+            <input type="text" id="intro_link" class="link-input" placeholder="Link 1, Link 2">
         </div>
 
-        <div class="input-group"><label>🙌 Praise 1</label><input type="text" id="praise1"></div>
-        <div class="input-group"><label>🙌 Praise 2</label><input type="text" id="praise2"></div>
+        <div class="input-group">
+            <label>🙌 Praise Songs</label>
+            <input type="text" id="praise" placeholder="Song 1, Song 2, Song 3">
+            <input type="text" id="praise_link" class="link-input" placeholder="Link 1, Link 2, Link 3">
+        </div>
 
-        <div class="input-group"><label>🙏 Worship 1</label><input type="text" id="worship1"></div>
-        <div class="input-group"><label>🙏 Worship 2</label><input type="text" id="worship2"></div>
+        <div class="input-group">
+            <label>🙏 Worship Songs</label>
+            <input type="text" id="worship" placeholder="Song 1, Song 2, Song 3">
+            <input type="text" id="worship_link" class="link-input" placeholder="Link 1, Link 2, Link 3">
+        </div>
 
-        <div class="input-group"><label>🎤 Ministerial</label><input type="text" id="ministerial"></div>
-        <div class="input-group"><label>🏆 Victory Song</label><input type="text" id="victory"></div>
+        <div class="input-group">
+            <label>🎤 Ministerial</label>
+            <input type="text" id="ministerial" placeholder="Song 1, Song 2">
+            <input type="text" id="ministerial_link" class="link-input" placeholder="Link 1, Link 2">
+        </div>
 
-        <div class="input-group"><label>🚪 Closing 1</label><input type="text" id="closing1"></div>
-        <div class="input-group"><label>🚪 Closing 2</label><input type="text" id="closing2"></div>
+        <div class="input-group">
+            <label>🏆 Victory Song</label>
+            <input type="text" id="victory" placeholder="Song 1, Song 2">
+            <input type="text" id="victory_link" class="link-input" placeholder="Link 1, Link 2">
+        </div>
+
+        <div class="input-group full-width">
+            <label>🚪 Closing Songs</label>
+            <input type="text" id="closing" placeholder="Song 1, Song 2">
+            <input type="text" id="closing_link" class="link-input" placeholder="Link 1, Link 2">
+        </div>
     </div>
 
     <div class="btn-container">
@@ -135,28 +161,30 @@
         element.style.height = (element.scrollHeight) + "px";
     }
 
+    function splitComma(str) {
+        if (!str) return [];
+        return str.split(',').map(item => item.trim()).filter(item => item !== "");
+    }
+
     function getFormValues() {
         const getValue = (id) => document.getElementById(id).value.trim();
         return {
             date: getValue('serviceDate'),
             leader: getValue('leaderName'),
             verse: getValue('verse'),
-            intro: getValue('intro'),
-            praise1: getValue('praise1'),
-            praise2: getValue('praise2'),
-            worship1: getValue('worship1'),
-            worship2: getValue('worship2'),
-            ministerial: getValue('ministerial'),
-            victory: getValue('victory'),
-            closing1: getValue('closing1'),
-            closing2: getValue('closing2')
+            intro: { title: getValue('intro'), link: getValue('intro_link') },
+            praise: { title: getValue('praise'), link: getValue('praise_link') },
+            worship: { title: getValue('worship'), link: getValue('worship_link') },
+            ministerial: { title: getValue('ministerial'), link: getValue('ministerial_link') },
+            victory: { title: getValue('victory'), link: getValue('victory_link') },
+            closing: { title: getValue('closing'), link: getValue('closing_link') }
         };
     }
 
     function downloadPDF() {
         const data = getFormValues();
         if (!data.date || !data.leader) {
-            alert("Please provide both the Service Date and Worship Leader.");
+            alert("Please provide Service Date and Leader.");
             return;
         }
         const doc = new jsPDF();
@@ -167,75 +195,83 @@
         doc.setFontSize(11);
         doc.setTextColor(100);
         doc.text(`Date: ${data.date}`, 190, 20, { align: "right" });
-        doc.setFont("helvetica", "bold");
-        doc.setTextColor(79, 70, 229);
         doc.text(`Leader: ${data.leader}`, 190, 27, { align: "right" });
         doc.setDrawColor(220);
         doc.line(20, 32, 190, 32);
 
         let y = 45;
-        const addLongText = (label, value) => {
-            if (!value) return;
+
+        const renderItems = (label, obj) => {
+            if (!obj.title) return;
+            const titles = splitComma(obj.title);
+            const links = splitComma(obj.link);
+
             doc.setFontSize(10); doc.setTextColor(150); doc.text(label.toUpperCase(), 20, y);
-            y += 7; doc.setFontSize(12); doc.setTextColor(0);
-            const splitText = doc.splitTextToSize(value, 170);
-            doc.text(splitText, 20, y); y += (splitText.length * 7) + 8;
-        };
-        const addSection = (label, song1, song2) => {
-            if (!song1 && !song2) return;
-            doc.setFontSize(10); doc.setTextColor(150); doc.text(label.toUpperCase(), 20, y);
-            y += 7; doc.setFontSize(13); doc.setTextColor(0);
-            if (song1) { doc.text(`• ${song1}`, 25, y); y += 8; }
-            if (song2) { doc.text(`• ${song2}`, 25, y); y += 8; }
-            y += 4;
+            y += 7; 
+            
+            titles.forEach((t, index) => {
+                doc.setFontSize(12); doc.setTextColor(0);
+                doc.text(`• ${t}`, 25, y);
+                if (links[index]) {
+                    y += 5; doc.setFontSize(9); doc.setTextColor(79, 70, 229);
+                    doc.text(`  Link: ${links[index]}`, 25, y);
+                    y += 2;
+                }
+                y += 8;
+            });
+            y += 2;
         };
 
-        addLongText("Theme Verse", data.verse);
-        addLongText("Intro Song", data.intro);
-        addSection("Praise Songs", data.praise1, data.praise2);
-        addSection("Worship Songs", data.worship1, data.worship2);
-        if (data.ministerial) addLongText("Ministerial", data.ministerial);
-        if (data.victory) addLongText("Victory Song", data.victory);
-        addSection("Closing Songs", data.closing1, data.closing2);
+        if(data.verse) {
+            doc.setFontSize(10); doc.setTextColor(150); doc.text("THEME VERSE", 20, y);
+            y += 7; doc.setFontSize(11); doc.setTextColor(0);
+            const splitVerse = doc.splitTextToSize(data.verse, 170);
+            doc.text(splitVerse, 20, y); y += (splitVerse.length * 7) + 8;
+        }
+
+        renderItems("Intro Song", data.intro);
+        renderItems("Praise Songs", data.praise);
+        renderItems("Worship Songs", data.worship);
+        renderItems("Ministerial", data.ministerial);
+        renderItems("Victory Song", data.victory);
+        renderItems("Closing Songs", data.closing);
+        
         doc.save(`Lineup_${data.date}.pdf`);
     }
 
+    // UPDATED COPY FUNCTION FOR CLEARER SPACING
     function copyLineup() {
         const data = getFormValues();
         let text = `✨ *SERVICE LINEUP* ✨\n`;
-        
         if (data.date) text += `📅 Date: ${data.date}\n`;
         if (data.leader) text += `🎤 Leader: ${data.leader}\n`;
         text += `────────────────────\n\n`;
         
         if (data.verse) text += `📖 *Theme Verse:*\n${data.verse}\n\n`;
-        if (data.intro) text += `🎵 *Intro Song:*\n- ${data.intro}\n\n`;
         
-        if (data.praise1 || data.praise2) {
-            text += `🙌 *Praise Songs:*\n`;
-            if (data.praise1) text += `- ${data.praise1}\n`;
-            if (data.praise2) text += `- ${data.praise2}\n`;
-            text += `\n`;
-        }
+        const appendHelper = (label, obj) => {
+            if (!obj.title) return "";
+            let res = `${label}\n`;
+            const titles = splitComma(obj.title);
+            const links = splitComma(obj.link);
+            
+            titles.forEach((t, i) => {
+                res += `- ${t}\n`;
+                if (links[i]) res += `  🔗 ${links[i]}\n`;
+                res += `\n`; // <--- THIS ADDS THE NEW LINE PER EACH SONG
+            });
+            return res;
+        };
 
-        if (data.worship1 || data.worship2) {
-            text += `🙏 *Worship Songs:*\n`;
-            if (data.worship1) text += `- ${data.worship1}\n`;
-            if (data.worship2) text += `- ${data.worship2}\n`;
-            text += `\n`;
-        }
-
-        if (data.ministerial) text += `🎤 *Ministerial:*\n- ${data.ministerial}\n\n`;
-        if (data.victory) text += `🏆 *Victory Song:*\n- ${data.victory}\n\n`;
-        
-        if (data.closing1 || data.closing2) {
-            text += `🚪 *Closing Songs:*\n`;
-            if (data.closing1) text += `- ${data.closing1}\n`;
-            if (data.closing2) text += `- ${data.closing2}\n`;
-        }
+        text += appendHelper("🎵 *Intro Song:*", data.intro);
+        text += appendHelper("🙌 *Praise Songs:*", data.praise);
+        text += appendHelper("🙏 *Worship Songs:*", data.worship);
+        text += appendHelper("🎤 *Ministerial:*", data.ministerial);
+        text += appendHelper("🏆 *Victory Song:*", data.victory);
+        text += appendHelper("🚪 *Closing Songs:*", data.closing);
 
         navigator.clipboard.writeText(text).then(() => {
-            alert("Lineup copied in vertical format! ✅");
+            alert("Lineup copied with clean spacing! ✅");
         });
     }
 
