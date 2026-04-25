@@ -1,223 +1,285 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>ANNOUNCEMENT SENDER</title>
-  <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Announcement Sender</title>
+    <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
 
-  <style>
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(135deg, #4f46e5, #6d28d9);
-      display: flex; justify-content: center; align-items: center;
-      min-height: 100vh; margin: 0; padding: 20px;
-    }
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #4f46e5, #6d28d9);
+            display: flex; justify-content: center; align-items: flex-start;
+            min-height: 100vh; margin: 0; padding: 20px;
+            box-sizing: border-box;
+        }
 
-    .container {
-      background: #ffffff; padding: 30px; border-radius: 16px;
-      width: 380px; box-shadow: 0 15px 35px rgba(0,0,0,0.15);
-      text-align: center;
-    }
+        .container {
+            background: #ffffff; padding: 30px; border-radius: 20px;
+            width: 100%; max-width: 500px; 
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            text-align: center;
+            margin-top: 20px;
+        }
 
-    h3 { margin-bottom: 20px; color: #333; }
+        h3 { margin-bottom: 25px; color: #1f2937; font-size: 24px; }
 
-    textarea {
-      width: 100%; padding: 12px; margin: 6px 0;
-      border-radius: 8px; border: 1px solid #ddd;
-      font-size: 14px; font-family: inherit; box-sizing: border-box;
-      resize: vertical; min-height: 80px;
-    }
+        .input-group {
+            text-align: left;
+            margin-bottom: 20px;
+        }
 
-    /* Styles for File Input */
-    .file-input-wrapper {
-      margin: 10px 0; text-align: left;
-    }
-    .file-label {
-      font-size: 11px; font-weight: 700; color: #4f46e5;
-      display: block; text-transform: uppercase; margin-bottom: 5px;
-    }
-    input[type="file"] {
-      font-size: 13px; color: #666;
-    }
+        label.section-label {
+            font-size: 11px; font-weight: 700; color: #4f46e5;
+            display: block; text-transform: uppercase; margin-bottom: 8px;
+            letter-spacing: 0.5px;
+        }
 
-    .notice-text {
-      display: block; font-size: 11px; color: #6366f1;
-      text-align: left; margin-top: 15px; margin-bottom: 2px;
-      font-weight: 600; text-transform: uppercase;
-    }
+        textarea {
+            width: 100%; padding: 12px; border: 2px solid #f0f0f0;
+            border-radius: 10px; font-size: 15px; font-family: inherit; 
+            box-sizing: border-box; transition: 0.3s;
+            resize: none; min-height: 100px;
+        }
 
-    .select-all-row {
-      display: flex; align-items: center; justify-content: space-between; 
-      font-size: 14px; padding: 5px 0;
-    }
+        textarea:focus { outline: none; border-color: #4f46e5; background: #f9f9ff; }
 
-    button {
-      width: 100%; padding: 11px; margin-top: 10px;
-      background: #4f46e5; color: white; border: none;
-      border-radius: 8px; cursor: pointer; font-weight: 600; transition: 0.2s;
-    }
+        .file-box {
+            background: #f8fafc; border: 2px dashed #e2e8f0;
+            padding: 15px; border-radius: 10px; margin-top: 5px;
+        }
 
-    button:hover { background: #4338ca; }
-    button:disabled { background: #a5a2e1; cursor: not-allowed; }
+        input[type="file"] { font-size: 13px; color: #64748b; width: 100%; }
 
-    .email-list {
-      max-height: 120px; overflow-y: auto; background: #f9fafb;
-      padding: 10px; margin-top: 10px; border-radius: 8px;
-      border: 1px solid #eee; text-align: left;
-    }
+        /* Recipient Section */
+        .recipient-card {
+            background: #f9fafb; border-radius: 12px;
+            padding: 15px; border: 1px solid #e5e7eb;
+            margin-bottom: 20px;
+        }
 
-    .email-item {
-      display: flex; align-items: center; justify-content: space-between; 
-      padding: 4px 0; font-size: 14px;
-    }
+        .select-all-row {
+            display: flex; align-items: center; justify-content: space-between; 
+            font-size: 14px; font-weight: 600; color: #374151;
+            padding-bottom: 10px; border-bottom: 1px solid #e5e7eb;
+            margin-bottom: 10px;
+            cursor: pointer;
+        }
 
-    .status { margin-top: 12px; font-size: 14px; font-weight: 500; min-height: 20px; }
+        .email-list {
+            max-height: 150px; overflow-y: auto; text-align: left;
+        }
 
-    .footer-links {
-      display: flex; justify-content: space-between; margin-top: 20px;
-    }
+        .email-item {
+            display: flex; align-items: center; justify-content: space-between; 
+            padding: 8px 0; font-size: 14px; color: #4b5563;
+        }
 
-    .back-link { text-decoration: none; color: #999; font-size: 13px; font-weight: 600; }
-  </style>
+        /* Checkbox styling */
+        input[type="checkbox"] {
+            width: 18px; height: 18px; cursor: pointer;
+            accent-color: #4f46e5;
+        }
+
+        button {
+            width: 100%; padding: 14px; background: #4f46e5; 
+            color: white; border: none; border-radius: 10px;
+            cursor: pointer; font-weight: 700; font-size: 16px;
+            transition: 0.2s; box-shadow: 0 4px 6px rgba(79, 70, 229, 0.2);
+        }
+
+        button:hover { background: #4338ca; transform: translateY(-1px); }
+        button:active { transform: translateY(0); }
+        button:disabled { background: #a5a2e1; cursor: not-allowed; transform: none; }
+
+        .status { margin-top: 15px; font-size: 14px; font-weight: 600; min-height: 20px; }
+
+        .footer-links {
+            display: flex; justify-content: space-between; margin-top: 25px;
+            padding-top: 15px; border-top: 1px solid #f3f4f6;
+        }
+
+        .back-link { text-decoration: none; color: #9ca3af; font-size: 13px; font-weight: 600; transition: 0.2s; }
+        .back-link:hover { color: #4f46e5; }
+
+        /* Custom Scrollbar for Email List */
+        .email-list::-webkit-scrollbar { width: 6px; }
+        .email-list::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 10px; }
+
+        @media (max-width: 480px) {
+            .container { padding: 20px; }
+            h3 { font-size: 20px; }
+        }
+    </style>
 </head>
 
 <body>
 
 <div class="container">
- <h3>📧 Announcement Sender</h3> 
+    <h3>📧 Announcement Sender</h3> 
 
-  <textarea id="caption" placeholder="Write your caption here..." oninput="autoGrow(this)"></textarea>
+    <div class="input-group">
+        <label class="section-label">💬 Message Caption</label>
+        <textarea id="caption" placeholder="Write your message details here..." oninput="autoGrow(this)"></textarea>
+    </div>
 
-  <div class="file-input-wrapper">
-      <label class="file-label">📎 Attach PDF Lineup (Optional)</label>
-      <input type="file" id="pdfFile" accept="application/pdf">
-  </div>
+    <div class="input-group">
+        <label class="section-label">📎 Attachment (Optional)</label>
+        <div class="file-box">
+            <input type="file" id="pdfFile" accept="application/pdf">
+        </div>
+    </div>
 
-  <span class="notice-text">Recipient Settings</span>
-  <label class="select-all-row">
-    <span>Select All Recipients</span>
-    <input type="checkbox" id="selectAllBox" onclick="toggleAll(this)">
-  </label>
+    <div class="input-group">
+        <label class="section-label">👥 Recipients</label>
+        <div class="recipient-card">
+            <label class="select-all-row">
+                <span>Select All Members</span>
+                <input type="checkbox" id="selectAllBox" onclick="toggleAll(this)">
+            </label>
+            <div class="email-list" id="emailList">
+                <div style="text-align:center; padding: 10px; color: #9ca3af; font-size: 12px;">Loading emails...</div>
+            </div>
+        </div>
+    </div>
+    
+    <button id="sendBtn" onclick="processAndSend()">🚀 Send Announcement</button>
 
-  <div class="email-list" id="emailList"></div>
-  
-  <button id="sendBtn" onclick="processAndSend()">Send Announcement</button>
+    <p class="status" id="status"></p>
 
-  <p class="status" id="status"></p>
-
-  <div class="footer-links">
-    <a href="index.html" class="back-link">← Homepage</a>
-    <a href="#" onclick="logout()" class="back-link" style="color: #ef4444;">Logout 🔒</a>
-  </div>
+    <div class="footer-links">
+        <a href="index.html" class="back-link">← Homepage</a>
+        <a href="#" onclick="logout()" class="back-link" style="color: #ef4444;">Logout 🔒</a>
+    </div>
 </div>
 
 <script>
-if (sessionStorage.getItem("isAllowed") !== "true") { window.location.href = "login.html"; }
+    // Security Check
+    if (sessionStorage.getItem("isAllowed") !== "true") { window.location.href = "login.html"; }
 
-function logout() {
-    sessionStorage.removeItem("isAllowed");
-    window.location.href = "login.html";
-}
-
-(function(){ emailjs.init("EklYONd-KHgKN-1HA"); })();
-
-function autoGrow(element) {
-  element.style.height = "5px";
-  element.style.height = (element.scrollHeight) + "px";
-}
-
-let emails = [];
-
-async function loadEmailsFromSheet() {
-  try {
-    const response = await fetch("https://script.google.com/macros/s/AKfycbz7xG5gki0Jr8TidIbKKpT8YM52XDxTK_6JN2XcX7xESn8ABgdp98E_Q9WS2D8geKfB/exec");
-    emails = await response.json();
-    renderEmails();
-  } catch (error) { console.error("Error loading emails:", error); }
-}
-
-function renderEmails() {
-  const container = document.getElementById("emailList");
-  container.innerHTML = "";
-  emails.forEach((email) => {
-    container.innerHTML += `
-      <div class="email-item">
-        <span>${email}</span>
-        <input type="checkbox" class="emailCheck" value="${email}">
-      </div>
-    `;
-  });
-}
-
-function toggleAll(source) {
-  const checkboxes = document.querySelectorAll(".emailCheck");
-  checkboxes.forEach(cb => cb.checked = source.checked);
-}
-
-// Helper to convert File to Base64
-function getBase64(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = () => resolve(reader.result);
-    reader.onerror = error => reject(error);
-  });
-}
-
-async function processAndSend() {
-  const caption = document.getElementById("caption").value;
-  const fileInput = document.getElementById("pdfFile");
-  const selected = Array.from(document.querySelectorAll(".emailCheck:checked"));
-  const status = document.getElementById("status");
-  const sendBtn = document.getElementById("sendBtn");
-
-  if (selected.length === 0) return alert("Select at least one recipient.");
-  if (!caption) return alert("Please enter a caption.");
-
-  sendBtn.disabled = true;
-  status.style.color = "#4f46e5";
-
-  let base64File = null;
-  if (fileInput.files.length > 0) {
-      status.innerText = "⚙️ Preparing attachment...";
-      base64File = await getBase64(fileInput.files[0]);
-  }
-
-  let successCount = 0;
-  let errorCount = 0;
-
-  for (let i = 0; i < selected.length; i++) {
-    const email = selected[i].value;
-    status.innerText = `⏳ Sending ${i + 1} of ${selected.length}...`;
-
-    try {
-      // Data to send to EmailJS
-      const templateParams = {
-        to_email: email,
-        message: caption,
-        content: base64File // This is the Base64 string of the PDF
-      };
-
-      await emailjs.send("service_0d1cw4d", "template_kuw3ryv", templateParams);
-      successCount++;
-    } catch (error) {
-      console.error(`Failed to send to ${email}:`, error);
-      errorCount++;
+    function logout() {
+        sessionStorage.removeItem("isAllowed");
+        window.location.href = "login.html";
     }
-  }
 
-  status.innerText = errorCount === 0 ? `✅ All ${successCount} sent successfully!` : `⚠️ Sent: ${successCount} | Failed: ${errorCount}`;
-  status.style.color = errorCount === 0 ? "#059669" : "#d97706";
+    // Initialize EmailJS
+    (function(){ emailjs.init("EklYONd-KHgKN-1HA"); })();
 
-  if (successCount > 0) {
-    document.getElementById("caption").value = "";
-    fileInput.value = "";
-    selected.forEach(cb => cb.checked = false);
-    document.getElementById("selectAllBox").checked = false;
-  }
-  sendBtn.disabled = false;
-}
+    function autoGrow(element) {
+        element.style.height = "5px";
+        element.style.height = (element.scrollHeight) + "px";
+    }
 
-loadEmailsFromSheet();
+    let emails = [];
+
+    async function loadEmailsFromSheet() {
+        const container = document.getElementById("emailList");
+        try {
+            const response = await fetch("https://script.google.com/macros/s/AKfycbz7xG5gki0Jr8TidIbKKpT8YM52XDxTK_6JN2XcX7xESn8ABgdp98E_Q9WS2D8geKfB/exec");
+            emails = await response.json();
+            renderEmails();
+        } catch (error) { 
+            console.error("Error loading emails:", error);
+            container.innerHTML = `<div style="color: #ef4444; font-size: 12px;">Failed to load email list.</div>`;
+        }
+    }
+
+    function renderEmails() {
+        const container = document.getElementById("emailList");
+        container.innerHTML = "";
+        if (emails.length === 0) {
+            container.innerHTML = `<div style="text-align:center; padding: 10px; color: #9ca3af;">No emails found.</div>`;
+            return;
+        }
+        emails.forEach((email) => {
+            const div = document.createElement('div');
+            div.className = 'email-item';
+            div.innerHTML = `
+                <span>${email}</span>
+                <input type="checkbox" class="emailCheck" value="${email}">
+            `;
+            // Make the whole row clickable
+            div.onclick = function(e) {
+                if(e.target.type !== 'checkbox') {
+                    const cb = this.querySelector('.emailCheck');
+                    cb.checked = !cb.checked;
+                }
+            };
+            container.appendChild(div);
+        });
+    }
+
+    function toggleAll(source) {
+        const checkboxes = document.querySelectorAll(".emailCheck");
+        checkboxes.forEach(cb => cb.checked = source.checked);
+    }
+
+    function getBase64(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = error => reject(error);
+        });
+    }
+
+    async function processAndSend() {
+        const caption = document.getElementById("caption").value;
+        const fileInput = document.getElementById("pdfFile");
+        const selected = Array.from(document.querySelectorAll(".emailCheck:checked"));
+        const status = document.getElementById("status");
+        const sendBtn = document.getElementById("sendBtn");
+
+        if (selected.length === 0) return alert("Select at least one recipient.");
+        if (!caption) return alert("Please enter a caption.");
+
+        sendBtn.disabled = true;
+        status.style.color = "#4f46e5";
+
+        let base64File = null;
+        if (fileInput.files.length > 0) {
+            status.innerText = "⚙️ Preparing attachment...";
+            base64File = await getBase64(fileInput.files[0]);
+        }
+
+        let successCount = 0;
+        let errorCount = 0;
+
+        for (let i = 0; i < selected.length; i++) {
+            const email = selected[i].value;
+            status.innerText = `⏳ Sending ${i + 1} of ${selected.length}...`;
+
+            try {
+                const templateParams = {
+                    to_email: email,
+                    message: caption,
+                    content: base64File 
+                };
+
+                await emailjs.send("service_0d1cw4d", "template_kuw3ryv", templateParams);
+                successCount++;
+            } catch (error) {
+                console.error(`Failed to send to ${email}:`, error);
+                errorCount++;
+            }
+        }
+
+        status.innerText = errorCount === 0 ? `✅ All ${successCount} sent successfully!` : `⚠️ Sent: ${successCount} | Failed: ${errorCount}`;
+        status.style.color = errorCount === 0 ? "#059669" : "#ef4444";
+
+        if (successCount > 0) {
+            document.getElementById("caption").value = "";
+            fileInput.value = "";
+            selected.forEach(cb => cb.checked = false);
+            document.getElementById("selectAllBox").checked = false;
+            // Reset height
+            document.getElementById("caption").style.height = "100px";
+        }
+        sendBtn.disabled = false;
+    }
+
+    loadEmailsFromSheet();
 </script>
 
 </body>
