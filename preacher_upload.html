@@ -6,26 +6,27 @@
     <title>Drive Cloud Manager</title>
     <style>
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             background: linear-gradient(135deg, #4f46e5, #6d28d9);
             display: flex; justify-content: center; align-items: flex-start;
-            min-height: 100vh; margin: 0; padding: 40px 20px;
+            min-height: 100vh; margin: 0; padding: 20px 10px; /* Adjusted for mobile */
             box-sizing: border-box;
         }
 
         .card {
-            background: white; padding: 40px; border-radius: 20px;
+            background: white; padding: 30px 20px; border-radius: 20px;
             width: 100%; max-width: 650px;
             box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            box-sizing: border-box;
         }
 
-        h2 { text-align: center; color: #333; margin-bottom: 10px; font-size: 28px; }
-        p.subtitle { text-align: center; color: #666; margin-bottom: 30px; font-size: 14px; }
+        h2 { text-align: center; color: #333; margin-bottom: 10px; font-size: 24px; }
+        p.subtitle { text-align: center; color: #666; margin-bottom: 25px; font-size: 13px; padding: 0 10px; }
 
         .upload-section {
             border-bottom: 2px solid #f0f0f0;
-            padding-bottom: 30px;
-            margin-bottom: 30px;
+            padding-bottom: 25px;
+            margin-bottom: 25px;
             text-align: center;
         }
 
@@ -49,10 +50,11 @@
             border: none; border-radius: 10px; font-weight: 700;
             cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 8px;
         }
+        .btn-upload:active { transform: scale(0.98); }
         
-        .btn-refresh { background: #f3f4f6; color: #4b5563; font-size: 12px; padding: 8px 15px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        .btn-refresh { background: #f3f4f6; color: #4b5563; font-size: 11px; padding: 8px 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
         
-        /* File List Styles */
+        /* Responsive File List */
         .file-item {
             background: #fff;
             border: 1px solid #f0f0f0;
@@ -60,38 +62,40 @@
             border-radius: 12px;
             margin-bottom: 12px;
             display: flex;
-            justify-content: space-between;
-            align-items: center;
+            flex-direction: column; /* Stack on mobile */
+            gap: 12px;
         }
 
-        .file-info { flex-grow: 1; margin-right: 10px; }
-        .file-name { font-weight: 600; color: #333; font-size: 14px; display: block; }
-        
-        /* TIMESTAMP STYLE */
-        .file-date { 
-            font-size: 11px; 
-            color: #888; 
-            display: block; 
-            margin-top: 4px;
-            font-style: italic;
+        @media (min-width: 480px) {
+            .file-item { flex-direction: row; justify-content: space-between; align-items: center; }
+            h2 { font-size: 28px; }
+            .card { padding: 40px; }
+        }
+
+        .file-info { flex-grow: 1; min-width: 0; }
+        .file-name { 
+            font-weight: 600; color: #333; font-size: 14px; display: block; 
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; /* Prevent long names from breaking layout */
         }
         
-        .file-actions { display: flex; gap: 6px; }
+        .file-date { font-size: 11px; color: #888; display: block; margin-top: 4px; font-style: italic; }
+        
+        .file-actions { display: flex; gap: 6px; flex-wrap: wrap; }
         .file-actions a, .file-actions button {
             text-decoration: none; font-size: 10px; font-weight: bold;
-            padding: 6px 8px; border-radius: 6px; border: none; cursor: pointer;
-            text-transform: uppercase;
+            padding: 8px 10px; border-radius: 6px; border: none; cursor: pointer;
+            text-transform: uppercase; flex: 1; text-align: center; /* Buttons fill space on small screens */
+            min-width: 70px;
         }
         
         .view-btn { color: #4f46e5; background: #eef2ff; }
         .dl-btn { color: #059669; background: #ecfdf5; }
         .del-btn { color: #dc2626; background: #fef2f2; }
 
-        #status { margin-top: 15px; font-size: 13px; font-weight: bold; text-align: center; }
+        #status { margin-top: 15px; font-size: 13px; font-weight: bold; text-align: center; min-height: 1.2em; }
 
         .home-link-container { margin-top: 25px; text-align: center; border-top: 1px solid #f0f0f0; padding-top: 20px; }
-        .home-link { text-decoration: none; color: #6366f1; font-size: 14px; font-weight: 600; transition: 0.2s; }
-        .home-link:hover { transform: translateX(-3px); }
+        .home-link { text-decoration: none; color: #6366f1; font-size: 14px; font-weight: 600; display: inline-block; }
     </style>
 </head>
 <body>
@@ -112,7 +116,7 @@
     <div class="file-list-section">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
             <label style="margin: 0;">Stored Files</label>
-            <button class="btn-refresh" onclick="loadFiles()">🔄 Refresh List</button>
+            <button class="btn-refresh" onclick="loadFiles()">🔄 Refresh</button>
         </div>
         <div id="fileListContainer">
             <p style="text-align: center; color: #999; font-size: 13px;">Loading...</p>
@@ -148,7 +152,7 @@
                 html += `
                     <div class="file-item">
                         <div class="file-info">
-                            <span class="file-name">${file.name}</span>
+                            <span class="file-name" title="${file.name}">${file.name}</span>
                             <span class="file-date">📅 ${file.timestamp || 'Date unknown'}</span>
                         </div>
                         <div class="file-actions">
