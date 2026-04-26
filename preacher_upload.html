@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drive Cloud Manager</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #4f46e5, #6d28d9);
+            display: flex; justify-content: center; align-items: flex-start;
+            min-height: 100vh; margin: 0; padding: 40px 20px;
+            box-sizing: border-box;
+        }
+
+        .card {
+            background: white; padding: 40px; border-radius: 20px;
+            width: 100%; max-width: 650px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+
+        h2 { text-align: center; color: #333; margin-bottom: 10px; font-size: 28px; }
+        p.subtitle { text-align: center; color: #666; margin-bottom: 30px; font-size: 14px; }
+
+        .upload-section {
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 30px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .input-group { margin-bottom: 15px; display: flex; flex-direction: column; text-align: left; }
+
+        label {
+            font-size: 11px; font-weight: bold;
+            color: #4f46e5; text-transform: uppercase; margin-bottom: 8px;
+            letter-spacing: 0.5px;
+        }
+
+        input[type="file"] {
+            width: 100%; padding: 12px; border: 2px dashed #e0e7ff;
+            border-radius: 10px; font-size: 14px; box-sizing: border-box;
+            background: #f9f9ff; cursor: pointer; transition: 0.3s;
+        }
+
+        .btn-upload { 
+            background: #4f46e5; color: white; width: 100%; 
+            justify-content: center; padding: 14px; font-size: 15px;
+            border: none; border-radius: 10px; font-weight: 700;
+            cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 8px;
+        }
+        
+        .btn-refresh { background: #f3f4f6; color: #4b5563; font-size: 12px; padding: 8px 15px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        
+        /* File List Styles */
+        .file-item {
+            background: #fff;
+            border: 1px solid #f0f0f0;
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .file-info { flex-grow: 1; margin-right: 10px; }
+        .file-name { font-weight: 600; color: #333; font-size: 14px; display: block; }
+        
+        /* TIMESTAMP STYLE */
+        .file-date { 
+            font-size: 11px; 
+            color: #888; 
+            display: block; 
+            margin-top: 4px;
+            font-style: italic;
+        }
+        
+        .file-actions { display: flex; gap: 6px; }
+        .file-actions a, .file-actions button {
+            text-decoration: none; font-size: 10px; font-weight: bold;
+            padding: 6px 8px; border-radius: 6px; border: none; cursor: pointer;
+            text-transform: uppercase;
+        }
+        
+        .view-btn { color: #4f46e5; background: #eef2ff; }
+        .dl-btn { color: #059669; background: #ecfdf5; }
+        .del-btn { color: #dc2626; background: #fef2f2; }
+
+        #status { margin-top: 15px; font-size: 13px; font-weight: bold; text-align: center; }
+
+        .home-link-container { margin-top: 25px; text-align: center; border-top: 1px solid #f0f0f0; padding-top: 20px; }
+        .home-link { text-decoration: none; color: #6366f1; font-size: 14px; font-weight: 600; transition: 0.2s; }
+        .home-link:hover { transform: translateX(-3px); }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>☁️ Drive Cloud Manager</h2>
+    <p class="subtitle">Securely upload, view, and delete your cloud files</p>
+
+    <div class="upload-section">
+        <div class="input-group">
+            <label>Select File</label>
+            <input type="file" id="fileInput">
+        </div>
+        <button class="btn-upload" onclick="uploadFile()">🚀 Upload to Drive</button>
+        <p id="status">Ready</p>
+    </div>
+
+    <div class="file-list-section">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <label style="margin: 0;">Stored Files</label>
+            <button class="btn-refresh" onclick="loadFiles()">🔄 Refresh List</button>
+        </div>
+        <div id="fileListContainer">
+            <p style="text-align: center; color: #999; font-size: 13px;">Loading...</p>
+        </div>
+    </div>
+
+    <div class="home-link-container">
+        <a href="index.html" class="home-link">← Back to Homepage</a>
+    </div>
+</div>
+
+<script>
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzeu4VmiBQaF5lHW0U3kIb7ibu3Z5sIdMMVHui921JfvwlzPwgurGxl9k_vQBsN45yn/exec";
+    const SCRIPT_URL1 = "https://script.google.com/macros/s/AKfycby60xVkMGA3DPHNIX0qxxPF4pluT2R7GSs7VggkbyvXRAxN_eGFygXgOvYptfqjME02/exec";
+
+    window.onload = loadFiles;
+
+    async function loadFiles() {
+        const container = document.getElementById('fileListContainer');
+        container.innerHTML = '<p style="text-align: center; color: #999; font-size: 13px;">Updating files...</p>';
+
+        try {
+            const response = await fetch(SCRIPT_URL1);
+            const files = await response.json();
+            
+            if (!files || files.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #999; font-size: 13px;">No files found.</p>';
+                return;
+            }
+
+            let html = '';
+            files.forEach(file => {
+                html += `
+                    <div class="file-item">
+                        <div class="file-info">
+                            <span class="file-name">${file.name}</span>
+                            <span class="file-date">📅 ${file.timestamp || 'Date unknown'}</span>
+                        </div>
+                        <div class="file-actions">
+                            <a href="${file.url}" target="_blank" class="view-btn">View</a>
+                            <a href="${file.downloadUrl}" target="_blank" class="dl-btn">Download</a>
+                            <button onclick="deleteFile('${file.id}')" class="del-btn">Delete</button>
+                        </div>
+                    </div>`;
+            });
+            container.innerHTML = html;
+        } catch (e) {
+            container.innerHTML = '<p style="text-align: center; color: #ef4444; font-size: 13px;">Error loading list.</p>';
+        }
+    }
+
+    async function uploadFile() {
+        const fileInput = document.getElementById('fileInput');
+        const status = document.getElementById('status');
+        if (fileInput.files.length === 0) { status.innerText = "❌ Select a file"; return; }
+
+        const file = fileInput.files[0];
+        const reader = new FileReader();
+        status.innerText = "⏳ Uploading...";
+
+        reader.onload = async function() {
+            const base64 = reader.result.split(',')[1];
+            try {
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ base64: base64, mimeType: file.type, fileName: file.name })
+                });
+                const result = await response.json();
+                if (result.status === "success") {
+                    status.innerText = "✅ Uploaded!";
+                    fileInput.value = ""; 
+                    loadFiles();
+                }
+            } catch (error) { status.innerText = "❌ Failed"; }
+        };
+        reader.readAsDataURL(file);
+    }
+
+    async function deleteFile(fileId) {
+        if (!confirm("Delete this file?")) return;
+        const status = document.getElementById('status');
+        status.innerText = "🗑️ Deleting...";
+        try {
+            const response = await fetch(SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify({ action: "delete", fileId: fileId })
+            });
+            const result = await response.json();
+            if (result.status === "success") {
+                status.innerText = "✅ Deleted";
+                loadFiles();
+            }
+        } catch (error) { status.innerText = "❌ Error"; }
+    }
+</script>
+
+</body>
+</html>
