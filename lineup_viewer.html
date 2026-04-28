@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Service Archives</title>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --danger: #f43f5e;
+            --bg-gradient: linear-gradient(135deg, #4f46e5, #6d28d9);
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: var(--bg-gradient);
+            background-attachment: fixed;
+            margin: 0; padding: 15px; color: #1e293b;
+            display: flex; flex-direction: column; align-items: center;
+        }
+
+        .header { text-align: center; color: white; margin-bottom: 25px; }
+        .container { width: 100%; max-width: 600px; display: flex; flex-direction: column; gap: 15px; }
+
+        .lineup-card {
+            background: white; padding: 20px; border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            position: relative; border-left: 5px solid var(--primary);
+        }
+
+        .card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+        .date { font-size: 1.1rem; font-weight: 800; color: var(--primary); display: block; }
+        .leader { font-size: 0.85rem; color: #64748b; font-weight: 600; }
+
+        .btn-delete {
+            background: #fff1f2; color: var(--danger); border: 1px solid #fecdd3;
+            padding: 6px 12px; border-radius: 6px; cursor: pointer;
+            font-size: 11px; font-weight: bold;
+        }
+
+        .verse-box {
+            background: #f1f5f9; padding: 10px; border-radius: 8px;
+            font-size: 13px; color: #475569; font-style: italic;
+            margin-bottom: 15px; border-left: 3px solid #cbd5e1;
+        }
+
+        .song-box {
+            background: #f8fafc; padding: 12px; border-radius: 8px;
+            margin-top: 10px;
+        }
+
+        .section-item { margin-bottom: 12px; }
+        .section-item:last-child { margin-bottom: 0; }
+
+        .sec-label { font-size: 9px; font-weight: 800; color: var(--primary); text-transform: uppercase; letter-spacing: 0.5px; }
+        
+        .song-list { margin: 4px 0 0 0; padding: 0; list-style: none; }
+        .song-entry { font-size: 13px; font-weight: 600; margin-bottom: 4px; display: flex; flex-direction: column; }
+        
+        .song-link { 
+            font-size: 11px; color: #6366f1; text-decoration: none; 
+            font-weight: normal; margin-top: 2px;
+        }
+        .song-link:hover { text-decoration: underline; }
+
+        .back-btn { margin-top: 30px; color: white; text-decoration: none; font-size: 13px; opacity: 0.8; }
+        
+        hr { border: 0; border-top: 1px solid #e2e8f0; margin: 10px 0; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>📋 Service Archives</h1>
+    </div>
+
+    <div class="container" id="lineupContainer">
+        <div style="color:white; text-align:center;">Loading archives...</div>
+    </div>
+
+    <a href="index.html" class="back-btn">← Back to Dashboard</a>
+
+    <script>
+        const FETCH_URL = "https://script.google.com/macros/s/AKfycbyZ0YIviyQ3Rgky0yd71cBdbFwkcDfAl0Ht9UzJDkgcuyskgLPr-XajW9D-xJKL09Uu/exec";
+        const DELETE_URL = "https://script.google.com/macros/s/AKfycbxlP1F2b8rvEAawOF6vVe_y9N0Ku-zuTclILzhb780Hf_dEb_6lmJgfW8hKiSR7d60M/exec";
+
+        async function loadData() {
+            try {
+                const res = await fetch(`${FETCH_URL}?viewLineups=true`);
+                const data = await res.json();
+                render(data);
+            } catch (e) {
+                document.getElementById('lineupContainer').innerHTML = "<div style='color:white'>Failed to load lineups.</div>";
+            }
+        }
+
+        async function deleteItem(timestamp, btn) {
+            if(!confirm("Permanently delete this lineup?")) return;
+            const originalText = btn.innerText;
+            btn.innerText = "..."; btn.disabled = true;
+            try {
+                await fetch(DELETE_URL, {
+                    method: "POST",
+                    body: JSON.stringify({ action: "deleteLineup", timestamp: timestamp })
+                });
+                alert("Deleted! ✅");
+                location.reload();
+            } catch (e) {
+                alert("Delete failed.");
+                btn.innerText = originalText; btn.disabled = false;
+            }
+        }
+
+        // Helper to parse "Title, Title | Link, Link"
+        function createSection(label, dataString) {
+            if (!dataString || dataString === "undefined | undefined" || dataString.trim() === "|") return "";
+            
+            const parts = dataString.split('|');
+            const titles = parts[0] ? parts[0].split(',').map(s => s.trim()).filter(s => s !== "") : [];
+            const links = parts[1] ? parts[1].split(',').map(s => s.trim()).filter(s => s !== "") : [];
+
+            if (titles.length === 0) return "";
+
+            let html = `<div class="section-item"><span class="sec-label">${label}</span><ul class="song-list">`;
+            titles.forEach((t, i) => {
+                html += `<li class="song-entry">${t}`;
+                if (links[i] && links[i] !== "undefined") {
+                    html += `<a href="${links[i]}" target="_blank" class="song-link">🔗 View Link</a>`;
+                }
+                html += `</li>`;
+            });
+            html += `</ul></div>`;
+            return html;
+        }
+
+        function render(list) {
+            const cont = document.getElementById('lineupContainer');
+            cont.innerHTML = '';
+            if(list.length === 0) {
+                cont.innerHTML = "<div style='color:white; text-align:center;'>No saved lineups found.</div>";
+                return;
+            }
+
+            list.reverse().forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'lineup-card';
+                
+                // Construct the sections
+                const introHtml = createSection("Intro", item.intro);
+                const praiseHtml = createSection("Praise", item.praise);
+                const worshipHtml = createSection("Worship", item.worship);
+                const ministerialHtml = createSection("Ministerial", item.ministerial);
+                const victoryHtml = createSection("Victory", item.victory);
+                const closingHtml = createSection("Closing", item.closing);
+
+                card.innerHTML = `
+                    <div class="card-top">
+                        <div>
+                            <span class="date">${item.date || 'No Date'}</span>
+                            <span class="leader">🎤 ${item.leader || 'No Leader'}</span>
+                        </div>
+                        <button class="btn-delete" onclick="deleteItem('${item.timestamp}', this)">DELETE</button>
+                    </div>
+                    
+                    ${item.verse ? `<div class="verse-box">📖 ${item.verse}</div>` : ''}
+                    
+                    <div class="song-box">
+                        ${introHtml}
+                        ${praiseHtml ? (introHtml ? '<hr>' : '') + praiseHtml : ''}
+                        ${worshipHtml ? (praiseHtml || introHtml ? '<hr>' : '') + worshipHtml : ''}
+                        ${ministerialHtml ? (worshipHtml || praiseHtml ? '<hr>' : '') + ministerialHtml : ''}
+                        ${victoryHtml ? (ministerialHtml || worshipHtml ? '<hr>' : '') + victoryHtml : ''}
+                        ${closingHtml ? (victoryHtml || ministerialHtml ? '<hr>' : '') + closingHtml : ''}
+                    </div>
+                `;
+                cont.appendChild(card);
+            });
+        }
+
+        loadData();
+    </script>
+</body>
+</html>

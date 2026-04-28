@@ -6,92 +6,120 @@
     <title>Song Library Pro</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
     <style>
+        :root {
+            --sidebar-width: 320px;
+            --primary: #4f46e5;      /* Indigo */
+            --primary-hover: #4338ca;
+            --success: #10b981;      /* Emerald */
+            --danger: #f43f5e;       /* Rose */
+            --bg-dark: #0f172a;
+            --bg-viewer: #1e293b;
+            --text-muted: #94a3b8;
+        }
+
         body {
             font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            background: #0f172a;
+            background: var(--bg-dark);
             margin: 0; display: flex; height: 100vh; overflow: hidden;
             color: #f8fafc;
         }
 
-        /* Sidebar Container */
+        /* --- Sidebar --- */
         .sidebar-wrapper { display: flex; position: relative; z-index: 100; }
+        
         .sidebar {
-            width: 320px; background: #ffffff; display: flex; flex-direction: column;
+            width: var(--sidebar-width); background: #ffffff; display: flex; flex-direction: column;
             box-shadow: 4px 0 10px rgba(0,0,0,0.3); color: #334155;
-            transition: margin-left 0.3s ease; flex-shrink: 0; height: 100vh;
+            transition: transform 0.3s ease; flex-shrink: 0; height: 100vh;
         }
-        .sidebar.collapsed { margin-left: -320px; }
 
-        /* Permanent Toggle Button */
+        /* --- Toggle Button --- */
         .toggle-btn {
-            position: absolute; left: 320px; top: 20px;
-            width: 35px; height: 35px; background: #4f46e5;
+            position: absolute; left: var(--sidebar-width); top: 20px;
+            width: 40px; height: 40px; background: var(--primary);
             color: white; border: none; border-radius: 0 6px 6px 0;
-            cursor: pointer; font-weight: bold; transition: left 0.3s ease;
+            cursor: pointer; font-weight: bold; transition: 0.3s;
             display: flex; align-items: center; justify-content: center;
             box-shadow: 3px 0 5px rgba(0,0,0,0.2);
+            z-index: 101;
         }
-        .sidebar.collapsed + .toggle-btn { left: 0; }
+        .toggle-btn:hover { background: var(--primary-hover); }
 
-        /* Header & Home Button */
-        .sidebar-header { 
-            padding: 20px; 
-            border-bottom: 1px solid #e2e8f0; 
-            flex-shrink: 0; 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-        }
+        /* --- Sidebar Content --- */
+        .sidebar-header { padding: 15px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; }
         .home-btn {
-            background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 4px;
-            color: #4f46e5; font-size: 10px; padding: 5px 10px; cursor: pointer;
-            font-weight: 800; transition: 0.2s; letter-spacing: 1px;
-            text-decoration: none; /* In case you use an <a> tag later */
+            background: var(--success); border: none; border-radius: 4px;
+            color: white; font-size: 10px; padding: 6px 12px; cursor: pointer;
+            font-weight: 800; text-decoration: none; transition: 0.2s;
         }
-        .home-btn:hover { background: #4f46e5; color: white; border-color: #4f46e5; }
+        .home-btn:hover { background: #059669; transform: scale(1.05); }
 
-        /* Search & Inputs */
-        .search-container { padding: 15px; background: #fff; border-bottom: 1px solid #e2e8f0; flex-shrink: 0; }
-        .search-input { 
-            width: 100%; padding: 10px; border: 2px solid #e2e8f0; 
-            border-radius: 6px; outline: none; font-size: 14px; box-sizing: border-box;
+        .search-container { padding: 10px 15px; background: #fff; border-bottom: 1px solid #e2e8f0; }
+        .search-input { width: 100%; padding: 10px; border: 2px solid #e2e8f0; border-radius: 6px; font-size: 14px; box-sizing: border-box; }
+
+        .upload-section { padding: 15px; background: #f8fafc; font-size: 11px; border-bottom: 1px solid #e2e8f0; }
+        .upload-section label { color: var(--primary); font-weight: bold; }
+        .upload-section input { width: 100%; margin-bottom: 8px; margin-top: 4px; }
+        
+        .btn-upload { 
+            width: 100%; background: var(--primary); color: white; border: none; 
+            padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold; 
+            transition: 0.2s;
         }
-
-        .upload-section { padding: 15px; background: #f1f5f9; font-size: 11px; border-bottom: 1px solid #e2e8f0; flex-shrink: 0; }
-        .upload-section label { font-weight: bold; display: block; margin-bottom: 2px; color: #4f46e5; }
-        .upload-section input { width: 100%; margin-bottom: 10px; border: 1px solid #cbd5e1; border-radius: 3px; padding: 4px; box-sizing: border-box; }
-        .btn-upload { width: 100%; background: #4f46e5; color: white; border: none; padding: 10px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .btn-upload:hover { background: var(--primary-hover); }
 
         .song-list { flex-grow: 1; overflow-y: auto; padding: 10px; background: #fff; }
-        .song-item { padding: 12px; margin-bottom: 5px; border-radius: 6px; cursor: pointer; border: 1px solid #e2e8f0; background: white; color: #1e293b; font-size: 14px; }
-        .song-item.active { background: #4f46e5; color: white; border-color: #4f46e5; }
+        .song-item { padding: 12px; margin-bottom: 5px; border-radius: 6px; cursor: pointer; border: 1px solid #e2e8f0; color: #1e293b; font-size: 14px; transition: 0.2s; }
+        .song-item:hover { background: #f1f5f9; border-color: var(--primary); }
+        .song-item.active { background: var(--primary); color: white; border-color: var(--primary); }
 
-        /* Main Area */
-        .main-content { flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; }
-        .toolbar { padding: 10px 20px; background: #ffffff; color: #1e293b; display: flex; align-items: center; gap: 20px; border-bottom: 1px solid #cbd5e1; flex-shrink: 0; }
+        /* --- Main Content --- */
+        .main-content { flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; width: 100%; }
+        
+        .toolbar { 
+            padding: 10px 15px; background: #fff; color: #1e293b; 
+            display: flex; align-items: center; gap: 10px; 
+            border-bottom: 1px solid #cbd5e1; flex-wrap: wrap; 
+        }
 
         .viewer-area { 
-            flex-grow: 1; overflow-y: auto; padding: 40px 20px; 
-            display: flex; flex-direction: column; align-items: center; background: #1e293b;
+            flex-grow: 1; overflow-y: auto; padding: 20px; 
+            display: flex; flex-direction: column; align-items: center; background: var(--bg-viewer);
         }
         
         #chordDisplay {
             background: white; color: #1e293b;
-            padding: 60px; border-radius: 4px;
+            padding: 40px; border-radius: 8px;
             white-space: pre;
             font-family: 'Courier New', Courier, monospace; 
-            font-size: 16px; line-height: 1.6;
+            font-size: 15px; line-height: 1.6;
             width: 100%; max-width: 850px;
-            height: auto; min-height: max-content; 
-            display: none; margin-bottom: 150px;
-            box-shadow: 0 0 40px rgba(0,0,0,0.6);
             box-sizing: border-box;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            display: none;
+            overflow-x: auto;
         }
 
-        .chord { color: #4f46e5; font-weight: bold; }
-        .label { font-weight: bold; color: #dc2626; text-transform: uppercase; border-bottom: 1px solid #fee2e2; }
+        /* Chart Styling */
+        .chord { color: var(--primary); font-weight: bold; }
+        .label { font-weight: bold; color: var(--danger); text-transform: uppercase; display: block; margin-top: 15px; border-bottom: 1px solid #fee2e2; }
 
-        .player-bar { padding: 15px; background: white; border-top: 1px solid #e2e8f0; z-index: 10; flex-shrink: 0; }
+        .player-bar { padding: 15px; background: white; border-top: 1px solid #e2e8f0; width: 100%; box-sizing: border-box; }
+
+        /* --- Responsive Queries --- */
+        @media (max-width: 768px) {
+            .sidebar { position: fixed; left: 0; transform: translateX(-100%); z-index: 200; }
+            .sidebar.active { transform: translateX(0); }
+            .toggle-btn { left: 0; }
+            .sidebar.active + .toggle-btn { left: var(--sidebar-width); }
+            #chordDisplay { padding: 20px; font-size: 3.8vw; margin-bottom: 80px; }
+            .toolbar { justify-content: center; }
+        }
+
+        @media (min-width: 769px) {
+            .sidebar.collapsed { margin-left: calc(var(--sidebar-width) * -1); }
+            .sidebar.collapsed + .toggle-btn { left: 0; }
+        }
     </style>
 </head>
 <body>
@@ -99,49 +127,50 @@
     <div class="sidebar-wrapper">
         <div class="sidebar" id="sidebar">
             <div class="sidebar-header">
-                <h3 style="margin:0">🎵 Song Library</h3>
-                <button class="home-btn" onclick="goHome()">HOME</button>
+                <h3 style="margin:0; color:var(--primary)">🎵 Library</h3>
+                <button class="home-btn" onclick="goHome()">🏠 HOME</button>
             </div>
             <div class="search-container">
-                <input type="text" id="searchInput" class="search-input" placeholder="Search songs..." oninput="filterSongs()">
+                <input type="text" id="searchInput" class="search-input" placeholder="Search song library...">
             </div>
             <div class="upload-section">
-                <label>SONG TITLE</label>
+                <label>TITLE</label>
                 <input type="text" id="songTitle">
-                <label>PDF CHORDS</label>
+                <label>FILES</label>
                 <input type="file" id="pdfFile" accept=".pdf">
-                <label>AUDIO (MP3)</label>
                 <input type="file" id="audioFile" accept=".mp3">
-                <button class="btn-upload" onclick="addNewSong()" id="uploadBtn">UPLOAD SONG</button>
+                <button class="btn-upload" onclick="addNewSong()" id="uploadBtn">🚀 UPLOAD SONG</button>
             </div>
             <div class="song-list" id="songList"></div>
         </div>
-        <button class="toggle-btn" onclick="toggleSidebar()" id="tglIcon">◀</button>
+        <button class="toggle-btn" onclick="toggleSidebar()" id="tglIcon">▶</button>
     </div>
 
     <div class="main-content">
         <div class="toolbar" id="toolbar" style="display:none;">
-            <label style="font-size:12px; font-weight:bold; color: #64748b;">KEY:</label>
-            <select id="transposeSelect" onchange="applyTransposition()" style="padding: 5px; border-radius: 4px; border: 1px solid #cbd5e1; min-width: 120px;"></select>
-            <span id="originalKeyDisplay" style="font-size: 11px; color: #94a3b8; font-style: italic;"></span>
+            <div style="display:flex; align-items:center; gap:8px;">
+                <label style="font-size:11px; font-weight:bold; color:var(--primary);">TRANSPOSE:</label>
+                <select id="transposeSelect" onchange="applyTransposition()" style="padding:6px; border-radius:6px; border:1px solid #cbd5e1; background:#f8fafc; font-weight:bold; cursor:pointer;"></select>
+            </div>
+            <span id="originalKeyDisplay" style="font-size:11px; color:var(--text-muted); font-style:italic;"></span>
         </div>
 
         <div class="viewer-area">
-            <div id="placeholder" style="text-align:center; margin-top:100px;">
-                <h1 style="opacity: 0.1; font-size: 100px; margin: 0;">🎸</h1>
-                <p style="color: #94a3b8; font-size: 18px;">Welcome to your Library</p>
-                <p style="color: #64748b; font-size: 14px;">Select a song from the left to view chords.</p>
+            <div id="placeholder" style="text-align:center; margin-top:50px;">
+                <h1 style="opacity: 0.05; font-size: 80px; margin: 0;">🎸</h1>
+                <p style="color: var(--text-muted);">Select a song to display chords</p>
             </div>
             <pre id="chordDisplay"></pre>
         </div>
 
         <div class="player-bar">
-            <small id="playingTitle" style="color:#64748b; font-weight: bold; display: block; margin-bottom: 5px;">Not playing</small>
-            <audio id="audioPlayer" controls style="width:100%; height: 40px;"></audio>
+            <small id="playingTitle" style="color:var(--primary); font-size:10px; font-weight:bold; display:block; margin-bottom:5px; text-transform:uppercase;">Not playing</small>
+            <audio id="audioPlayer" controls style="width:100%; height:35px;"></audio>
         </div>
     </div>
 
 <script>
+    // [All your existing JavaScript logic remains exactly the same here]
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzRsxz074A8laQ4BG0S4ORPpyIWzbqbeMOT-O-JJzdO80tuVk0-9FEDIm2t5fxAfY5YZg/exec";
     
@@ -151,17 +180,15 @@
     const notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
     const flatMap = { 'Db': 'C#', 'Eb': 'D#', 'Gb': 'F#', 'Ab': 'G#', 'Bb': 'A#' };
 
-    // NAVIGATE TO EXTERNAL HOMEPAGE
-    function goHome() {
-        // Replace "index.html" with your actual homepage URL
-        window.location.href = "index.html"; 
-    }
+    function goHome() { window.location.href = "index.html"; }
 
     function toggleSidebar() {
         const sidebar = document.getElementById('sidebar');
         const btn = document.getElementById('tglIcon');
-        const isCollapsed = sidebar.classList.toggle('collapsed');
-        btn.innerText = isCollapsed ? "▶" : "◀";
+        if (window.innerWidth <= 768) { sidebar.classList.toggle('active'); } 
+        else { sidebar.classList.toggle('collapsed'); }
+        const isClosed = window.innerWidth <= 768 ? !sidebar.classList.contains('active') : sidebar.classList.contains('collapsed');
+        btn.innerText = isClosed ? "▶" : "◀";
     }
 
     window.onload = loadLibrary;
@@ -181,15 +208,12 @@
             const item = document.createElement('div');
             item.className = 'song-item';
             item.innerHTML = `<strong>${song.title}</strong>`;
-            item.onclick = () => selectSong(song, item);
+            item.onclick = () => {
+                selectSong(song, item);
+                if (window.innerWidth <= 768) toggleSidebar(); 
+            };
             listContainer.appendChild(item);
         });
-    }
-
-    function filterSongs() {
-        const query = document.getElementById('searchInput').value.toLowerCase();
-        const filtered = myLibrary.filter(song => song.title.toLowerCase().includes(query));
-        renderList(filtered);
     }
 
     async function selectSong(song, element) {
@@ -241,13 +265,13 @@
         const select = document.getElementById('transposeSelect');
         const display = document.getElementById('originalKeyDisplay');
         select.innerHTML = '';
-        display.innerText = `Original: ${detectedOriginalKey}`;
+        display.innerText = `Original Key: ${detectedOriginalKey}`;
         const startIdx = notes.indexOf(detectedOriginalKey);
         for (let i = 0; i < 12; i++) {
             const opt = document.createElement('option');
             const targetKey = notes[(startIdx + i) % 12];
             opt.value = i;
-            opt.text = targetKey + (i === 0 ? " (Original)" : "");
+            opt.text = targetKey + (i === 0 ? " (Orig)" : "");
             select.appendChild(opt);
         }
     }

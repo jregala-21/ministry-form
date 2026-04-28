@@ -7,9 +7,17 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     
     <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-dark: #4338ca;
+            --success: #059669;
+            --cloud: #8b5cf6;
+            --bg-gradient: linear-gradient(135deg, #4f46e5, #6d28d9);
+        }
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #4f46e5, #6d28d9);
+            background: var(--bg-gradient);
             display: flex; justify-content: center; align-items: flex-start;
             min-height: 100vh; margin: 0; padding: 40px 20px;
             box-sizing: border-box;
@@ -35,7 +43,7 @@
 
         label {
             font-size: 11px; font-weight: bold;
-            color: #4f46e5; text-transform: uppercase; margin-bottom: 4px;
+            color: var(--primary); text-transform: uppercase; margin-bottom: 4px;
             letter-spacing: 0.5px;
         }
 
@@ -43,46 +51,54 @@
             width: 100%; padding: 10px; border: 2px solid #f0f0f0;
             border-radius: 8px; font-size: 14px; box-sizing: border-box;
             font-family: inherit; transition: 0.3s;
+            resize: none;
+            overflow: hidden;
+        }
+
+        /* This ensures that if the text is long, you see the end of it when not focused */
+        input:not(:focus) {
+            text-overflow: ellipsis;
         }
 
         .link-input {
-            margin-top: 5px;
-            font-size: 12px;
-            border-color: #e0e7ff;
-            color: #4338ca;
+            margin-top: 5px; font-size: 12px;
+            border-color: #e0e7ff; color: var(--primary-dark);
         }
 
-        textarea { resize: none; min-height: 60px; overflow: hidden; }
-        input:focus, textarea:focus { outline: none; border-color: #4f46e5; background: #f9f9ff; }
+        textarea { min-height: 42px; }
+        input:focus, textarea:focus { outline: none; border-color: var(--primary); background: #f9f9ff; }
 
-        .highlight-input { border: 2px solid #4f46e5; background: #f0f4ff; font-weight: bold; }
+        .highlight-input { border: 2px solid var(--primary); background: #f0f4ff; font-weight: bold; }
 
         .btn-container { 
-            display: flex; gap: 15px; margin-top: 30px; 
-            justify-content: center;
+            display: flex; gap: 10px; margin-top: 30px; 
+            justify-content: center; flex-wrap: wrap;
         }
 
         button {
-            padding: 14px 24px; border: none; border-radius: 10px;
+            padding: 12px 20px; border: none; border-radius: 10px;
             font-weight: 700; cursor: pointer; transition: 0.2s;
-            font-size: 15px; display: flex; align-items: center; gap: 8px;
+            font-size: 14px; display: flex; align-items: center; gap: 8px;
+            color: white;
         }
 
-        .btn-copy { background: #4f46e5; color: white; }
-        .btn-pdf { background: #059669; color: white; }
+        .btn-copy { background: var(--primary); }
+        .btn-pdf { background: var(--success); }
+        .btn-save { background: var(--cloud); }
         .btn-clear { background: #f3f4f6; color: #4b5563; }
         
         button:hover { opacity: 0.9; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
 
         .back-link {
             display: block; text-align: center; margin-top: 30px;
-            text-decoration: none; color: #aaa; font-size: 14px;
+            text-decoration: none; color: #cbd5e1; font-size: 14px;
         }
 
         @media (max-width: 650px) {
             .main-grid { grid-template-columns: 1fr; }
             .full-width { grid-column: span 1; }
-            .btn-container { flex-direction: column; }
+            .btn-container button { width: 100%; justify-content: center; }
         }
     </style>
 </head>
@@ -90,64 +106,65 @@
 
 <div class="card">
     <h2>📝 Service Lineup Creator</h2>
-    <p class="subtitle">Separate multiple songs or links with a comma ( , ).</p>
+    <p class="subtitle">Separate items with commas. Save to sync with Google Sheets.</p>
 
     <div class="main-grid">
         <div class="input-group">
             <label>📅 Service Date</label>
-            <input type="text" id="serviceDate" class="highlight-input" placeholder="e.g., Oct 27, 2024">
+            <input type="text" id="serviceDate" class="highlight-input" placeholder="Oct 27, 2024">
         </div>
         <div class="input-group">
             <label>🎤 Worship Leader</label>
-            <input type="text" id="leaderName" class="highlight-input" placeholder="Name of leader...">
+            <input type="text" id="leaderName" class="highlight-input" placeholder="Name...">
         </div>
 
         <div class="input-group full-width">
             <label>📖 Theme Verse</label>
-            <textarea id="verse" placeholder="Reference and full text..." oninput="autoGrow(this)"></textarea>
+            <textarea id="verse" placeholder="Reference and text..." oninput="autoGrow(this)"></textarea>
         </div>
 
         <div class="input-group full-width">
             <label>🎵 Intro Song</label>
-            <input type="text" id="intro" placeholder="Song 1, Song 2">
-            <input type="text" id="intro_link" class="link-input" placeholder="Link 1, Link 2">
+            <textarea id="intro" placeholder="Song Titles..." oninput="autoGrow(this)"></textarea>
+            <textarea id="intro_link" class="link-input" placeholder="Song Links..." oninput="autoGrow(this)"></textarea>
         </div>
 
         <div class="input-group">
             <label>🙌 Praise Songs</label>
-            <input type="text" id="praise" placeholder="Song 1, Song 2, Song 3">
-            <input type="text" id="praise_link" class="link-input" placeholder="Link 1, Link 2, Link 3">
+            <textarea id="praise" placeholder="Titles..." oninput="autoGrow(this)"></textarea>
+            <textarea id="praise_link" class="link-input" placeholder="Links..." oninput="autoGrow(this)"></textarea>
         </div>
 
         <div class="input-group">
             <label>🙏 Worship Songs</label>
-            <input type="text" id="worship" placeholder="Song 1, Song 2, Song 3">
-            <input type="text" id="worship_link" class="link-input" placeholder="Link 1, Link 2, Link 3">
+            <textarea id="worship" placeholder="Titles..." oninput="autoGrow(this)"></textarea>
+            <textarea id="worship_link" class="link-input" placeholder="Links..." oninput="autoGrow(this)"></textarea>
         </div>
 
         <div class="input-group">
             <label>🎤 Ministerial</label>
-            <input type="text" id="ministerial" placeholder="Song 1, Song 2">
-            <input type="text" id="ministerial_link" class="link-input" placeholder="Link 1, Link 2">
+            <textarea id="ministerial" placeholder="Titles..." oninput="autoGrow(this)"></textarea>
+            <textarea id="ministerial_link" class="link-input" placeholder="Links..." oninput="autoGrow(this)"></textarea>
         </div>
 
         <div class="input-group">
             <label>🏆 Victory Song</label>
-            <input type="text" id="victory" placeholder="Song 1, Song 2">
-            <input type="text" id="victory_link" class="link-input" placeholder="Link 1, Link 2">
+            <textarea id="victory" placeholder="Titles..." oninput="autoGrow(this)"></textarea>
+            <textarea id="victory_link" class="link-input" placeholder="Links..." oninput="autoGrow(this)"></textarea>
         </div>
 
         <div class="input-group full-width">
             <label>🚪 Closing Songs</label>
-            <input type="text" id="closing" placeholder="Song 1, Song 2">
-            <input type="text" id="closing_link" class="link-input" placeholder="Link 1, Link 2">
+            <textarea id="closing" placeholder="Titles..." oninput="autoGrow(this)"></textarea>
+            <textarea id="closing_link" class="link-input" placeholder="Links..." oninput="autoGrow(this)"></textarea>
         </div>
     </div>
 
     <div class="btn-container">
         <button class="btn-clear" onclick="clearForm()">🗑️ Clear</button>
-        <button class="btn-copy" onclick="copyLineup()">📋 Copy Text</button>
-        <button class="btn-pdf" onclick="downloadPDF()">📥 Download PDF</button>
+        <button class="btn-copy" onclick="copyLineup()">📋 Copy</button>
+        <button class="btn-pdf" onclick="downloadPDF()">📥 PDF</button>
+        <button class="btn-save" onclick="saveLineup()" id="saveBtn">☁️ Save to Cloud</button>
     </div>
 
     <a href="index.html" class="back-link">← Back to Main Menu</a>
@@ -155,6 +172,7 @@
 
 <script>
     const { jsPDF } = window.jspdf;
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyNwfpSFDHB5Gs9Vs8h1UKOznsnDdxU_UREmDGQWDgPo3F9Ryl99mo6pg3nXfNVoKxw/exec";
 
     function autoGrow(element) {
         element.style.height = "5px";
@@ -181,72 +199,85 @@
         };
     }
 
+    async function saveLineup() {
+        const data = getFormValues();
+        const btn = document.getElementById('saveBtn');
+        if (!data.date || !data.leader) return alert("Date and Leader are required.");
+
+        btn.innerText = "SAVING..."; btn.disabled = true;
+
+        try {
+            const payload = { action: "saveLineup", ...data };
+            await fetch(SCRIPT_URL, {
+                method: "POST",
+                body: JSON.stringify(payload)
+            });
+            alert("Lineup saved to Google Sheets! ✅");
+        } catch (e) {
+            alert("Save failed. Check your Apps Script.");
+        } finally {
+            btn.innerText = "☁️ Save to Cloud"; btn.disabled = false;
+        }
+    }
+
     function downloadPDF() {
         const data = getFormValues();
-        if (!data.date || !data.leader) {
-            alert("Please provide Service Date and Leader.");
-            return;
-        }
+        if (!data.date || !data.leader) return alert("Please provide Service Date and Leader.");
+        
         const doc = new jsPDF();
         doc.setFont("helvetica", "bold");
-        doc.setFontSize(24);
+        doc.setFontSize(22);
         doc.setTextColor(79, 70, 229);
         doc.text("SERVICE LINEUP", 20, 25);
-        doc.setFontSize(11);
+        
+        doc.setFontSize(10);
         doc.setTextColor(100);
         doc.text(`Date: ${data.date}`, 190, 20, { align: "right" });
         doc.text(`Leader: ${data.leader}`, 190, 27, { align: "right" });
+        
         doc.setDrawColor(220);
         doc.line(20, 32, 190, 32);
 
         let y = 45;
-
         const renderItems = (label, obj) => {
             if (!obj.title) return;
             const titles = splitComma(obj.title);
             const links = splitComma(obj.link);
-
             doc.setFontSize(10); doc.setTextColor(150); doc.text(label.toUpperCase(), 20, y);
             y += 7; 
-            
-            titles.forEach((t, index) => {
-                doc.setFontSize(12); doc.setTextColor(0);
+            titles.forEach((t, i) => {
+                doc.setFontSize(11); doc.setTextColor(0);
                 doc.text(`• ${t}`, 25, y);
-                if (links[index]) {
-                    y += 5; doc.setFontSize(9); doc.setTextColor(79, 70, 229);
-                    doc.text(`  Link: ${links[index]}`, 25, y);
+                if (links[i]) {
+                    y += 5; doc.setFontSize(8); doc.setTextColor(79, 70, 229);
+                    doc.text(`  Link: ${links[i]}`, 25, y);
                     y += 2;
                 }
-                y += 8;
+                y += 7;
             });
-            y += 2;
+            y += 5;
         };
 
         if(data.verse) {
             doc.setFontSize(10); doc.setTextColor(150); doc.text("THEME VERSE", 20, y);
-            y += 7; doc.setFontSize(11); doc.setTextColor(0);
+            y += 7; doc.setFontSize(10); doc.setTextColor(0);
             const splitVerse = doc.splitTextToSize(data.verse, 170);
-            doc.text(splitVerse, 20, y); y += (splitVerse.length * 7) + 8;
+            doc.text(splitVerse, 20, y); y += (splitVerse.length * 7) + 10;
         }
 
-        renderItems("Intro Song", data.intro);
-        renderItems("Praise Songs", data.praise);
-        renderItems("Worship Songs", data.worship);
+        renderItems("Intro", data.intro);
+        renderItems("Praise", data.praise);
+        renderItems("Worship", data.worship);
         renderItems("Ministerial", data.ministerial);
-        renderItems("Victory Song", data.victory);
-        renderItems("Closing Songs", data.closing);
+        renderItems("Victory", data.victory);
+        renderItems("Closing", data.closing);
         
         doc.save(`Lineup_${data.date}.pdf`);
     }
 
-    // UPDATED COPY FUNCTION FOR CLEARER SPACING
     function copyLineup() {
         const data = getFormValues();
-        let text = `✨ *SERVICE LINEUP* ✨\n`;
-        if (data.date) text += `📅 Date: ${data.date}\n`;
-        if (data.leader) text += `🎤 Leader: ${data.leader}\n`;
-        text += `────────────────────\n\n`;
-        
+        let text = `✨ *SERVICE LINEUP* ✨\n📅 Date: ${data.date}\n🎤 Leader: ${data.leader}\n────────────────────\n\n`;
         if (data.verse) text += `📖 *Theme Verse:*\n${data.verse}\n\n`;
         
         const appendHelper = (label, obj) => {
@@ -254,11 +285,10 @@
             let res = `${label}\n`;
             const titles = splitComma(obj.title);
             const links = splitComma(obj.link);
-            
             titles.forEach((t, i) => {
                 res += `- ${t}\n`;
                 if (links[i]) res += `  🔗 ${links[i]}\n`;
-                res += `\n`; // <--- THIS ADDS THE NEW LINE PER EACH SONG
+                res += `\n`;
             });
             return res;
         };
@@ -270,20 +300,19 @@
         text += appendHelper("🏆 *Victory Song:*", data.victory);
         text += appendHelper("🚪 *Closing Songs:*", data.closing);
 
-        navigator.clipboard.writeText(text).then(() => {
-            alert("Lineup copied with clean spacing! ✅");
-        });
+        navigator.clipboard.writeText(text).then(() => alert("Copied to clipboard! ✅"));
     }
 
     function clearForm() {
         if(confirm("Clear all entries?")) {
             document.querySelectorAll('input, textarea').forEach(el => {
                 el.value = '';
-                if(el.tagName === 'TEXTAREA') el.style.height = "60px";
+                if(el.tagName === 'TEXTAREA' || el.classList.contains('link-input')) {
+                     el.style.height = "42px";
+                }
             });
         }
     }
 </script>
-
 </body>
 </html>
