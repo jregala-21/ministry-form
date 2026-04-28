@@ -3,275 +3,221 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Song Library Pro</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+    <title>Song Library Cloud</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
         :root {
-            --sidebar-width: 320px;
-            --primary: #4f46e5;      /* Indigo */
-            --primary-hover: #4338ca;
-            --success: #10b981;      /* Emerald */
-            --danger: #f43f5e;       /* Rose */
+            --sidebar-width: 300px;
+            --primary: #4f46e5;
             --bg-dark: #0f172a;
             --bg-viewer: #1e293b;
-            --text-muted: #94a3b8;
+            --chord-color: #e5c07b;
+            --text-light: #f8fafc;
+            --success: #10b981;
         }
 
         body {
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            font-family: 'Segoe UI', system-ui, sans-serif;
             background: var(--bg-dark);
             margin: 0; display: flex; height: 100vh; overflow: hidden;
-            color: #f8fafc;
+            color: var(--text-light);
         }
 
-        /* --- Sidebar --- */
-        .sidebar-wrapper { display: flex; position: relative; z-index: 100; }
-        
+        /* Sidebar */
         .sidebar {
             width: var(--sidebar-width); background: #ffffff; display: flex; flex-direction: column;
             box-shadow: 4px 0 10px rgba(0,0,0,0.3); color: #334155;
             transition: transform 0.3s ease; flex-shrink: 0; height: 100vh;
+            position: fixed; left: 0; top: 0; z-index: 1000;
+        }
+        .sidebar.collapsed { transform: translateX(-100%); }
+
+        .mobile-toggle {
+            position: fixed; bottom: 20px; right: 20px; 
+            width: 56px; height: 56px; background: var(--primary);
+            color: white; border: none; border-radius: 50%;
+            z-index: 1001; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            display: flex; align-items: center; justify-content: center; font-size: 24px;
         }
 
-        /* --- Toggle Button --- */
-        .toggle-btn {
-            position: absolute; left: var(--sidebar-width); top: 20px;
-            width: 40px; height: 40px; background: var(--primary);
-            color: white; border: none; border-radius: 0 6px 6px 0;
-            cursor: pointer; font-weight: bold; transition: 0.3s;
-            display: flex; align-items: center; justify-content: center;
-            box-shadow: 3px 0 5px rgba(0,0,0,0.2);
-            z-index: 101;
-        }
-        .toggle-btn:hover { background: var(--primary-hover); }
-
-        /* --- Sidebar Content --- */
         .sidebar-header { padding: 15px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; }
-        .home-btn {
-            background: var(--success); border: none; border-radius: 4px;
-            color: white; font-size: 10px; padding: 6px 12px; cursor: pointer;
-            font-weight: 800; text-decoration: none; transition: 0.2s;
-        }
-        .home-btn:hover { background: #059669; transform: scale(1.05); }
-
         .search-container { padding: 10px 15px; background: #fff; border-bottom: 1px solid #e2e8f0; }
-        .search-input { width: 100%; padding: 10px; border: 2px solid #e2e8f0; border-radius: 6px; font-size: 14px; box-sizing: border-box; }
+        .search-input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; box-sizing: border-box; }
 
-        .upload-section { padding: 15px; background: #f8fafc; font-size: 11px; border-bottom: 1px solid #e2e8f0; }
-        .upload-section label { color: var(--primary); font-weight: bold; }
-        .upload-section input { width: 100%; margin-bottom: 8px; margin-top: 4px; }
-        
-        .btn-upload { 
-            width: 100%; background: var(--primary); color: white; border: none; 
-            padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold; 
-            transition: 0.2s;
-        }
-        .btn-upload:hover { background: var(--primary-hover); }
+        .upload-section { padding: 15px; background: #f8fafc; border-bottom: 1px solid #e2e8f0; }
+        .btn-sbp { background: var(--primary); color: white; border: none; padding: 12px; border-radius: 8px; width: 100%; cursor: pointer; font-weight: bold; }
 
         .song-list { flex-grow: 1; overflow-y: auto; padding: 10px; background: #fff; }
-        .song-item { padding: 12px; margin-bottom: 5px; border-radius: 6px; cursor: pointer; border: 1px solid #e2e8f0; color: #1e293b; font-size: 14px; transition: 0.2s; }
-        .song-item:hover { background: #f1f5f9; border-color: var(--primary); }
-        .song-item.active { background: var(--primary); color: white; border-color: var(--primary); }
+        .song-item { padding: 15px; margin-bottom: 8px; border-radius: 8px; cursor: pointer; border: 1px solid #e2e8f0; color: #1e293b; }
+        .song-item.active { background: var(--primary); color: white; }
 
-        /* --- Main Content --- */
-        .main-content { flex-grow: 1; display: flex; flex-direction: column; overflow: hidden; width: 100%; }
-        
+        /* Main Content */
+        .main-content { flex-grow: 1; display: flex; flex-direction: column; width: 100%; transition: 0.3s; }
+
         .toolbar { 
-            padding: 10px 15px; background: #fff; color: #1e293b; 
-            display: flex; align-items: center; gap: 10px; 
-            border-bottom: 1px solid #cbd5e1; flex-wrap: wrap; 
+            padding: 10px 20px; background: #ffffff; color: #1e293b; 
+            display: flex; align-items: center; justify-content: space-between;
+            border-bottom: 1px solid #cbd5e1; z-index: 900; min-height: 50px;
         }
 
-        .viewer-area { 
-            flex-grow: 1; overflow-y: auto; padding: 20px; 
-            display: flex; flex-direction: column; align-items: center; background: var(--bg-viewer);
+        .toolbar-left { display: flex; align-items: center; gap: 12px; }
+        
+        .btn-home {
+            background: #f1f5f9; border: 1px solid #cbd5e1; color: #64748b;
+            padding: 6px 12px; border-radius: 6px; cursor: pointer;
+            font-size: 12px; font-weight: bold;
         }
         
+        .btn-save {
+            background: var(--success); color: white; border: none;
+            padding: 6px 16px; border-radius: 6px; cursor: pointer;
+            font-size: 12px; font-weight: bold; transition: opacity 0.2s;
+        }
+        .btn-save:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        select {
+            padding: 6px 10px; border-radius: 6px; border: 1px solid #cbd5e1;
+            font-size: 13px; font-weight: 600; cursor: pointer; background: #f1f5f9;
+        }
+
+        .viewer-area { flex-grow: 1; overflow-y: auto; padding: 20px; background: var(--bg-viewer); display: flex; flex-direction: column; align-items: center; }
+
         #chordDisplay {
-            background: white; color: #1e293b;
-            padding: 40px; border-radius: 8px;
-            white-space: pre;
-            font-family: 'Courier New', Courier, monospace; 
-            font-size: 15px; line-height: 1.6;
-            width: 100%; max-width: 850px;
-            box-sizing: border-box;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            display: none;
-            overflow-x: auto;
+            background: #1e293b; color: #ecf0f1; padding: 25px; border-radius: 8px;
+            font-family: 'Consolas', 'Monaco', monospace; 
+            font-size: 1.1rem; width: 100%; max-width: 800px;
+            display: none; line-height: 1.5;
         }
 
-        /* Chart Styling */
-        .chord { color: var(--primary); font-weight: bold; }
-        .label { font-weight: bold; color: var(--danger); text-transform: uppercase; display: block; margin-top: 15px; border-bottom: 1px solid #fee2e2; }
-
-        .player-bar { padding: 15px; background: white; border-top: 1px solid #e2e8f0; width: 100%; box-sizing: border-box; }
-
-        /* --- Responsive Queries --- */
-        @media (max-width: 768px) {
-            .sidebar { position: fixed; left: 0; transform: translateX(-100%); z-index: 200; }
-            .sidebar.active { transform: translateX(0); }
-            .toggle-btn { left: 0; }
-            .sidebar.active + .toggle-btn { left: var(--sidebar-width); }
-            #chordDisplay { padding: 20px; font-size: 3.8vw; margin-bottom: 80px; }
-            .toolbar { justify-content: center; }
-        }
+        .line-group { margin-bottom: 14px; }
+        .chord-line { color: var(--chord-color); font-weight: bold; min-height: 1.2em; white-space: pre; }
+        .text-line { color: #ecf0f1; white-space: pre; }
+        .label { color: #d19a66; font-weight: bold; text-transform: uppercase; display: block; margin: 25px 0 8px; border-bottom: 1px solid #3e4451; font-family: sans-serif; font-size: 0.85rem; }
 
         @media (min-width: 769px) {
-            .sidebar.collapsed { margin-left: calc(var(--sidebar-width) * -1); }
-            .sidebar.collapsed + .toggle-btn { left: 0; }
+            .sidebar { position: relative; transform: none !important; }
+            .mobile-toggle { display: none; }
         }
     </style>
 </head>
 <body>
 
-    <div class="sidebar-wrapper">
-        <div class="sidebar" id="sidebar">
-            <div class="sidebar-header">
-                <h3 style="margin:0; color:var(--primary)">🎵 Library</h3>
-                <button class="home-btn" onclick="goHome()">🏠 HOME</button>
-            </div>
-            <div class="search-container">
-                <input type="text" id="searchInput" class="search-input" placeholder="Search song library...">
-            </div>
-            <div class="upload-section">
-                <label>TITLE</label>
-                <input type="text" id="songTitle">
-                <label>FILES</label>
-                <input type="file" id="pdfFile" accept=".pdf">
-                <input type="file" id="audioFile" accept=".mp3">
-                <button class="btn-upload" onclick="addNewSong()" id="uploadBtn">🚀 UPLOAD SONG</button>
-            </div>
-            <div class="song-list" id="songList"></div>
+    <button class="mobile-toggle" onclick="toggleSidebar()" id="menuBtn">☰</button>
+
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h3 style="margin:0; color:var(--primary)">🎵 Library</h3>
+            <button onclick="loadLibrary()" style="border:none; background:none; cursor:pointer; font-size: 18px;">🔄</button>
         </div>
-        <button class="toggle-btn" onclick="toggleSidebar()" id="tglIcon">▶</button>
+        <div class="search-container">
+            <input type="text" id="searchInput" class="search-input" placeholder="Search songs..." oninput="filterSongs()">
+        </div>
+        <div class="upload-section">
+            <button class="btn-sbp" onclick="document.getElementById('sbpFile').click()">📁 IMPORT .SBP</button>
+            <input type="file" id="sbpFile" accept=".sbp" style="display:none">
+        </div>
+        <div class="song-list" id="songList"></div>
     </div>
 
     <div class="main-content">
-        <div class="toolbar" id="toolbar" style="display:none;">
-            <div style="display:flex; align-items:center; gap:8px;">
-                <label style="font-size:11px; font-weight:bold; color:var(--primary);">TRANSPOSE:</label>
-                <select id="transposeSelect" onchange="applyTransposition()" style="padding:6px; border-radius:6px; border:1px solid #cbd5e1; background:#f8fafc; font-weight:bold; cursor:pointer;"></select>
+        <div class="toolbar" id="toolbar" style="visibility: hidden;">
+            <div class="toolbar-left">
+                <button class="btn-home" onclick="goHome()">🏠 Home</button>
+                <div style="width:1px; height:20px; background:#e2e8f0;"></div>
+                <label style="font-size:12px; font-weight:bold;">KEY:</label>
+                <select id="transposeSelect" onchange="applyTransposition()"></select>
+                <button class="btn-save" id="saveKeyBtn" onclick="saveTransposedKey()">💾 SAVE KEY</button>
             </div>
-            <span id="originalKeyDisplay" style="font-size:11px; color:var(--text-muted); font-style:italic;"></span>
+            <span id="songTitleDisplay" style="font-size: 12px; font-weight: bold; color: #64748b; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"></span>
         </div>
 
         <div class="viewer-area">
-            <div id="placeholder" style="text-align:center; margin-top:50px;">
-                <h1 style="opacity: 0.05; font-size: 80px; margin: 0;">🎸</h1>
-                <p style="color: var(--text-muted);">Select a song to display chords</p>
+            <div id="placeholder" style="text-align:center; margin-top:100px; opacity:0.3;">
+                <h1 style="font-size: 60px; margin: 0;">🎸</h1>
+                <p>Select a song from the library</p>
             </div>
-            <pre id="chordDisplay"></pre>
-        </div>
-
-        <div class="player-bar">
-            <small id="playingTitle" style="color:var(--primary); font-size:10px; font-weight:bold; display:block; margin-bottom:5px; text-transform:uppercase;">Not playing</small>
-            <audio id="audioPlayer" controls style="width:100%; height:35px;"></audio>
+            <div id="chordDisplay"></div>
         </div>
     </div>
 
 <script>
-    // [All your existing JavaScript logic remains exactly the same here]
-    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzRsxz074A8laQ4BG0S4ORPpyIWzbqbeMOT-O-JJzdO80tuVk0-9FEDIm2t5fxAfY5YZg/exec";
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyabmsybyBb52Jj3-e5eNX31I_HBVIuZD_xF2WFyKjQWW3TdPNnP_NPDbQctpRnY8VT/exec";
     
     let myLibrary = [];
     let originalText = "";
+    let currentSelectedSongTitle = ""; // Track title for saving
     let detectedOriginalKey = "C";
     const notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
     const flatMap = { 'Db': 'C#', 'Eb': 'D#', 'Gb': 'F#', 'Ab': 'G#', 'Bb': 'A#' };
 
-    function goHome() { window.location.href = "index.html"; }
-
     function toggleSidebar() {
         const sidebar = document.getElementById('sidebar');
-        const btn = document.getElementById('tglIcon');
-        if (window.innerWidth <= 768) { sidebar.classList.toggle('active'); } 
-        else { sidebar.classList.toggle('collapsed'); }
-        const isClosed = window.innerWidth <= 768 ? !sidebar.classList.contains('active') : sidebar.classList.contains('collapsed');
-        btn.innerText = isClosed ? "▶" : "◀";
+        const isCollapsed = sidebar.classList.toggle('collapsed');
+        document.getElementById('menuBtn').innerText = isCollapsed ? "☰" : "✕";
     }
 
-    window.onload = loadLibrary;
+    function goHome() {
+        window.location.href = "index.html"; 
+    }
 
     async function loadLibrary() {
+        const listContainer = document.getElementById('songList');
+        listContainer.innerHTML = '<p style="text-align:center; padding:20px;">Updating...</p>';
         try {
             const resp = await fetch(SCRIPT_URL);
             myLibrary = await resp.json();
             renderList(myLibrary);
-        } catch(e) { console.error("Load failed", e); }
+        } catch(e) { listContainer.innerHTML = '<p style="color:red; padding:20px;">Connection failed.</p>'; }
     }
 
     function renderList(list) {
         const listContainer = document.getElementById('songList');
         listContainer.innerHTML = '';
-        list.forEach(song => {
+        list.forEach((song) => {
             const item = document.createElement('div');
             item.className = 'song-item';
-            item.innerHTML = `<strong>${song.title}</strong>`;
-            item.onclick = () => {
-                selectSong(song, item);
-                if (window.innerWidth <= 768) toggleSidebar(); 
-            };
+            item.innerHTML = `<strong>${song.title || "Untitled"}</strong>`;
+            item.onclick = () => selectSong(song, item);
             listContainer.appendChild(item);
         });
     }
 
-    async function selectSong(song, element) {
+    function filterSongs() {
+        const term = document.getElementById('searchInput').value.toLowerCase();
+        const filtered = myLibrary.filter(s => s.title.toLowerCase().includes(term));
+        renderList(filtered);
+    }
+
+    function selectSong(song, element) {
         document.querySelectorAll('.song-item').forEach(i => i.classList.remove('active'));
         element.classList.add('active');
-        document.getElementById('placeholder').innerHTML = "<p style='color:#94a3b8'>Opening PDF...</p>";
-        document.getElementById('chordDisplay').style.display = "none";
-
-        try {
-            const fileId = song.pdfUrl.match(/[-\w]{25,}/)[0];
-            const resp = await fetch(`${SCRIPT_URL}?getPdf=${fileId}`);
-            const json = await resp.json();
-            const uint8Array = new Uint8Array(atob(json.data).split("").map(c => c.charCodeAt(0)));
-
-            const pdf = await pdfjsLib.getDocument({data: uint8Array}).promise;
-            let fullText = "";
-            for (let i = 1; i <= pdf.numPages; i++) {
-                const page = await pdf.getPage(i);
-                const textContent = await page.getTextContent();
-                let lastY = -1;
-                textContent.items.sort((a,b) => b.transform[5] - a.transform[5] || a.transform[4] - b.transform[4]);
-                textContent.items.forEach(item => {
-                    if (lastY !== -1 && Math.abs(lastY - item.transform[5]) > 5) fullText += "\n";
-                    fullText += item.str + " ";
-                    lastY = item.transform[5];
-                });
-                fullText += "\n\n";
-            }
-            originalText = fullText;
-
-            const firstChordMatch = originalText.match(/\b[A-G][#b]?/);
-            detectedOriginalKey = firstChordMatch ? (flatMap[firstChordMatch[0]] || firstChordMatch[0]) : "C";
-            
-            updateKeyDropdown();
-            document.getElementById('placeholder').style.display = "none";
-            document.getElementById('chordDisplay').style.display = "block";
-            document.getElementById('toolbar').style.display = "flex";
-            
-            applyTransposition();
-            if (song.audioUrl) {
-                const player = document.getElementById('audioPlayer');
-                player.src = song.audioUrl;
-                document.getElementById('playingTitle').innerText = "PLAYING: " + song.title;
-            }
-        } catch (e) { document.getElementById('placeholder').innerText = "Error loading PDF."; }
+        
+        currentSelectedSongTitle = song.title || "";
+        originalText = (song.content || "").replace(/\\n/g, '\n');
+        
+        const firstChordMatch = originalText.match(/\[([A-G][#b]?)/);
+        detectedOriginalKey = firstChordMatch ? (flatMap[firstChordMatch[1]] || firstChordMatch[1]) : "C";
+        
+        document.getElementById('songTitleDisplay').innerText = song.title || "Untitled";
+        document.getElementById('placeholder').style.display = "none";
+        document.getElementById('chordDisplay').style.display = "block";
+        document.getElementById('toolbar').style.visibility = "visible";
+        
+        updateKeyDropdown();
+        applyTransposition();
+        
+        if (window.innerWidth <= 768) toggleSidebar(); 
     }
 
     function updateKeyDropdown() {
         const select = document.getElementById('transposeSelect');
-        const display = document.getElementById('originalKeyDisplay');
-        select.innerHTML = '';
-        display.innerText = `Original Key: ${detectedOriginalKey}`;
         const startIdx = notes.indexOf(detectedOriginalKey);
+        select.innerHTML = '';
         for (let i = 0; i < 12; i++) {
             const opt = document.createElement('option');
-            const targetKey = notes[(startIdx + i) % 12];
             opt.value = i;
-            opt.text = targetKey + (i === 0 ? " (Orig)" : "");
+            const currentNote = notes[(startIdx + i) % 12];
+            opt.text = currentNote + (i === 0 ? " (Orig)" : "");
             select.appendChild(opt);
         }
     }
@@ -279,10 +225,33 @@
     function applyTransposition() {
         const steps = parseInt(document.getElementById('transposeSelect').value);
         const display = document.getElementById('chordDisplay');
-        const labels = /\b(VERSE|CHORUS|BRIDGE|INTRO|OUTRO|TAG)\b/gi;
-        let formatted = originalText.replace(labels, m => `<span class="label">${m}</span>`);
-        const chordRegex = /\b([A-G][#b]?(m|maj|min|sus|add|dim|aug|7|9|13)?(\/[A-G][#b]?)?)\b/g;
-        display.innerHTML = formatted.replace(chordRegex, match => `<span class="chord">${transpose(match, steps)}</span>`);
+        const lines = originalText.split('\n');
+        let html = "";
+
+        lines.forEach(line => {
+            if (line.trim().startsWith('{') || line.match(/^(VERSE|CHORUS|BRIDGE|INTRO|OUTRO|TAG|INSTRUMENTAL)/i)) {
+                let label = line.replace(/\{|\}/g, '').replace(/c:|verse:|chorus:/i, '').trim();
+                html += `<span class="label">${label}</span>`;
+                return;
+            }
+
+            let chords = ""; let lyrics = "";
+            const regex = /\[(.*?)\]|([^\[]+)/g;
+            let m;
+            while ((m = regex.exec(line)) !== null) {
+                if (m[1]) chords += transpose(m[1], steps);
+                else if (m[2]) { lyrics += m[2]; chords += " ".repeat(m[2].length); }
+            }
+
+            if (lyrics.trim() || chords.trim()) {
+                html += `<div class="line-group">
+                    <div class="chord-line">${chords}</div>
+                    <div class="text-line">${lyrics}</div>
+                </div>`;
+            } else { html += `<div style="height:10px;"></div>`; }
+        });
+        display.innerHTML = html;
+        display.parentElement.scrollTop = 0;
     }
 
     function transpose(chord, steps) {
@@ -293,20 +262,78 @@
         });
     }
 
-    async function addNewSong() {
-        const title = document.getElementById('songTitle').value;
-        const pdfFile = document.getElementById('pdfFile').files[0];
-        const audioFile = document.getElementById('audioFile').files[0];
-        const btn = document.getElementById('uploadBtn');
-        if (!title || !pdfFile) return alert("Title and PDF required");
-        btn.innerText = "UPLOADING..."; btn.disabled = true;
-        const toBase64 = f => new Promise(r => { const rd = new FileReader(); rd.readAsDataURL(f); rd.onload = () => r(rd.result.split(',')[1]); });
+    // --- NEW SAVE FUNCTIONALITY ---
+    async function saveTransposedKey() {
+        const steps = parseInt(document.getElementById('transposeSelect').value);
+        if (steps === 0) {
+            alert("This is already the original key.");
+            return;
+        }
+
+        if (!confirm(`Save this new key to the library for "${currentSelectedSongTitle}"?`)) return;
+
+        const btn = document.getElementById('saveKeyBtn');
+        btn.innerText = "SAVING...";
+        btn.disabled = true;
+
+        // Transpose the raw text with brackets [ ]
+        const transposedRaw = originalText.replace(/\[(.*?)\]/g, (match, chord) => {
+            return `[${transpose(chord, steps)}]`;
+        });
+
+        const payload = {
+            action: "updateSong",
+            title: currentSelectedSongTitle,
+            content: transposedRaw
+        };
+
         try {
-            const payload = { title, pdfBase64: await toBase64(pdfFile), audioBase64: audioFile ? await toBase64(audioFile) : null };
-            await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify(payload) });
-            location.reload();
-        } catch (e) { alert("Upload failed"); btn.disabled = false; btn.innerText = "UPLOAD SONG"; }
+            await fetch(SCRIPT_URL, {
+                method: "POST",
+                mode: "no-cors", // Standard for Google Apps Script POST
+                body: JSON.stringify(payload)
+            });
+            
+            alert("Key updated successfully in Google Sheets!");
+            loadLibrary(); // Refresh library to get new data
+        } catch (e) {
+            alert("Failed to save key. Check connection.");
+        } finally {
+            btn.innerText = "💾 SAVE KEY";
+            btn.disabled = false;
+        }
     }
+
+    document.getElementById('sbpFile').addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const btn = document.querySelector('.btn-sbp');
+        btn.innerText = "UPLOADING..."; btn.disabled = true;
+
+        try {
+            const zip = new JSZip();
+            const contents = await zip.loadAsync(file);
+            let rawStr = "";
+            for (let name in contents.files) {
+                const text = await contents.files[name].async("string");
+                if (text.includes('{"songs":')) { rawStr = text; break; }
+            }
+            const data = JSON.parse(rawStr);
+            const payload = {
+                batch: true,
+                songs: data.songs.map(s => ({
+                    title: s.name,
+                    content: s.content.replace(/\\n/g, '\n')
+                }))
+            };
+            await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify(payload) });
+            alert("Upload Success!");
+            loadLibrary();
+        } catch (err) { alert("Upload failed."); }
+        finally { btn.innerText = "📁 IMPORT .SBP"; btn.disabled = false; }
+    });
+
+    window.onload = loadLibrary;
 </script>
 </body>
 </html>

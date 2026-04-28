@@ -4,385 +4,335 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Cloud Service Flow Manager</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
     <style>
         :root {
             --primary: #4f46e5;
             --bg: #0f172a;
             --card-bg: #1e293b;
             --text-main: #f8fafc;
-            --text-dim: #94a3b8;
             --accent: #10b981;
-            --sidebar-width: 350px;
+            --chord-yellow: #fbbf24;
+            --header-orange: #fb923c;
         }
 
-        body {
-            font-family: 'Segoe UI', system-ui, sans-serif;
-            background-color: var(--bg); color: var(--text-main);
-            margin: 0; display: flex; height: 100vh; overflow: hidden;
+        body { 
+            font-family: 'Segoe UI', sans-serif; 
+            background-color: var(--bg); 
+            color: var(--text-main); 
+            margin: 0; 
+            padding: 0;
+            overflow-x: hidden;
         }
 
-        /* --- MOBILE NAVIGATION --- */
-        .mobile-header {
-            display: none;
-            background: #111827;
-            padding: 15px;
-            justify-content: space-between;
+        /* --- Centered Main Container --- */
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px 15px;
+        }
+
+        /* --- Navigation Link --- */
+        .nav-header {
+            display: flex;
+            justify-content: flex-start;
+            margin-bottom: 10px;
+        }
+
+        .home-link {
+            color: #94a3b8;
+            text-decoration: none;
+            font-size: 13px;
+            display: flex;
             align-items: center;
+            gap: 5px;
+            transition: color 0.2s;
+        }
+
+        .home-link:hover {
+            color: var(--accent);
+        }
+
+        .header-section {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
             border-bottom: 1px solid #334155;
-            position: fixed; top: 0; left: 0; right: 0; z-index: 50;
         }
 
-        .menu-toggle {
-            background: var(--primary);
-            color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer;
-        }
-
-        /* --- SIDEBAR LAYOUT --- */
-        .sidebar-nav { 
-            width: var(--sidebar-width); 
-            border-right: 1px solid #334155; 
-            display: flex; flex-direction: column; 
-            background: #111827;
-            transition: transform 0.3s ease;
-            z-index: 100;
-        }
-
-        .sidebar-header { padding: 20px; border-bottom: 1px solid #334155; flex-shrink: 0; }
-        .setlist-scroll { flex-grow: 1; overflow-y: auto; padding: 20px; }
-
-        /* Inputs & Buttons */
-        .service-input {
-            width: 100%; padding: 12px; margin-bottom: 10px;
-            background: #0f172a; border: 1px solid #334155;
-            border-radius: 8px; color: white; font-size: 16px; /* 16px prevents iOS zoom on focus */
-            box-sizing: border-box;
-        }
-
-        .btn { padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: 600; border: none; font-size: 13px; transition: 0.2s; }
-        .btn-primary { background: var(--primary); color: white; width: 100%; margin-top: 10px; }
-        .btn-ghost { background: transparent; color: var(--text-dim); border: 1px solid #334155; }
-        .btn-outline-accent { background: transparent; color: var(--accent); border: 1px solid var(--accent); width: 100%; margin-top: 10px; }
-
-        /* Section Styling */
-        .service-section { margin-bottom: 25px; }
-        .section-header { 
-            font-size: 12px; text-transform: uppercase; letter-spacing: 1.5px; 
-            color: var(--accent); font-weight: 800; margin-bottom: 12px;
-            display: flex; justify-content: space-between; align-items: center;
+        .service-input { 
+            width: 100%; 
+            padding: 14px; 
+            margin-bottom: 15px; 
+            background: #111827; 
+            border: 1px solid #334155; 
+            border-radius: 10px; 
+            color: white; 
+            box-sizing: border-box; 
+            font-size: 16px;
         }
         
-        .song-slot {
-            background: var(--card-bg); padding: 14px; border-radius: 10px;
-            margin-bottom: 8px; display: flex; justify-content: space-between;
+        .btn { padding: 12px 15px; border-radius: 8px; cursor: pointer; border: none; font-weight: 600; transition: 0.2s; touch-action: manipulation; }
+        .btn-primary { background: var(--primary); color: white; width: 100%; margin-top: 5px; font-size: 16px; }
+        .btn-secondary { background: #334155; color: white; width: 100%; margin-top: 10px; font-size: 14px; text-decoration: none; text-align: center; display: block; box-sizing: border-box; }
+        
+        .category-block {
+            margin-bottom: 25px;
+            background: rgba(30, 41, 59, 0.4);
+            padding: 15px;
+            border-radius: 12px;
+        }
+
+        .section-header { 
+            font-size: 12px; 
+            text-transform: uppercase; 
+            color: var(--accent); 
+            font-weight: 800; 
+            margin-bottom: 12px; 
+            display: flex; 
+            justify-content: space-between; 
             align-items: center;
         }
-        .song-slot span { font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 60%; }
-
-        /* --- MAIN VIEWER --- */
-        .main-viewer { flex-grow: 1; display: flex; flex-direction: column; background: #0f172a; position: relative; overflow: hidden; }
-
-        #chordModal {
-            position: absolute; inset: 0; background: #ffffff; color: #1e293b;
-            display: none; flex-direction: column; z-index: 200;
+        
+        .song-slot { 
+            background: var(--card-bg); 
+            padding: 14px; 
+            border-radius: 10px; 
+            margin-bottom: 8px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            cursor: pointer; 
         }
+        .song-title-link { flex-grow: 1; font-size: 15px; font-weight: 500; }
+        
+        /* --- Chord Viewer --- */
+        #chordModal { 
+            position: fixed; 
+            inset: 0; 
+            background: var(--bg); 
+            color: var(--text-main); 
+            display: none; 
+            flex-direction: column; 
+            z-index: 2000; 
+        }
+
         .modal-toolbar { 
-            padding: 10px 20px; background: white; border-bottom: 1px solid #e2e8f0; 
-            display: flex; align-items: center; flex-wrap: wrap; gap: 10px;
-        }
-        #modalText { 
-            flex-grow: 1; overflow-y: auto; padding: 20px; 
-            font-family: 'Courier New', monospace; font-size: 15px; line-height: 1.6; white-space: pre; background: white;
+            padding: 15px; 
+            background: #111827; 
+            border-bottom: 1px solid #334155; 
+            display: flex; 
+            align-items: center; 
+            justify-content: space-between; 
         }
 
-        /* --- SELECTOR MODAL --- */
-        #selectorOverlay {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.85); 
-            display: none; z-index: 1000; justify-content: center; align-items: center; padding: 20px;
+        #modalText { 
+            flex-grow: 1; 
+            overflow: auto; 
+            padding: 30px 20px; 
+            font-family: 'Consolas', 'Monaco', monospace; 
+            font-size: 16px; 
+            line-height: 2.4; 
         }
-        .selector-box { background: white; color: #1e293b; width: 100%; max-width: 450px; border-radius: 12px; overflow: hidden; }
+
+        .chord-line { position: relative; margin-top: 1.3em; white-space: pre; min-width: fit-content; }
+        .chord-wrap { position: absolute; top: -1.2em; color: var(--chord-yellow); font-weight: bold; }
+        .section-tag { color: var(--header-orange); font-weight: bold; text-transform: uppercase; font-size: 0.85em; border-bottom: 1px solid #334155; display: block; margin: 25px 0 10px 0; }
+
+        /* --- Overlays --- */
+        #selectorOverlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: none; z-index: 3000; justify-content: center; align-items: flex-start; padding-top: 50px; }
+        .selector-box { background: white; color: #1e293b; width: 90%; max-width: 450px; border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; max-height: 80vh; }
         .modal-item { padding: 15px; border-bottom: 1px solid #eee; cursor: pointer; font-size: 16px; }
 
-        /* --- RESPONSIVE MEDIA QUERIES --- */
-        @media (max-width: 850px) {
-            .mobile-header { display: flex; }
-            .sidebar-nav {
-                position: fixed; top: 0; bottom: 0; left: 0;
-                transform: translateX(-100%);
-                width: 85%; max-width: 320px;
-            }
-            .sidebar-nav.active { transform: translateX(0); box-shadow: 10px 0 50px rgba(0,0,0,0.5); }
-            .main-viewer { padding-top: 60px; }
-            #emptyState { margin-top: 80px !important; }
-            #emptyState h1 { font-size: 60px !important; }
-            .modal-toolbar { padding: 15px; }
-            #modalTitle { width: 100%; order: -1; }
-        }
-
-        .chord { color: #4f46e5; font-weight: bold; }
-        .label { font-weight: bold; color: #dc2626; text-transform: uppercase; border-bottom: 1px solid #fee2e2; }
-        .sidebar-overlay {
-            display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 90;
-        }
-        .sidebar-overlay.active { display: block; }
+        .status-msg { font-size: 12px; text-align: center; display: block; margin-top: 8px; color: var(--accent); }
     </style>
 </head>
 <body>
 
-    <div class="mobile-header">
-        <h3 style="margin:0">📋 Cloud Flow</h3>
-        <button class="menu-toggle" onclick="toggleSidebar()">MENU</button>
+    <div class="container">
+        <div class="nav-header">
+            <a href="index.html" class="home-link">🏠 Back to Home</a>
+        </div>
+
+        <div class="header-section">
+            <h2 style="margin:0">📋 Setlist Creator</h2>
+            <span id="loadStatus" class="status-msg">Connecting to Library...</span>
+            
+            <div style="margin-top:20px;">
+                <input type="text" id="serviceNameInput" class="service-input" placeholder="Service Name (e.g. Sunday Service)">
+                <button class="btn btn-primary" id="saveBtn" onclick="saveServicePlan()">SAVE TO CLOUD</button>
+                <a href="Setlist_archive.html" class="btn btn-secondary">VIEW ARCHIVED SETLISTS</a>
+            </div>
+        </div>
+
+        <div id="flow-container"></div>
     </div>
 
-    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
-
-    <div class="sidebar-nav" id="sidebarNav">
-        <div class="sidebar-header">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                <h3 style="margin:0">📋 Create Setlist</h3>
-                <button class="btn btn-ghost" onclick="window.location.href='index.html'">Homepage</button>
-            </div>
-            <input type="text" id="serviceNameInput" class="service-input" placeholder="Service Name">
-            <button class="btn btn-outline-accent" onclick="window.location.href='Setlist_archive.html'">📂 ARCHIVE</button>
-            <button class="btn btn-primary" id="saveBtn" onclick="saveServicePlan()">SAVE TO CLOUD</button>
+    <div id="chordModal">
+        <div class="modal-toolbar">
+            <strong id="modalTitle" style="font-size:14px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:60%;">Song Title</strong>
+            <button class="btn" style="background:#ef4444; color:white; padding: 8px 15px;" onclick="closeChords()">CLOSE</button>
         </div>
-
-        <div class="setlist-scroll">
-            <div id="flow-container">
-                <script>
-                    const flowCategories = ["Intro", "Praise", "Worship", "Ministerial", "Victory", "Closing"];
-                    flowCategories.forEach(cat => {
-                        document.write(`
-                            <div class="service-section">
-                                <div class="section-header">
-                                    <span>${cat}</span> 
-                                    <button onclick="openSelector('${cat}')" style="cursor:pointer; background:none; border:none; color:var(--accent); font-weight:bold; padding: 5px;">+ Add</button>
-                                </div>
-                                <div id="list-${cat}"></div>
-                            </div>
-                        `);
-                    });
-                </script>
-            </div>
-        </div>
-    </div>
-
-    <div class="main-viewer">
-        <div id="emptyState" style="text-align: center; margin-top: 150px; opacity: 0.3;">
-            <h1 style="font-size: 100px; margin: 0;">🎹</h1>
-            <h2>Service Dashboard</h2>
-            <p>Select a song to begin.</p>
-        </div>
-
-        <div id="chordModal">
-            <div class="modal-toolbar">
-                <button class="btn" style="background:#ef4444; color:white;" onclick="closeChords()">CLOSE</button>
-                <strong id="modalTitle" style="font-size: 16px;">Song Title</strong>
-                <div style="margin-left: auto; display: flex; align-items: center; gap: 10px;">
-                    <select id="transposeSelect" onchange="applyTransposition()" style="padding: 8px; border-radius: 4px; border: 1px solid #ccc;">
-                        <option value="-5">-5</option><option value="-4">-4</option><option value="-3">-3</option>
-                        <option value="-2">-2</option><option value="-1">-1</option>
-                        <option value="0" selected>Key: Original</option>
-                        <option value="1">+1</option><option value="2">+2</option><option value="3">+3</option>
-                        <option value="4">+4</option><option value="5">+5</option>
-                    </select>
-                </div>
-            </div>
-            <div id="modalText"></div>
-        </div>
+        <div id="modalText"></div>
     </div>
 
     <div id="selectorOverlay" onclick="this.style.display='none'">
         <div class="selector-box" onclick="event.stopPropagation()">
-            <div style="padding: 15px; background: #f1f5f9; font-weight: bold; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between;">
-                Select Song <span style="cursor:pointer" onclick="document.getElementById('selectorOverlay').style.display='none'">✕</span>
+            <div style="padding:15px; background:#f1f5f9; font-weight:bold; display:flex; justify-content:space-between; align-items:center;">
+                <span>Select Song</span>
+                <span style="cursor:pointer; font-size:24px;" onclick="document.getElementById('selectorOverlay').style.display='none'">×</span>
             </div>
-            <div id="libraryList" style="max-height: 70vh; overflow-y: auto;"></div>
+            <div style="padding:10px;">
+                <input type="text" id="libSearch" class="service-input" placeholder="Search songs..." oninput="filterLibrary()" style="color:black; border:1px solid #ccc; margin-bottom:0;">
+            </div>
+            <div id="libraryList" style="flex-grow:1; overflow-y:auto;"></div>
         </div>
     </div>
 
     <script>
-        // Toggle Sidebar for Mobile
-        function toggleSidebar() {
-            document.getElementById('sidebarNav').classList.toggle('active');
-            document.getElementById('sidebarOverlay').classList.toggle('active');
-        }
-
-        // Rest of your JS logic (unchanged but integrated)
-        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
-        
-        const GET_URL = "https://script.google.com/macros/s/AKfycbxYnBNDbsobAUF9f9l_wsKvIAmKLx7yBDD6E_lFjNIyvNasUVqML2F8bRr630tooakD/exec"; 
+        // ... (The JavaScript remains the same as the previous version) ...
+        const GET_URL = "https://script.google.com/macros/s/AKfycbyabmsybyBb52Jj3-e5eNX31I_HBVIuZD_xF2WFyKjQWW3TdPNnP_NPDbQctpRnY8VT/exec"; 
         const POST_URL = "https://script.google.com/macros/s/AKfycbykKHze1guBdWU5HTjfYiQatZGq1i8YQv21nxZJXl6cn9P8Vb3iDbNOpNKACFVTPvI3/exec"; 
         
+        const flowCategories = ["Intro", "Praise", "Worship", "Ministerial", "Victory", "Closing"];
         let fullLibrary = [];
         let activeCategory = '';
-        let originalText = "";
-        const notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-        const flatMap = { 'Db': 'C#', 'Eb': 'D#', 'Gb': 'F#', 'Ab': 'G#', 'Bb': 'A#' };
 
-        window.onload = async () => {
-            await fetchLibrary();
-            await loadSavedSetlist();
+        window.onload = () => {
+            const container = document.getElementById('flow-container');
+            flowCategories.forEach(cat => {
+                container.innerHTML += `
+                    <div class="category-block">
+                        <div class="section-header">
+                            <span>${cat}</span>
+                            <button onclick="openSelector('${cat}')" style="color:var(--accent); background:rgba(16,185,129,0.1); padding:5px 10px; border-radius:5px; border:none; cursor:pointer; font-weight:bold;">+ Add Song</button>
+                        </div>
+                        <div id="list-${cat}"></div>
+                    </div>`;
+            });
+            fetchLibrary();
         };
 
-        function resetSetlistUI() {
-            document.getElementById('serviceNameInput').value = "";
-            flowCategories.forEach(cat => {
-                const list = document.getElementById(`list-${cat}`);
-                if (list) list.innerHTML = "";
+        async function fetchLibrary() {
+            const status = document.getElementById('loadStatus');
+            try {
+                const resp = await fetch(GET_URL);
+                const data = await resp.json();
+                fullLibrary = data.map(s => ({
+                    title: (s.title || s.Title || "Untitled").trim(),
+                    content: (s.content || s.Content || "").replace(/\\n/g, '\n')
+                }));
+                status.innerText = `✅ ${fullLibrary.length} Songs Ready`;
+            } catch(e) { status.innerText = "❌ Library Sync Failed"; }
+        }
+
+        function parseChords(text) {
+            if (!text) return "No content.";
+            const lines = text.split('\n');
+            let output = "";
+            lines.forEach(line => {
+                line = line.trimEnd();
+                if (line.startsWith('{')) {
+                    const tag = line.match(/:(.*)}/)?.[1]?.trim() || "SECTION";
+                    output += `<span class="section-tag">${tag}</span>`;
+                } else if (line.includes('[')) {
+                    let lyricLine = ""; let chordLine = "";
+                    const parts = line.split(/\[(.*?)\]/);
+                    for (let i = 0; i < parts.length; i++) {
+                        if (i % 2 === 1) chordLine += `<span class="chord-wrap" style="left: ${lyricLine.length}ch">${parts[i]}</span>`;
+                        else lyricLine += parts[i];
+                    }
+                    output += `<div class="chord-line">${chordLine}${lyricLine || " "}</div>`;
+                } else {
+                    output += `<div class="chord-line">${line || " "}</div>`;
+                }
+            });
+            return output;
+        }
+
+        function renderLibrary(songs) {
+            const container = document.getElementById('libraryList');
+            container.innerHTML = "";
+            songs.slice(0, 50).forEach(song => {
+                const div = document.createElement('div');
+                div.className = 'modal-item';
+                div.innerText = song.title;
+                div.onclick = () => { addSongToSet(song); document.getElementById('selectorOverlay').style.display = 'none'; };
+                container.appendChild(div);
             });
         }
 
-        async function fetchLibrary() {
-            try {
-                const resp = await fetch(GET_URL);
-                fullLibrary = await resp.json();
-                const container = document.getElementById('libraryList');
-                container.innerHTML = ""; 
-                fullLibrary.forEach(song => {
-                    const div = document.createElement('div');
-                    div.className = 'modal-item';
-                    div.innerText = song.title;
-                    div.onclick = () => addSongToSet(song);
-                    container.appendChild(div);
-                });
-            } catch(e) { console.error("Library fetch failed"); }
+        function filterLibrary() {
+            const term = document.getElementById('libSearch').value.toLowerCase();
+            renderLibrary(fullLibrary.filter(s => s.title.toLowerCase().includes(term)));
         }
 
-        function openSelector(category) {
-            activeCategory = category;
+        function openSelector(cat) {
+            activeCategory = cat;
             document.getElementById('selectorOverlay').style.display = 'flex';
-        }
-
-        function createSongSlot(category, title, pdfUrl) {
-            const container = document.getElementById(`list-${category}`);
-            if(!container) return;
-            const div = document.createElement('div');
-            div.className = 'song-slot';
-            div.dataset.title = title;
-            div.dataset.pdfUrl = pdfUrl;
-            
-            div.innerHTML = `
-                <span>${title}</span>
-                <div style="display:flex; gap:8px;">
-                    <button class="btn" style="background:#334155; color:white; padding: 5px 12px;" onclick="openChordViewer('${title.replace(/'/g, "\\'")}', '${pdfUrl}')">VIEW</button>
-                    <button class="btn" style="background:#ef4444; color:white; padding: 5px 12px;" onclick="this.parentElement.parentElement.remove()">✕</button>
-                </div>
-            `;
-            container.appendChild(div);
+            document.getElementById('libSearch').value = "";
+            renderLibrary(fullLibrary);
         }
 
         function addSongToSet(song) {
-            createSongSlot(activeCategory, song.title, song.pdfUrl);
-            document.getElementById('selectorOverlay').style.display = 'none';
+            const container = document.getElementById(`list-${activeCategory}`);
+            const div = document.createElement('div');
+            div.className = 'song-slot';
+            div.onclick = () => viewSong(song.title, song.content); 
+            div.innerHTML = `
+                <span class="song-title-link">${song.title}</span>
+                <button class="btn" style="background:none; color:#ef4444; padding:5px; font-size:20px;" onclick="event.stopPropagation(); this.parentElement.remove()">×</button>`;
+            container.appendChild(div);
+        }
+
+        function viewSong(title, content) {
+            document.getElementById('modalTitle').innerText = title;
+            document.getElementById('modalText').innerHTML = parseChords(content);
+            document.getElementById('chordModal').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeChords() { 
+            document.getElementById('chordModal').style.display = 'none'; 
+            document.body.style.overflow = 'auto'; 
         }
 
         async function saveServicePlan() {
-            const serviceName = document.getElementById('serviceNameInput').value;
-            if (!serviceName) { alert("Enter Service Name"); return; }
-
+            const name = document.getElementById('serviceNameInput').value;
+            if(!name) return alert("Please enter a Service Name.");
+            
             const btn = document.getElementById('saveBtn');
+            const originalText = btn.innerText;
             btn.innerText = "SAVING...";
             btn.disabled = true;
 
             const items = [];
             flowCategories.forEach(cat => {
-                const container = document.getElementById(`list-${cat}`);
-                if(container){
-                    const slots = container.querySelectorAll('.song-slot');
-                    slots.forEach(slot => {
-                        items.push({ category: cat, title: slot.dataset.title, pdfUrl: slot.dataset.pdfUrl });
-                    });
-                }
+                document.querySelectorAll(`#list-${cat} .song-slot .song-title-link`).forEach(slot => {
+                    items.push({ category: cat, title: slot.innerText });
+                });
             });
+
+            if (items.length === 0) {
+                alert("Please add songs to your setlist.");
+                btn.innerText = originalText;
+                btn.disabled = false;
+                return;
+            }
 
             try {
                 await fetch(POST_URL, {
-                    method: "POST",
-                    body: JSON.stringify({ action: "saveSetlist", serviceName: serviceName, items: items })
+                    method: 'POST',
+                    mode: 'no-cors',
+                    body: JSON.stringify({ action: "saveSetlist", serviceName: name, items: items })
                 });
-                alert(`Saved: ${serviceName}`);
-                resetSetlistUI();
+                alert("Setlist Saved!");
             } catch (e) {
-                alert("Save failed.");
+                alert("Error saving. Try again.");
             } finally {
-                btn.innerText = "SAVE TO CLOUD";
+                btn.innerText = originalText;
                 btn.disabled = false;
             }
         }
-
-        async function loadSavedSetlist() {
-            try {
-                const resp = await fetch(`${GET_URL}?getSetlist=true`);
-                const savedItems = await resp.json();
-                flowCategories.forEach(cat => {
-                    const list = document.getElementById(`list-${cat}`);
-                    if (list) list.innerHTML = "";
-                });
-                if(Array.isArray(savedItems)) {
-                    savedItems.forEach(item => {
-                        createSongSlot(item.category, item.title, item.pdfUrl);
-                    });
-                }
-            } catch (e) { console.log("No previous setlist."); }
-        }
-
-        async function openChordViewer(title, pdfUrl) {
-            const modal = document.getElementById('chordModal');
-            const textContainer = document.getElementById('modalText');
-            document.getElementById('modalTitle').innerText = title;
-            document.getElementById('transposeSelect').value = "0";
-            
-            modal.style.display = 'flex';
-            if (window.innerWidth < 850) toggleSidebar(); // Close sidebar on mobile when viewing
-            textContainer.innerHTML = "<p style='text-align:center; padding-top:100px;'>Syncing Chords...</p>";
-
-            try {
-                const fileIdMatch = pdfUrl.match(/[-\w]{25,}/);
-                if(!fileIdMatch) throw new Error("Invalid PDF URL");
-                const fileId = fileIdMatch[0];
-                
-                const resp = await fetch(`${GET_URL}?getPdf=${fileId}`);
-                const json = await resp.json();
-                const uint8Array = new Uint8Array(atob(json.data).split("").map(c => c.charCodeAt(0)));
-                const pdf = await pdfjsLib.getDocument({data: uint8Array}).promise;
-                
-                let fullText = "";
-                for(let i=1; i<=pdf.numPages; i++) {
-                    const page = await pdf.getPage(i);
-                    const content = await page.getTextContent();
-                    content.items.sort((a,b) => b.transform[5] - a.transform[5] || a.transform[4] - b.transform[4]);
-                    let lastY = -1;
-                    content.items.forEach(item => {
-                        if (lastY !== -1 && Math.abs(lastY - item.transform[5]) > 5) fullText += "\n";
-                        fullText += item.str + " ";
-                        lastY = item.transform[5];
-                    });
-                    fullText += "\n\n";
-                }
-                originalText = fullText;
-                applyTransposition();
-            } catch (e) { textContainer.innerText = "Error extracting data."; }
-        }
-
-        function applyTransposition() {
-            const steps = parseInt(document.getElementById('transposeSelect').value);
-            const display = document.getElementById('modalText');
-            const labels = /\b(VERSE|CHORUS|BRIDGE|INTRO|OUTRO|TAG)\b/gi;
-            let formatted = originalText.replace(labels, m => `<span class="label">${m}</span>`);
-            const chordRegex = /\b([A-G][#b]?(m|maj|min|sus|add|dim|aug|7|9|13)?(\/[A-G][#b]?)?)\b/g;
-            display.innerHTML = formatted.replace(chordRegex, match => `<span class="chord">${transpose(match, steps)}</span>`);
-        }
-
-        function transpose(chord, steps) {
-            return chord.replace(/[A-G][#b]?/g, m => {
-                let root = flatMap[m] || m;
-                let idx = notes.indexOf(root);
-                return idx === -1 ? m : notes[(idx + steps + 12) % 12];
-            });
-        }
-
-        function closeChords() { document.getElementById('chordModal').style.display = 'none'; }
     </script>
 </body>
 </html>
