@@ -9,6 +9,7 @@
             --bg: #0f172a; --card-bg: #1e293b; --text-main: #f8fafc;
             --accent: #10b981; --service-header: #4f46e5; --danger: #ef4444;
             --chord-color: #fbbf24; --header-color: #fb923c; --sub-text: #94a3b8;
+            --communion-purple: #a78bfa; /* Matches image_e3ea17.png */
         }
         body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text-main); padding: 10px; max-width: 800px; margin: auto; }
         
@@ -22,13 +23,14 @@
         .song-item { display: flex; align-items: center; padding: 10px 20px; border-bottom: 1px solid rgba(255,255,255,0.03); }
         .song-item:last-child { border-bottom: none; }
 
-        /* Updated Badge Colors */
+        /* Categorized Badges */
         .cat-badge { font-size: 9px; font-weight: 800; text-transform: uppercase; padding: 3px 8px; border-radius: 4px; margin-right: 15px; min-width: 85px; text-align: center; letter-spacing: 0.5px; }
         .cat-intro { background: #334155; color: #cbd5e1; }
         .cat-praise { background: rgba(16, 185, 129, 0.2); color: var(--accent); }
         .cat-worship { background: rgba(251, 191, 36, 0.2); color: var(--chord-color); }
         .cat-ministerial { background: rgba(99, 102, 241, 0.2); color: #818cf8; }
-        .cat-communion { background: rgba(167, 139, 250, 0.2); color: #a78bfa; }
+        .cat-communion { background: rgba(167, 139, 250, 0.2); color: var(--communion-purple); } /* New Communion Style */
+        .cat-victory { background: rgba(167, 139, 250, 0.2); color: #a78bfa; } 
         .cat-closing { background: rgba(239, 68, 68, 0.2); color: var(--danger); }
 
         .song-title-text { font-size: 15px; font-weight: 500; color: var(--text-main); }
@@ -38,7 +40,6 @@
         .btn-view { background: var(--accent); color: #064e3b; }
         .btn-edit { background: #334155; color: #fff; }
         .btn-danger { background: var(--danger); color: white; }
-        .btn:active { transform: scale(0.96); }
 
         .full-modal { display: none; position: fixed; inset: 0; background: var(--bg); z-index: 2000; flex-direction: column; }
         .modal-nav { padding: 10px 15px; background: #111827; border-bottom: 1px solid #334155; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; }
@@ -48,19 +49,19 @@
         .chord-wrap { position: absolute; top: -1.1em; color: var(--chord-color); font-weight: bold; }
         .section-tag { color: var(--header-color); font-weight: bold; display: block; margin: 15px 0 5px 0; border-bottom: 1px solid #334155; }
         
-        .loading-toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--accent); color: #000; padding: 10px 25px; border-radius: 30px; font-weight: bold; z-index: 4000; box-shadow: 0 4px 12px rgba(0,0,0,0.4); }
-        #libSearch { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #475569; background: #1e293b; color: white; margin-bottom: 15px; }
+        .loading-toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--accent); color: #000; padding: 10px 25px; border-radius: 30px; font-weight: bold; z-index: 4000; }
+        #libSearch { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #475569; background: #1e293b; color: white; }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <h1 style="font-size: 1.2rem;">📋 Archive Overview</h1>
+        <h1 style="font-size: 1.2rem;">📋 Setlist Archive</h1>
         <a href="Setlist.html" class="btn btn-edit">← BACK</a>
     </div>
 
     <div id="archive-container">
-        <div style="text-align: center; color: var(--sub-text); margin-top: 50px;">Fetching setlists...</div>
+        <div style="text-align: center; color: var(--sub-text); margin-top: 50px;">Loading archive...</div>
     </div>
 
     <div id="viewerModal" class="full-modal">
@@ -73,7 +74,7 @@
 
     <div id="selectorModal" class="full-modal" style="z-index: 3000;">
         <div class="modal-nav">
-            <input type="text" id="libSearch" placeholder="Search song library..." oninput="filterLibrary()">
+            <input type="text" id="libSearch" placeholder="Search song..." oninput="filterLibrary()">
             <button onclick="closeSelector()" class="btn btn-danger" style="margin-left:10px;">CANCEL</button>
         </div>
         <div id="libList"></div>
@@ -83,8 +84,8 @@
         const ARCHIVE_URL = "https://script.google.com/macros/s/AKfycbw11UhydEjyfPDlr5s43nddQn0rHHbRF4AIYtfNnnm3kmjkErPZm5rwCjEc18MUTVje/exec"; 
         const LIB_URL = "https://script.google.com/macros/s/AKfycbyabmsybyBb52Jj3-e5eNX31I_HBVIuZD_xF2WFyKjQWW3TdPNnP_NPDbQctpRnY8VT/exec";
 
-        // Updated Category Order
-        const categories = ["Intro", "Praise", "Worship", "Ministerial Song", "Communion Song", "Closing Song"];
+        // Added "Communion" to the flow list
+        const flowCategories = ["Intro", "Praise", "Worship", "Ministerial", "Communion", "Victory", "Closing"];
 
         let archiveCache = [];
         let libraryCache = {};
@@ -97,7 +98,7 @@
                 const libData = await libResp.json();
                 libData.forEach(s => { libraryCache[s.title || s.Title] = s.content || s.Content; });
                 loadArchive();
-            } catch (e) { console.error("Initialization failed", e); }
+            } catch (e) { console.error(e); }
         }
 
         async function loadArchive() {
@@ -105,7 +106,7 @@
                 const resp = await fetch(`${ARCHIVE_URL}?getSetlist=true`);
                 archiveCache = await resp.json();
                 renderArchive();
-            } catch (e) { document.getElementById('archive-container').innerText = "Failed to sync archive."; }
+            } catch (e) { document.getElementById('archive-container').innerText = "Sync failed."; }
         }
 
         function renderArchive() {
@@ -123,13 +124,12 @@
                 block.className = 'service-block';
                 
                 let listHtml = "";
-                categories.forEach(cat => {
+                flowCategories.forEach(cat => {
                     const catSongs = groups[sName].filter(s => s.category === cat);
                     catSongs.forEach(s => {
-                        const classKey = cat.split(' ')[0].toLowerCase(); // "Ministerial" -> ministerial
                         listHtml += `
                             <div class="song-item">
-                                <span class="cat-badge cat-${classKey}">${cat}</span>
+                                <span class="cat-badge cat-${cat.toLowerCase()}">${cat}</span>
                                 <span class="song-title-text">${s.title}</span>
                             </div>`;
                     });
@@ -143,9 +143,7 @@
                             <button class="btn btn-edit" onclick="enterEditMode('${sName.replace(/'/g, "\\'")}')">EDIT</button>
                         </div>
                     </div>
-                    <div class="song-list-container">
-                        ${listHtml || '<div style="padding:20px; color:var(--sub-text); text-align:center;">No songs.</div>'}
-                    </div>
+                    <div class="song-list-container">${listHtml || '<div style="padding:20px; color:var(--sub-text); text-align:center;">Empty</div>'}</div>
                 `;
                 container.appendChild(block);
             });
@@ -154,16 +152,14 @@
         function enterEditMode(sName) {
             currentServiceName = sName;
             const songs = archiveCache.filter(i => i.serviceName === sName);
-            
             let html = `<h3 style="color:var(--accent); margin-bottom:20px; padding-left:5px;">Editing: ${sName}</h3>`;
             
-            categories.forEach(cat => {
+            flowCategories.forEach(cat => {
                 const catSongs = songs.filter(s => s.category === cat);
-                const classKey = cat.split(' ')[0].toLowerCase();
                 html += `
                     <div style="margin-bottom:20px; background:rgba(255,255,255,0.02); border-radius:8px; padding:10px;">
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; border-bottom:1px solid #334155; padding-bottom:8px;">
-                            <span class="cat-badge cat-${classKey}">${cat}</span>
+                            <span class="cat-badge cat-${cat.toLowerCase()}">${cat}</span>
                             <button class="btn" style="background:var(--accent); color:#000; font-size:9px;" onclick="openSelector('${cat}')">+ ADD</button>
                         </div>
                         ${catSongs.map(s => `
@@ -175,13 +171,7 @@
                     </div>`;
             });
 
-            html += `
-                <div style="margin-top:40px; padding:20px; border-top: 1px solid #ef4444;">
-                    <button class="btn btn-danger" style="width:100%; padding:15px;" onclick="deleteEntireSetlist()">
-                        🗑️ DELETE ENTIRE SETLIST
-                    </button>
-                </div>
-            `;
+            html += `<button class="btn btn-danger" style="width:100%; margin-top:20px; padding:15px;" onclick="deleteEntireSetlist()">🗑️ DELETE ENTIRE SETLIST</button>`;
 
             document.getElementById('modalTitle').innerText = "Manage Setlist";
             document.getElementById('contentContainer').innerHTML = html;
@@ -191,13 +181,11 @@
         async function removeSong(title, cat) {
             if(!confirm(`Remove "${title}"?`)) return;
             showToast("Removing...");
-            try {
-                await fetch(ARCHIVE_URL, {
-                    method: "POST", mode: "no-cors",
-                    body: JSON.stringify({ action: "deleteSong", serviceName: currentServiceName, songTitle: title, category: cat })
-                });
-                setTimeout(async () => { await loadArchive(); enterEditMode(currentServiceName); hideToast(); }, 1200);
-            } catch (e) { alert("Error"); hideToast(); }
+            await fetch(ARCHIVE_URL, {
+                method: "POST", mode: "no-cors",
+                body: JSON.stringify({ action: "deleteSong", serviceName: currentServiceName, songTitle: title, category: cat })
+            });
+            setTimeout(async () => { await loadArchive(); enterEditMode(currentServiceName); hideToast(); }, 1200);
         }
 
         async function addSong(title) {
@@ -212,7 +200,7 @@
 
         async function deleteEntireSetlist() {
             if(!confirm("Delete ENTIRE setlist?")) return;
-            showToast("Wiping...");
+            showToast("Deleting...");
             await fetch(ARCHIVE_URL, {
                 method: "POST", mode: "no-cors",
                 body: JSON.stringify({ action: "deleteSetlist", serviceName: currentServiceName })
@@ -237,14 +225,11 @@
         function openPreviewAll(sName) {
             const songs = archiveCache.filter(i => i.serviceName === sName);
             let html = `<h2 style="color:var(--accent); text-align:center; margin-bottom:30px;">${sName}</h2>`;
-            
-            categories.forEach(cat => {
-                const catSongs = songs.filter(s => s.category === cat);
-                catSongs.forEach(s => {
-                    const classKey = cat.split(' ')[0].toLowerCase();
+            flowCategories.forEach(cat => {
+                songs.filter(s => s.category === cat).forEach(s => {
                     html += `
                         <div style="margin-top:40px; border-top:1px solid #334155; padding-top:20px; page-break-inside: avoid;">
-                            <div class="cat-badge cat-${classKey}">${cat}</div>
+                            <div class="cat-badge cat-${cat.toLowerCase()}">${cat}</div>
                             <h3 style="margin:10px 0 15px 0; color:#fff;">${s.title}</h3>
                             ${parseChords(libraryCache[s.title] || "[Lyrics not found]")}
                         </div>`;
@@ -257,7 +242,6 @@
 
         function parseChords(text) {
             return text.split('\n').map(line => {
-                line = line.trimEnd();
                 if (line.startsWith('{')) return `<span class="section-tag">${line.match(/:(.*)}/)?.[1] || "SECTION"}</span>`;
                 if (line.includes('[')) {
                     let lyric = "", chords = "";

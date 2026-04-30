@@ -13,6 +13,7 @@
             --accent: #10b981;
             --chord-yellow: #fbbf24;
             --header-orange: #fb923c;
+            --communion-purple: #a78bfa; /* New color for Communion */
         }
 
         body { 
@@ -91,6 +92,11 @@
             display: flex; 
             justify-content: space-between; 
             align-items: center;
+        }
+
+        /* Specific color for Communion header */
+        .category-communion .section-header span {
+            color: var(--communion-purple);
         }
         
         .song-slot { 
@@ -189,11 +195,11 @@
     </div>
 
     <script>
-        // ... (The JavaScript remains the same as the previous version) ...
         const GET_URL = "https://script.google.com/macros/s/AKfycbyabmsybyBb52Jj3-e5eNX31I_HBVIuZD_xF2WFyKjQWW3TdPNnP_NPDbQctpRnY8VT/exec"; 
         const POST_URL = "https://script.google.com/macros/s/AKfycbykKHze1guBdWU5HTjfYiQatZGq1i8YQv21nxZJXl6cn9P8Vb3iDbNOpNKACFVTPvI3/exec"; 
         
-        const flowCategories = ["Intro", "Praise", "Worship", "Ministerial", "Victory", "Closing"];
+        // Updated categories with Communion after Ministerial
+        const flowCategories = ["Intro", "Praise", "Worship", "Ministerial", "Communion", "Victory", "Closing"];
         let fullLibrary = [];
         let activeCategory = '';
 
@@ -201,10 +207,10 @@
             const container = document.getElementById('flow-container');
             flowCategories.forEach(cat => {
                 container.innerHTML += `
-                    <div class="category-block">
+                    <div class="category-block category-${cat.toLowerCase()}">
                         <div class="section-header">
                             <span>${cat}</span>
-                            <button onclick="openSelector('${cat}')" style="color:var(--accent); background:rgba(16,185,129,0.1); padding:5px 10px; border-radius:5px; border:none; cursor:pointer; font-weight:bold;">+ Add Song</button>
+                            <button onclick="openSelector('${cat}')" style="color:inherit; background:rgba(255,255,255,0.05); padding:5px 10px; border-radius:5px; border:none; cursor:pointer; font-weight:bold;">+ Add Song</button>
                         </div>
                         <div id="list-${cat}"></div>
                     </div>`;
