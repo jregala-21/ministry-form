@@ -3,327 +3,284 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Saved Setlists Archive</title>
+    <title>Setlist Archive | Full Manager</title>
     <style>
         :root {
-            --bg: #0f172a;
-            --card-bg: #1e293b;
-            --text-main: #f8fafc;
-            --accent: #10b981;
-            --service-header: #4f46e5;
-            --danger: #ef4444;
-            --chord-color: #fbbf24; 
-            --header-color: #fb923c; 
+            --bg: #0f172a; --card-bg: #1e293b; --text-main: #f8fafc;
+            --accent: #10b981; --service-header: #4f46e5; --danger: #ef4444;
+            --chord-color: #fbbf24; --header-color: #fb923c; --sub-text: #94a3b8;
         }
-
-        body {
-            font-family: 'Segoe UI', system-ui, sans-serif;
-            background-color: var(--bg);
-            color: var(--text-main);
-            padding: 10px;
-            max-width: 900px;
-            margin: auto;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        /* --- Responsive Layout --- */
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 2px solid #334155;
-            padding: 10px 0 15px 0;
-            margin-bottom: 20px;
-        }
-        .header h1 { font-size: 1.2rem; margin: 0; }
-
-        .back-btn {
-            background: #334155;
-            color: white;
-            text-decoration: none;
-            padding: 6px 12px;
-            border-radius: 6px;
-            font-size: 11px;
-            font-weight: bold;
-        }
-
-        .service-block {
-            margin-bottom: 20px;
-            background: rgba(30, 41, 59, 0.6);
-            padding: 15px;
-            border-radius: 12px;
-            border-left: 4px solid var(--service-header);
-        }
-
-        .service-title {
-            font-size: 16px;
-            font-weight: bold;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text-main); padding: 10px; max-width: 800px; margin: auto; }
         
-        @media (min-width: 600px) {
-            .service-title { flex-direction: row; justify-content: space-between; align-items: center; }
-            .header h1 { font-size: 1.8rem; }
-        }
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #334155; padding-bottom: 15px; margin-bottom: 20px; }
+        
+        .service-block { margin-bottom: 25px; background: var(--card-bg); border-radius: 12px; overflow: hidden; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3); border: 1px solid #334155; }
+        .service-header-row { background: rgba(79, 70, 229, 0.1); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; }
+        .service-name { font-size: 18px; font-weight: 700; color: #fff; }
 
-        .view-btn {
-            background: rgba(99, 102, 241, 0.1);
-            color: #818cf8;
-            border: 1px solid #818cf8;
-            padding: 8px 12px;
-            border-radius: 6px;
-            font-size: 12px;
-            font-weight: bold;
-            cursor: pointer;
-            touch-action: manipulation;
-        }
+        .song-list-container { padding: 10px 0; }
+        .song-item { display: flex; align-items: center; padding: 10px 20px; border-bottom: 1px solid rgba(255,255,255,0.03); }
+        .song-item:last-child { border-bottom: none; }
 
-        .song-row {
-            background: var(--card-bg);
-            padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 8px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 10px;
-        }
-        .song-row span { font-size: 14px; flex: 1; }
+        /* Updated Badge Colors */
+        .cat-badge { font-size: 9px; font-weight: 800; text-transform: uppercase; padding: 3px 8px; border-radius: 4px; margin-right: 15px; min-width: 85px; text-align: center; letter-spacing: 0.5px; }
+        .cat-intro { background: #334155; color: #cbd5e1; }
+        .cat-praise { background: rgba(16, 185, 129, 0.2); color: var(--accent); }
+        .cat-worship { background: rgba(251, 191, 36, 0.2); color: var(--chord-color); }
+        .cat-ministerial { background: rgba(99, 102, 241, 0.2); color: #818cf8; }
+        .cat-communion { background: rgba(167, 139, 250, 0.2); color: #a78bfa; }
+        .cat-closing { background: rgba(239, 68, 68, 0.2); color: var(--danger); }
 
-        /* --- Mobile-First Viewer --- */
-        #viewerModal {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: #0f172a; 
-            color: var(--text-main);
-            z-index: 2000;
-            flex-direction: column;
-        }
+        .song-title-text { font-size: 15px; font-weight: 500; color: var(--text-main); }
 
-        .modal-header {
-            padding: 10px 15px;
-            background: #111827;
-            border-bottom: 1px solid #334155;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position: sticky;
-            top: 0;
-            z-index: 10;
-        }
+        .controls { display: flex; gap: 8px; }
+        .btn { padding: 8px 12px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; border: none; text-transform: uppercase; transition: 0.2s; text-decoration: none; display: inline-block; }
+        .btn-view { background: var(--accent); color: #064e3b; }
+        .btn-edit { background: #334155; color: #fff; }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn:active { transform: scale(0.96); }
 
-        #contentContainer {
-            flex-grow: 1;
-            overflow-x: auto; /* Allows side-scroll if lyrics are long on mobile */
-            overflow-y: auto;
-            padding: 20px 15px;
-            font-family: 'Consolas', 'Monaco', monospace;
-            line-height: 2.4; 
-            font-size: 15px; /* Base mobile size */
-        }
+        .full-modal { display: none; position: fixed; inset: 0; background: var(--bg); z-index: 2000; flex-direction: column; }
+        .modal-nav { padding: 10px 15px; background: #111827; border-bottom: 1px solid #334155; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; }
+        #contentContainer, #libList { flex-grow: 1; overflow-y: auto; padding: 20px; }
 
-        @media (min-width: 600px) {
-            #contentContainer { font-size: 18px; padding: 40px; }
-        }
-
-        /* --- Chord Engine --- */
-        .chord-line { 
-            position: relative; 
-            margin-top: 1.3em; 
-            white-space: pre; 
-            min-width: fit-content; 
-        }
-        .chord-wrap { 
-            position: absolute; 
-            top: -1.2em; 
-            color: var(--chord-color); 
-            font-weight: bold; 
-            pointer-events: none;
-        }
-        .section-tag { 
-            color: var(--header-color); 
-            font-weight: bold; 
-            text-transform: uppercase; 
-            font-size: 0.85em; 
-            border-bottom: 1px solid #334155; 
-            display: block; 
-            margin: 25px 0 10px 0;
-            line-height: 1.5;
-        }
+        .chord-line { line-height: 2.4; font-family: 'Consolas', monospace; font-size: 16px; white-space: pre; position: relative; margin-top: 1.2em; }
+        .chord-wrap { position: absolute; top: -1.1em; color: var(--chord-color); font-weight: bold; }
+        .section-tag { color: var(--header-color); font-weight: bold; display: block; margin: 15px 0 5px 0; border-bottom: 1px solid #334155; }
+        
+        .loading-toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--accent); color: #000; padding: 10px 25px; border-radius: 30px; font-weight: bold; z-index: 4000; box-shadow: 0 4px 12px rgba(0,0,0,0.4); }
+        #libSearch { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #475569; background: #1e293b; color: white; margin-bottom: 15px; }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <h1>📋 Setlist Archive</h1>
-        <a href="Setlist.html" class="back-btn">← BACK</a>
+        <h1 style="font-size: 1.2rem;">📋 Archive Overview</h1>
+        <a href="Setlist.html" class="btn btn-edit">← BACK</a>
     </div>
 
     <div id="archive-container">
-        <div id="loading-indicator" style="text-align: center; color: #94a3b8; margin-top: 50px;">
-            Loading Setlists...
-        </div>
+        <div style="text-align: center; color: var(--sub-text); margin-top: 50px;">Fetching setlists...</div>
     </div>
 
-    <div id="viewerModal">
-        <div class="modal-header">
-            <span id="modalTitle" style="font-weight: bold; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 70%;">Song Title</span>
-            <button onclick="closeViewer()" style="background:var(--danger); color:white; border:none; padding:6px 12px; border-radius:5px; font-weight:bold;">CLOSE</button>
+    <div id="viewerModal" class="full-modal">
+        <div class="modal-nav">
+            <div id="modalTitle" style="font-weight:bold;">Setlist</div>
+            <button onclick="closeModal()" class="btn btn-danger">CLOSE</button>
         </div>
         <div id="contentContainer"></div>
     </div>
 
+    <div id="selectorModal" class="full-modal" style="z-index: 3000;">
+        <div class="modal-nav">
+            <input type="text" id="libSearch" placeholder="Search song library..." oninput="filterLibrary()">
+            <button onclick="closeSelector()" class="btn btn-danger" style="margin-left:10px;">CANCEL</button>
+        </div>
+        <div id="libList"></div>
+    </div>
+
     <script>
-        const GET_LIB_URL = "https://script.google.com/macros/s/AKfycbyabmsybyBb52Jj3-e5eNX31I_HBVIuZD_xF2WFyKjQWW3TdPNnP_NPDbQctpRnY8VT/exec"; 
         const ARCHIVE_URL = "https://script.google.com/macros/s/AKfycbw11UhydEjyfPDlr5s43nddQn0rHHbRF4AIYtfNnnm3kmjkErPZm5rwCjEc18MUTVje/exec"; 
+        const LIB_URL = "https://script.google.com/macros/s/AKfycbyabmsybyBb52Jj3-e5eNX31I_HBVIuZD_xF2WFyKjQWW3TdPNnP_NPDbQctpRnY8VT/exec";
 
-        let libraryCache = {}; 
+        // Updated Category Order
+        const categories = ["Intro", "Praise", "Worship", "Ministerial Song", "Communion Song", "Closing Song"];
+
         let archiveCache = [];
-
-        function parseChords(text) {
-            if (!text) return "No content found.";
-            const lines = text.split('\n');
-            let output = "";
-
-            lines.forEach(line => {
-                line = line.trimEnd();
-                if (line.startsWith('{')) {
-                    const tag = line.match(/:(.*)}/)?.[1]?.trim() || "SECTION";
-                    output += `<span class="section-tag">${tag}</span>`;
-                } 
-                else if (line.includes('[')) {
-                    let lyricLine = "";
-                    let chordLine = "";
-                    const parts = line.split(/\[(.*?)\]/);
-                    for (let i = 0; i < parts.length; i++) {
-                        if (i % 2 === 1) {
-                            chordLine += `<span class="chord-wrap" style="left: ${lyricLine.length}ch">${parts[i]}</span>`;
-                        } else {
-                            lyricLine += parts[i];
-                        }
-                    }
-                    output += `<div class="chord-line">${chordLine}${lyricLine || " "}</div>`;
-                } 
-                else {
-                    output += `<div class="chord-line">${line || " "}</div>`;
-                }
-            });
-            return output;
-        }
+        let libraryCache = {};
+        let currentServiceName = "";
+        let currentCategory = "";
 
         async function init() {
             try {
-                const libResp = await fetch(GET_LIB_URL);
+                const libResp = await fetch(LIB_URL);
                 const libData = await libResp.json();
-                libData.forEach(s => {
-                    libraryCache[(s.title || s.Title || "").trim()] = (s.content || s.Content || "").replace(/\\n/g, '\n');
-                });
+                libData.forEach(s => { libraryCache[s.title || s.Title] = s.content || s.Content; });
                 loadArchive();
-            } catch (e) {
-                document.getElementById('archive-container').innerHTML = "Sync error.";
-            }
+            } catch (e) { console.error("Initialization failed", e); }
         }
 
         async function loadArchive() {
-            const container = document.getElementById('archive-container');
             try {
                 const resp = await fetch(`${ARCHIVE_URL}?getSetlist=true`);
                 archiveCache = await resp.json();
-                
-                if (!archiveCache || archiveCache.length === 0) {
-                    container.innerHTML = "<p style='text-align:center;'>Empty.</p>";
-                    return;
-                }
+                renderArchive();
+            } catch (e) { document.getElementById('archive-container').innerText = "Failed to sync archive."; }
+        }
 
-                container.innerHTML = "";
-                const grouped = {};
-                archiveCache.forEach(item => {
-                    const sn = item.serviceName || "Unnamed";
-                    if (!grouped[sn]) grouped[sn] = [];
-                    grouped[sn].push(item);
+        function renderArchive() {
+            const container = document.getElementById('archive-container');
+            container.innerHTML = "";
+            const groups = {};
+            
+            archiveCache.forEach(item => {
+                if (!groups[item.serviceName]) groups[item.serviceName] = [];
+                groups[item.serviceName].push(item);
+            });
+
+            Object.keys(groups).sort().reverse().forEach(sName => {
+                const block = document.createElement('div');
+                block.className = 'service-block';
+                
+                let listHtml = "";
+                categories.forEach(cat => {
+                    const catSongs = groups[sName].filter(s => s.category === cat);
+                    catSongs.forEach(s => {
+                        const classKey = cat.split(' ')[0].toLowerCase(); // "Ministerial" -> ministerial
+                        listHtml += `
+                            <div class="song-item">
+                                <span class="cat-badge cat-${classKey}">${cat}</span>
+                                <span class="song-title-text">${s.title}</span>
+                            </div>`;
+                    });
                 });
 
-                for (const sName in grouped) {
-                    const block = document.createElement('div');
-                    block.className = 'service-block';
-                    block.innerHTML = `
-                        <div class="service-title">
-                            <span>🗓️ ${sName}</span>
-                            <div style="display:flex; gap:5px;">
-                                <button class="view-btn" style="background:#10b981; color:#064e3b; border:none;" onclick="openAll('${sName.replace(/'/g, "\\'")}')">OPEN ALL</button>
-                                <button class="view-btn" style="color:#ef4444; border-color:#ef4444; background:none;" onclick="deleteService('${sName.replace(/'/g, "\\'")}')">DEL</button>
-                            </div>
-                        </div>`;
-
-                    const cats = {};
-                    grouped[sName].forEach(song => {
-                        const cat = song.category || "General";
-                        if (!cats[cat]) cats[cat] = [];
-                        cats[cat].push(song);
-                    });
-
-                    for (const c in cats) {
-                        const cDiv = document.createElement('div');
-                        cDiv.style.marginBottom = "10px";
-                        cDiv.innerHTML = `<div style="color:var(--accent); font-size:10px; text-transform:uppercase; margin-bottom:5px;">${c}</div>`;
-                        cats[c].forEach(song => {
-                            const row = document.createElement('div');
-                            row.className = 'song-row';
-                            row.innerHTML = `
-                                <span>${song.title}</span>
-                                <button class="view-btn" onclick="openSingle('${song.title.replace(/'/g, "\\'")}')">VIEW</button>
-                            `;
-                            cDiv.appendChild(row);
-                        });
-                        block.appendChild(cDiv);
-                    }
-                    container.appendChild(block);
-                }
-            } catch (e) { container.innerHTML = "Load error."; }
-        }
-
-        function openSingle(title) {
-            const raw = libraryCache[title] || "Not in library.";
-            document.getElementById('modalTitle').innerText = title;
-            document.getElementById('contentContainer').innerHTML = parseChords(raw);
-            document.getElementById('viewerModal').style.display = 'flex';
-            document.body.style.overflow = 'hidden';
-        }
-
-        function openAll(sName) {
-            const songs = archiveCache.filter(i => i.serviceName === sName);
-            let html = "";
-            songs.forEach(s => {
-                html += `<div style="border-top: 1px solid #334155; padding: 20px 0; margin-top: 20px;">
-                            <h2 style="margin:0; color:white;">${s.title}</h2>
-                            ${parseChords(libraryCache[s.title])}
-                         </div>`;
+                block.innerHTML = `
+                    <div class="service-header-row">
+                        <span class="service-name">🗓️ ${sName}</span>
+                        <div class="controls">
+                            <button class="btn btn-view" onclick="openPreviewAll('${sName.replace(/'/g, "\\'")}')">CHORDS</button>
+                            <button class="btn btn-edit" onclick="enterEditMode('${sName.replace(/'/g, "\\'")}')">EDIT</button>
+                        </div>
+                    </div>
+                    <div class="song-list-container">
+                        ${listHtml || '<div style="padding:20px; color:var(--sub-text); text-align:center;">No songs.</div>'}
+                    </div>
+                `;
+                container.appendChild(block);
             });
-            document.getElementById('modalTitle').innerText = sName;
+        }
+
+        function enterEditMode(sName) {
+            currentServiceName = sName;
+            const songs = archiveCache.filter(i => i.serviceName === sName);
+            
+            let html = `<h3 style="color:var(--accent); margin-bottom:20px; padding-left:5px;">Editing: ${sName}</h3>`;
+            
+            categories.forEach(cat => {
+                const catSongs = songs.filter(s => s.category === cat);
+                const classKey = cat.split(' ')[0].toLowerCase();
+                html += `
+                    <div style="margin-bottom:20px; background:rgba(255,255,255,0.02); border-radius:8px; padding:10px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; border-bottom:1px solid #334155; padding-bottom:8px;">
+                            <span class="cat-badge cat-${classKey}">${cat}</span>
+                            <button class="btn" style="background:var(--accent); color:#000; font-size:9px;" onclick="openSelector('${cat}')">+ ADD</button>
+                        </div>
+                        ${catSongs.map(s => `
+                            <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 5px;">
+                                <span style="font-size:14px;">${s.title}</span>
+                                <button class="btn btn-danger" style="font-size:9px;" onclick="removeSong('${s.title.replace(/'/g, "\\'")}', '${cat}')">REMOVE</button>
+                            </div>
+                        `).join('')}
+                    </div>`;
+            });
+
+            html += `
+                <div style="margin-top:40px; padding:20px; border-top: 1px solid #ef4444;">
+                    <button class="btn btn-danger" style="width:100%; padding:15px;" onclick="deleteEntireSetlist()">
+                        🗑️ DELETE ENTIRE SETLIST
+                    </button>
+                </div>
+            `;
+
+            document.getElementById('modalTitle').innerText = "Manage Setlist";
             document.getElementById('contentContainer').innerHTML = html;
             document.getElementById('viewerModal').style.display = 'flex';
-            document.body.style.overflow = 'hidden';
         }
 
-        function closeViewer() {
-            document.getElementById('viewerModal').style.display = 'none';
-            document.body.style.overflow = 'auto';
-        }
-
-        async function deleteService(sName) {
-            if(!confirm("Delete setlist?")) return;
+        async function removeSong(title, cat) {
+            if(!confirm(`Remove "${title}"?`)) return;
+            showToast("Removing...");
             try {
                 await fetch(ARCHIVE_URL, {
                     method: "POST", mode: "no-cors",
-                    body: JSON.stringify({ action: "deleteSetlist", serviceName: sName })
+                    body: JSON.stringify({ action: "deleteSong", serviceName: currentServiceName, songTitle: title, category: cat })
                 });
-                setTimeout(loadArchive, 800);
-            } catch(e) { alert("Error."); }
+                setTimeout(async () => { await loadArchive(); enterEditMode(currentServiceName); hideToast(); }, 1200);
+            } catch (e) { alert("Error"); hideToast(); }
         }
+
+        async function addSong(title) {
+            closeSelector();
+            showToast("Adding...");
+            await fetch(ARCHIVE_URL, {
+                method: "POST", mode: "no-cors",
+                body: JSON.stringify({ action: "saveSetlist", serviceName: currentServiceName, songTitle: title, category: currentCategory })
+            });
+            setTimeout(async () => { await loadArchive(); enterEditMode(currentServiceName); hideToast(); }, 1200);
+        }
+
+        async function deleteEntireSetlist() {
+            if(!confirm("Delete ENTIRE setlist?")) return;
+            showToast("Wiping...");
+            await fetch(ARCHIVE_URL, {
+                method: "POST", mode: "no-cors",
+                body: JSON.stringify({ action: "deleteSetlist", serviceName: currentServiceName })
+            });
+            setTimeout(async () => { await loadArchive(); closeModal(); hideToast(); }, 1500);
+        }
+
+        function openSelector(cat) {
+            currentCategory = cat;
+            const list = document.getElementById('libList');
+            list.innerHTML = "";
+            Object.keys(libraryCache).sort().forEach(title => {
+                const div = document.createElement('div');
+                div.style = "display:flex; justify-content:space-between; align-items:center; padding:12px; border-bottom:1px solid #334155;";
+                div.innerHTML = `<span style="font-size:14px;">${title}</span><button class="btn btn-view" style="font-size:9px;">SELECT</button>`;
+                div.onclick = () => addSong(title);
+                list.appendChild(div);
+            });
+            document.getElementById('selectorModal').style.display = 'flex';
+        }
+
+        function openPreviewAll(sName) {
+            const songs = archiveCache.filter(i => i.serviceName === sName);
+            let html = `<h2 style="color:var(--accent); text-align:center; margin-bottom:30px;">${sName}</h2>`;
+            
+            categories.forEach(cat => {
+                const catSongs = songs.filter(s => s.category === cat);
+                catSongs.forEach(s => {
+                    const classKey = cat.split(' ')[0].toLowerCase();
+                    html += `
+                        <div style="margin-top:40px; border-top:1px solid #334155; padding-top:20px; page-break-inside: avoid;">
+                            <div class="cat-badge cat-${classKey}">${cat}</div>
+                            <h3 style="margin:10px 0 15px 0; color:#fff;">${s.title}</h3>
+                            ${parseChords(libraryCache[s.title] || "[Lyrics not found]")}
+                        </div>`;
+                });
+            });
+            document.getElementById('modalTitle').innerText = "Full Setlist View";
+            document.getElementById('contentContainer').innerHTML = html;
+            document.getElementById('viewerModal').style.display = 'flex';
+        }
+
+        function parseChords(text) {
+            return text.split('\n').map(line => {
+                line = line.trimEnd();
+                if (line.startsWith('{')) return `<span class="section-tag">${line.match(/:(.*)}/)?.[1] || "SECTION"}</span>`;
+                if (line.includes('[')) {
+                    let lyric = "", chords = "";
+                    line.split(/\[(.*?)\]/).forEach((part, i) => {
+                        if (i % 2 === 1) chords += `<span class="chord-wrap" style="left:${lyric.length}ch">${part}</span>`;
+                        else lyric += part;
+                    });
+                    return `<div class="chord-line">${chords}${lyric}</div>`;
+                }
+                return `<div class="chord-line">${line || " "}</div>`;
+            }).join('');
+        }
+
+        function filterLibrary() {
+            const term = document.getElementById('libSearch').value.toLowerCase();
+            const items = document.getElementById('libList').children;
+            Array.from(items).forEach(it => it.style.display = it.innerText.toLowerCase().includes(term) ? "flex" : "none");
+        }
+
+        function showToast(m) { const t = document.createElement('div'); t.id="toast"; t.className="loading-toast"; t.innerText=m; document.body.appendChild(t); }
+        function hideToast() { const t=document.getElementById("toast"); if(t) t.remove(); }
+        function closeModal() { document.getElementById('viewerModal').style.display = 'none'; }
+        function closeSelector() { document.getElementById('selectorModal').style.display = 'none'; }
 
         window.onload = init;
     </script>
