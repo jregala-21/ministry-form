@@ -124,12 +124,14 @@
         <textarea id="caption" placeholder="Write your message details here..." oninput="autoGrow(this)"></textarea>
     </div>
 
-    <div class="input-group">
-        <label class="section-label">📎 Attachment (Optional)</label>
-        <div class="file-box">
-            <input type="file" id="pdfFile" accept="application/pdf">
-        </div>
+    <!-- Change the accept attribute to allow all files -->
+<div class="input-group">
+    <label class="section-label">📎 Attachments (Optional)</label>
+    <div class="file-box">
+        <!-- Added "multiple" attribute -->
+        <input type="file" id="generalFiles" accept="*/*" multiple>
     </div>
+</div>
 
     <div class="input-group">
         <label class="section-label">👥 Recipients</label>
@@ -154,17 +156,19 @@
     </div>
 </div>
 
+<!-- Replace your existing <script> section with this -->
 <script>
-    // Security Check
+    // --- 1. YOUR TWO SCRIPT LINKS ---
+    const GET_EMAILS_URL = "https://script.google.com/macros/s/AKfycbz7xG5gki0Jr8TidIbKKpT8YM52XDxTK_6JN2XcX7xESn8ABgdp98E_Q9WS2D8geKfB/exec"; // The one that returns the list
+    const SEND_EMAILS_URL = "https://script.google.com/macros/s/AKfycbxCmeDGNmRD0Z_FJm6LM897IC-oN0DGuh_R-kLz-49pseLEAL4ftx8tzwtvtBaGNT1dEA/exec"; // The one that sends the Gmail
+    
+    // Security and UI logic
     if (sessionStorage.getItem("isAllowed") !== "true") { window.location.href = "login.html"; }
 
     function logout() {
         sessionStorage.removeItem("isAllowed");
         window.location.href = "login.html";
     }
-
-    // Initialize EmailJS
-    (function(){ emailjs.init("EklYONd-KHgKN-1HA"); })();
 
     function autoGrow(element) {
         element.style.height = "5px";
@@ -173,15 +177,17 @@
 
     let emails = [];
 
+    // --- 2. GET FUNCTION (Uses GET_EMAILS_URL) ---
     async function loadEmailsFromSheet() {
         const container = document.getElementById("emailList");
         try {
-            const response = await fetch("https://script.google.com/macros/s/AKfycbz7xG5gki0Jr8TidIbKKpT8YM52XDxTK_6JN2XcX7xESn8ABgdp98E_Q9WS2D8geKfB/exec");
+            // We call the GET link here to fill the list
+            const response = await fetch(GET_EMAILS_URL);
             emails = await response.json();
             renderEmails();
         } catch (error) { 
-            console.error("Error loading emails:", error);
-            container.innerHTML = `<div style="color: #ef4444; font-size: 12px;">Failed to load email list.</div>`;
+            console.error("Error loading email list:", error);
+            container.innerHTML = `<div style="color: #ef4444; font-size: 12px;">Failed to fetch list.</div>`;
         }
     }
 
@@ -195,11 +201,7 @@
         emails.forEach((email) => {
             const div = document.createElement('div');
             div.className = 'email-item';
-            div.innerHTML = `
-                <span>${email}</span>
-                <input type="checkbox" class="emailCheck" value="${email}">
-            `;
-            // Make the whole row clickable
+            div.innerHTML = `<span>${email}</span><input type="checkbox" class="emailCheck" value="${email}">`;
             div.onclick = function(e) {
                 if(e.target.type !== 'checkbox') {
                     const cb = this.querySelector('.emailCheck');
@@ -224,61 +226,71 @@
         });
     }
 
-    async function processAndSend() {
-        const caption = document.getElementById("caption").value;
-        const fileInput = document.getElementById("pdfFile");
-        const selected = Array.from(document.querySelectorAll(".emailCheck:checked"));
-        const status = document.getElementById("status");
-        const sendBtn = document.getElementById("sendBtn");
+    // --- 3. POST FUNCTION (Uses SEND_EMAILS_URL) ---
+   async function processAndSend() {
+    const caption = document.getElementById("caption").value;
+    const fileInput = document.getElementById("generalFiles");
+    const selected = Array.from(document.querySelectorAll(".emailCheck:checked")).map(cb => cb.value);
+    const status = document.getElementById("status");
+    const sendBtn = document.getElementById("sendBtn");
 
-        if (selected.length === 0) return alert("Select at least one recipient.");
-        if (!caption) return alert("Please enter a caption.");
+    if (selected.length === 0 || !caption) return alert("Select recipients and enter a message.");
 
-        sendBtn.disabled = true;
-        status.style.color = "#4f46e5";
+    sendBtn.disabled = true;
+    status.style.color = "#4f46e5";
 
-        let base64File = null;
-        if (fileInput.files.length > 0) {
-            status.innerText = "⚙️ Preparing attachment...";
-            base64File = await getBase64(fileInput.files[0]);
+    // 1. Prepare Attachments once
+    let attachments = [];
+    if (fileInput.files.length > 0) {
+        status.innerText = `⚙️ Preparing ${fileInput.files.length} files...`;
+        for (let i = 0; i < fileInput.files.length; i++) {
+            const file = fileInput.files[i];
+            const base64Data = await getBase64(file);
+            attachments.push({
+                fileName: file.name,
+                fileType: file.type,
+                fileContent: base64Data.split(",")[1]
+            });
         }
-
-        let successCount = 0;
-        let errorCount = 0;
-
-        for (let i = 0; i < selected.length; i++) {
-            const email = selected[i].value;
-            status.innerText = `⏳ Sending ${i + 1} of ${selected.length}...`;
-
-            try {
-                const templateParams = {
-                    to_email: email,
-                    message: caption,
-                    content: base64File 
-                };
-
-                await emailjs.send("service_0d1cw4d", "template_kuw3ryv", templateParams);
-                successCount++;
-            } catch (error) {
-                console.error(`Failed to send to ${email}:`, error);
-                errorCount++;
-            }
-        }
-
-        status.innerText = errorCount === 0 ? `✅ All ${successCount} sent successfully!` : `⚠️ Sent: ${successCount} | Failed: ${errorCount}`;
-        status.style.color = errorCount === 0 ? "#059669" : "#ef4444";
-
-        if (successCount > 0) {
-            document.getElementById("caption").value = "";
-            fileInput.value = "";
-            selected.forEach(cb => cb.checked = false);
-            document.getElementById("selectAllBox").checked = false;
-            // Reset height
-            document.getElementById("caption").style.height = "100px";
-        }
-        sendBtn.disabled = false;
     }
 
+    // 2. Loop through each email and send one by one
+    let successCount = 0;
+    for (let i = 0; i < selected.length; i++) {
+        const currentEmail = selected[i];
+        status.innerText = `⏳ Sending to ${i + 1} of ${selected.length}: ${currentEmail}`;
+
+        const payload = {
+            recipient: currentEmail, // Notice: Single recipient now
+            message: caption,
+            attachments: attachments
+        };
+
+        try {
+            await fetch(SEND_EMAILS_URL, {
+                method: "POST",
+                mode: "no-cors", 
+                body: JSON.stringify(payload)
+            });
+            successCount++;
+        } catch (error) {
+            console.error(`Failed to send to ${currentEmail}`, error);
+        }
+    }
+
+    // 3. Final Status Update
+    status.innerText = `✅ Finished! Successfully sent to ${successCount} members.`;
+    status.style.color = "#059669";
+
+    // Reset UI
+    document.getElementById("caption").value = "";
+    fileInput.value = "";
+    document.querySelectorAll(".emailCheck").forEach(cb => cb.checked = false);
+    document.getElementById("selectAllBox").checked = false;
+    sendBtn.disabled = false;
+}
+
+    // Start by loading the list
     loadEmailsFromSheet();
 </script>
 
