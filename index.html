@@ -29,7 +29,7 @@
             font-size: 16px; transition: 0.3s ease;
             display: flex; align-items: center; justify-content: center; gap: 10px;
             box-sizing: border-box;
-            text-decoration: none; /* For link-based buttons */
+            text-decoration: none;
         }
 
         .menu-btn:hover { background: #e5e7eb; transform: translateY(-2px); }
@@ -40,6 +40,10 @@
 
         .btn-jam { background: #10b981; color: white; }
         .btn-jam:hover { background: #059669; box-shadow: 0 8px 15px rgba(16, 185, 129, 0.3); }
+
+        /* New MAN Button Style */
+        .btn-man { background: #f59e0b; color: white; }
+        .btn-man:hover { background: #d97706; box-shadow: 0 8px 15px rgba(245, 158, 11, 0.3); }
 
         .btn-preacher { background: #374151; color: white; }
         .btn-preacher:hover { background: #1f2937; box-shadow: 0 8px 15px rgba(55, 65, 81, 0.3); }
@@ -82,6 +86,7 @@
 <div class="container">
     <h2>⛪ JIL WAN-MAN TAGUIG PORTAL</h2>
 
+    <!-- VIA Section -->
     <button class="menu-btn btn-via" onclick="toggleMenu('viaMenu', 'viaArrow')">
         ⭐ VIA <span id="viaArrow" class="arrow">▼</span>
     </button>
@@ -90,6 +95,7 @@
         <button class="menu-btn sub-btn" onclick="location.href='voice_tracks.html'">🎤 Vocal Key Track</button>
     </div>
 
+    <!-- JAM Section -->
     <button class="menu-btn btn-jam" onclick="toggleMenu('jamMenu', 'jamArrow')">
         🎸 JAM <span id="jamArrow" class="arrow">▼</span>
     </button>
@@ -98,6 +104,15 @@
         <button class="menu-btn sub-btn" onclick="location.href='Setlist.html'">🎼 Setlist</button>
     </div>
 
+    <!-- MAN Section -->
+    <button class="menu-btn btn-man" onclick="toggleMenu('manMenu', 'manArrow')">
+        🖥️ MAN <span id="manArrow" class="arrow">▼</span>
+    </button>
+    <div id="manMenu" class="submenu">
+        <button class="menu-btn sub-btn" onclick="location.href='ppt_creator.html'">✨ EasyWorship Creator</button>
+    </div>
+    
+    <!-- Pastors Section -->
     <button class="menu-btn btn-preacher" onclick="toggleMenu('preachMenu', 'preachArrow')">
         📖 Pastors/Pulpit Ministers <span id="preachArrow" class="arrow">▼</span>
     </button>

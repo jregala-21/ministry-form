@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lineup Creator Pro</title>
+    <style>
+        :root { --primary: #4f46e5; --bg: #0f172a; --card-bg: #ffffff; --success: #34a853; --danger: #ef4444; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: white; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 15px; box-sizing: border-box; }
+        .card { background: var(--card-bg); color: #1e293b; padding: 25px; border-radius: 20px; width: 100%; max-width: 450px; box-shadow: 0 20px 40px rgba(0,0,0,0.4); }
+        h2 { text-align: center; color: var(--primary); margin: 0; font-size: 1.5rem; }
+        .input-wrapper { margin-top: 15px; }
+        input[type="text"], textarea { width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 16px; box-sizing: border-box; outline: none; }
+        textarea { min-height: 100px; margin-top: 5px; }
+        
+        /* FIXED PREFIX STYLES */
+        .prefix-group { display: flex; align-items: center; border: 2px solid #e2e8f0; border-radius: 10px; overflow: hidden; background: #f8fafc; }
+        .prefix-label { padding: 12px; background: #e2e8f0; color: #64748b; font-weight: bold; font-size: 16px; user-select: none; }
+        .prefix-group input { border: none; flex: 1; padding: 12px; font-size: 16px; background: transparent; outline: none; }
+
+        .button-group { display: flex; gap: 8px; margin-top: 15px; }
+        .btn { flex: 1; padding: 14px; background: var(--primary); color: white; border: none; border-radius: 10px; font-weight: 700; cursor: pointer; font-size: 13px; }
+        .btn-save { background: var(--success); }
+        
+        .manager-section { margin-top: 20px; border-top: 1px solid #e2e8f0; padding-top: 15px; }
+        #fileList { max-height: 200px; overflow-y: auto; border: 1px solid #f1f5f9; border-radius: 10px; padding: 5px; background: #f8fafc; }
+        .file-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 8px; border-bottom: 1px solid #e2e8f0; font-size: 13px; }
+        .file-item:last-child { border-bottom: none; }
+        .file-actions { display: flex; gap: 5px; }
+        .action-btn { padding: 6px 10px; border-radius: 6px; border: none; cursor: pointer; font-size: 11px; color: white; text-decoration: none; }
+        .btn-dl { background: var(--primary); }
+        .btn-del { background: var(--danger); }
+        
+        .hint { font-size: 11px; color: #94a3b8; margin: 8px 0 4px 0; font-weight: 600; text-transform: uppercase; }
+        .status { margin-top: 10px; text-align: center; font-size: 12px; color: #64748b; }
+        .back-link { display: block; text-align: center; margin-top: 20px; font-size: 14px; color: #64748b; text-decoration: none; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>📽️ Presentation Creator</h2>
+    
+    <div class="input-wrapper">
+        <p class="hint">1. Search & Add Songs</p>
+        <input type="text" id="songSearch" list="songSuggestions" placeholder="Type song title..." oninput="checkAutoAdd(event)">
+        <datalist id="songSuggestions"></datalist>
+    </div>
+
+    <textarea id="lineupInput" placeholder="Selected setlist..."></textarea>
+    
+    <div class="input-wrapper">
+        <p class="hint">2. Set File Name</p>
+        <div class="prefix-group">
+            <span class="prefix-label">Lineup_</span>
+            <input type="text" id="fileNameInput" placeholder="Sunday_Service">
+        </div>
+    </div>
+
+    <div class="button-group">
+        <button class="btn" onclick="generateAction('download')">DOWNLOAD</button>
+        <button class="btn btn-save" id="saveDriveBtn" onclick="generateAction('drive')">SAVE TO DRIVE</button>
+    </div>
+
+    <div class="manager-section">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <p class="hint" style="margin: 0;">📁 Saved Files</p>
+            <button onclick="refreshFiles()" style="background:none; border:none; color:var(--primary); font-size:11px; cursor:pointer; font-weight:700;">REFRESH</button>
+        </div>
+        <div id="fileList">
+            <p style="text-align:center; color:#94a3b8; font-size:12px; padding:20px;">Loading files...</p>
+        </div>
+    </div>
+    
+    <p class="status" id="statusText">Connecting...</p>
+    <a href="index.html" class="back-link">← Back to Homepage</a>
+</div>
+
+<script>
+    const LIBRARY_URL = "https://script.google.com/macros/s/AKfycbyabmsybyBb52Jj3-e5eNX31I_HBVIuZD_xF2WFyKjQWW3TdPNnP_NPDbQctpRnY8VT/exec"; 
+    const PROCESSOR_URL = "https://script.google.com/macros/s/AKfycbyTpzGoQuOqRf12EeWRmGrC-ONd2OWHhitPUnDSUbnJK-W0-O1z21Diu2J-Bgif_Cm3GQ/exec"; 
+    let songLibrary = [];
+
+    window.onload = async () => {
+        try {
+            const resp = await fetch(LIBRARY_URL);
+            songLibrary = await resp.json();
+            const datalist = document.getElementById('songSuggestions');
+            songLibrary.forEach(song => {
+                let option = document.createElement('option');
+                option.value = song.title;
+                datalist.appendChild(option);
+            });
+            document.getElementById('statusText').innerText = `✅ ${songLibrary.length} Songs Ready`;
+            refreshFiles();
+        } catch (e) { document.getElementById('statusText').innerText = "❌ Sync Failed."; }
+    };
+
+    function checkAutoAdd(event) {
+        const val = event.target.value;
+        const match = songLibrary.find(s => s.title === val);
+        if (match) {
+            const area = document.getElementById('lineupInput');
+            area.value = area.value.trim() ? `${area.value.trim()}, ${val}` : val;
+            event.target.value = ""; 
+        }
+    }
+
+    async function refreshFiles() {
+        const listDiv = document.getElementById('fileList');
+        listDiv.innerHTML = "<p style='text-align:center; padding:10px; font-size:12px;'>Updating...</p>";
+        try {
+            const resp = await fetch(`${PROCESSOR_URL}?action=list`);
+            const files = await resp.json();
+            if (!files || files.length === 0) {
+                listDiv.innerHTML = "<p style='text-align:center; padding:10px; font-size:12px;'>No files found.</p>";
+                return;
+            }
+            listDiv.innerHTML = files.map(f => `
+                <div class="file-item">
+                    <span>${f.name.length > 22 ? f.name.substring(0, 19) + '...' : f.name}</span>
+                    <div class="file-actions">
+                        <a href="${f.url}" class="action-btn btn-dl" target="_blank">DL</a>
+                        <button class="action-btn btn-del" onclick="deleteFile('${f.id}')">X</button>
+                    </div>
+                </div>
+            `).join('');
+        } catch (e) { listDiv.innerHTML = "<p style='text-align:center; padding:10px; color:red; font-size:12px;'>Error loading list</p>"; }
+    }
+
+    async function deleteFile(id) {
+        if (!confirm("Delete this file?")) return;
+        try {
+            await fetch(`${PROCESSOR_URL}?action=delete&id=${id}`);
+            refreshFiles();
+        } catch (e) { alert("Delete failed"); }
+    }
+
+    function processPureLyrics(text) {
+        if (!text) return "";
+        let clean = text.replace(/\[.*?\]/g, ""); 
+        const chordRegex = /\b([A-G][b#]?(m|maj|dim|aug|sus|add|acc|alt)?[2456791113]?)(\/[A-G][b#]?)?\b/g;
+        let lines = clean.split('\n').filter(line => {
+            let t = line.trim();
+            if (t.length === 0) return false;
+            if (t.replace(chordRegex, "").trim().length === 0) return false;
+            const lowerT = t.toLowerCase();
+            return !(lowerT.includes('verse') || lowerT.includes('chorus') || lowerT.includes('bridge') || lowerT.includes('tag'));
+        });
+        let output = "";
+        for (let i = 0; i < lines.length; i += 4) {
+            output += lines.slice(i, i + 4).join('\n') + "\n\n";
+        }
+        return output;
+    }
+
+    async function generateAction(mode) {
+        const input = document.getElementById('lineupInput').value;
+        const userInput = document.getElementById('fileNameInput').value.trim();
+        if (!input) return alert("Select songs first!");
+        
+        const titles = input.split(',').map(t => t.trim().toLowerCase());
+        let finalContent = "";
+        titles.forEach((title) => {
+            const song = songLibrary.find(s => s.title.toLowerCase() === title);
+            if (song) {
+                finalContent += `\n\n\n\n\n\n\n\n\n\n[[[${song.title.toUpperCase()}]]]\n\n`;
+                finalContent += processPureLyrics(song.content || song.lyrics || "");
+                finalContent += `\n\n\n\n\n\n\n\n\n\n`; 
+            }
+        });
+
+        // Combine Fixed Prefix + User Input or Date
+        const suffix = userInput || new Date().toISOString().split('T')[0];
+        const filename = `Lineup_${suffix}.txt`;
+
+        if (mode === 'download') {
+            const blob = new Blob([finalContent], { type: 'text/plain' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = filename;
+            a.click();
+        } else {
+            const btn = document.getElementById('saveDriveBtn');
+            btn.innerText = "SAVING..."; btn.disabled = true;
+            try {
+                await fetch(PROCESSOR_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ filename, content: finalContent }) });
+                setTimeout(() => { alert(`Saved as ${filename}`); refreshFiles(); }, 500);
+            } catch (e) { alert("Error: " + e); }
+            finally { btn.innerText = "SAVE TO DRIVE"; btn.disabled = false; }
+        }
+    }
+</script>
+</body>
+</html>
