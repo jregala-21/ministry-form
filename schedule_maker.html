@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- UPDATED: Changed viewport to allow better scaling on mobile devices -->
+    <meta name="viewport" content="width=device-width, initial-scale=0.5, maximum-scale=2.0, user-scalable=yes">
     <title>JIL Schedule Pro</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
@@ -49,7 +50,16 @@
         .theme-midweek { background-color: var(--mid-bg) !important; color: var(--mid-dark); }
 
         #capture-wrapper { width: 100%; overflow-x: auto; padding: 20px 0; display: flex; justify-content: center; }
-        #capture-area { width: 1100px; min-width: 1100px; padding: 60px 45px; box-sizing: border-box; position: relative; }
+        
+        /* UPDATED: Added max-width and transform-origin for better mobile fit */
+        #capture-area { 
+            width: 1100px; 
+            min-width: 1100px; 
+            padding: 60px 45px; 
+            box-sizing: border-box; 
+            position: relative; 
+            transform-origin: top center;
+        }
         
         .header h1 { font-size: 50px; margin: 0; font-family: 'Arial Black', sans-serif; text-align: center; text-transform: uppercase; }
         .header h2 { font-size: 24px; margin: 8px 0 40px 0; font-weight: 300; text-align: center; letter-spacing: 3px; }
@@ -65,7 +75,6 @@
             width: 100%; outline: none; word-wrap: break-word; white-space: normal; line-height: 1.2; padding: 2px; font-weight: 800;
         }
 
-        /* Fixed Overlay to span all 4 rows correctly */
         .status-overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: calc(400% + 30px);
             background: var(--status-red); color: white; display: flex; align-items: center;
@@ -94,6 +103,11 @@
         }
         .suggestion-item { padding: 8px 15px; cursor: pointer; font-size: 13px; color: #333; }
         .suggestion-item:hover { background: #f0f2f5; color: var(--accent); }
+
+        /* Tablet/Mobile optimization to force zoom out slightly on the container */
+        @media (max-width: 1100px) {
+            #capture-wrapper { justify-content: flex-start; }
+        }
     </style>
 </head>
 <body>
@@ -304,12 +318,8 @@
                         const status = statusMap[cIdx] || 'none';
                         const id = getCellId(type, year, month, cIdx, sec.id, rIdx);
                         html += `<div class="sun-cell">`;
-                        
-                        // Check if this specific service section is disabled for this week
                         const isDisabled = (status === 'one_s2' && sec.id === 's1') || (status === 'one_s1' && sec.id === 's2');
-                        
                         if (isDisabled) {
-                            // Only place the overlay div in the FIRST row of the disabled section
                             if (rIdx === 0) {
                                 html += `<div class="status-overlay">ONE SERVICE ONLY</div>`;
                             }
