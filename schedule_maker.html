@@ -2,7 +2,6 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <!-- UPDATED: Changed viewport to allow better scaling on mobile devices -->
     <meta name="viewport" content="width=device-width, initial-scale=0.5, maximum-scale=2.0, user-scalable=yes">
     <title>JIL Schedule Pro</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -46,20 +45,8 @@
         .dl-btn { background: var(--accent); color: white; }
         .clear-btn { background: #fee2e2; color: #991b1b; }
 
-        .theme-sunday { background-color: var(--sun-bg) !important; color: var(--sun-dark); }
-        .theme-midweek { background-color: var(--mid-bg) !important; color: var(--mid-dark); }
-
         #capture-wrapper { width: 100%; overflow-x: auto; padding: 20px 0; display: flex; justify-content: center; }
-        
-        /* UPDATED: Added max-width and transform-origin for better mobile fit */
-        #capture-area { 
-            width: 1100px; 
-            min-width: 1100px; 
-            padding: 60px 45px; 
-            box-sizing: border-box; 
-            position: relative; 
-            transform-origin: top center;
-        }
+        #capture-area { width: 1100px; min-width: 1100px; padding: 60px 45px; box-sizing: border-box; position: relative; transform-origin: top center; }
         
         .header h1 { font-size: 50px; margin: 0; font-family: 'Arial Black', sans-serif; text-align: center; text-transform: uppercase; }
         .header h2 { font-size: 24px; margin: 8px 0 40px 0; font-weight: 300; text-align: center; letter-spacing: 3px; }
@@ -71,8 +58,15 @@
         
         .sun-cell { background: white; padding: 10px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 800; min-height: 60px; text-align: center; position: relative; color: #333; }
         
+        /* UPDATED: Placeholder logic for contenteditable */
         .edit-area { 
             width: 100%; outline: none; word-wrap: break-word; white-space: normal; line-height: 1.2; padding: 2px; font-weight: 800;
+        }
+        .edit-area:empty:before {
+            content: "ENTER NAME";
+            color: #ccc;
+            font-weight: 400;
+            font-style: italic;
         }
 
         .status-overlay {
@@ -91,6 +85,8 @@
         .mid-cat::after { content: ":"; }
         
         .theme-midweek .edit-area { font-size: 15px; color: #222; }
+        .theme-sunday { background-color: var(--sun-bg) !important; color: var(--sun-dark); }
+        .theme-midweek { background-color: var(--mid-bg) !important; color: var(--mid-dark); }
 
         .footer { margin-top: 50px; color: white; padding: 35px; display: grid; grid-template-columns: 1fr 1fr; gap: 40px; border-radius: 15px; background: var(--sun-dark); }
         .theme-midweek .footer { background: var(--mid-dark); }
@@ -104,10 +100,7 @@
         .suggestion-item { padding: 8px 15px; cursor: pointer; font-size: 13px; color: #333; }
         .suggestion-item:hover { background: #f0f2f5; color: var(--accent); }
 
-        /* Tablet/Mobile optimization to force zoom out slightly on the container */
-        @media (max-width: 1100px) {
-            #capture-wrapper { justify-content: flex-start; }
-        }
+        @media (max-width: 1100px) { #capture-wrapper { justify-content: flex-start; } }
     </style>
 </head>
 <body>
@@ -221,8 +214,15 @@
 
     const getCellId = (type, year, month, week, section, row) => `jil_v5_${type}_y${year}_m${month}_w${week}_s${section}_r${row}`;
 
-    function saveContent(id, content) { localStorage.setItem(id, content); }
-    function loadContent(id, def = "ENTER NAME") { return localStorage.getItem(id) || def; }
+    function saveContent(id, content) { 
+        // If content is just empty whitespace, store nothing
+        const clean = content.trim();
+        localStorage.setItem(id, clean); 
+    }
+    
+    function loadContent(id) { 
+        return localStorage.getItem(id) || ""; 
+    }
 
     function saveFooter() {
         localStorage.setItem('jil_footer_l_v5', document.getElementById('footer-l').innerHTML);
@@ -233,7 +233,7 @@
         const val = e.target.innerText;
         saveContent(id, val);
         if (activeSuggestionBox) activeSuggestionBox.remove();
-        if (!val) return;
+        if (!val.trim()) return;
         const matches = MASTER_NAMES.filter(n => n.toLowerCase().includes(val.toLowerCase()));
         if (matches.length > 0) showSuggestions(e.target, matches, id);
     }
