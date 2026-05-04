@@ -133,18 +133,19 @@
     </div>
 </div>
 
-    <div class="input-group">
-        <label class="section-label">👥 Recipients</label>
-        <div class="recipient-card">
-            <label class="select-all-row">
-                <span>Select All Members</span>
-                <input type="checkbox" id="selectAllBox" onclick="toggleAll(this)">
-            </label>
-            <div class="email-list" id="emailList">
-                <div style="text-align:center; padding: 10px; color: #9ca3af; font-size: 12px;">Loading emails...</div>
-            </div>
+   <!-- Recipient Section Update -->
+<div class="input-group">
+    <label class="section-label">👥 Recipients (Grouped by Ministry)</label>
+    <div class="recipient-card">
+        <label class="select-all-row">
+            <span>Select All Members</span>
+            <input type="checkbox" id="selectAllBox" onclick="toggleAll(this)">
+        </label>
+        <div class="email-list" id="emailList">
+            <div style="text-align:center; padding: 10px; color: #9ca3af; font-size: 12px;">Loading members and ministries...</div>
         </div>
     </div>
+</div>
     
     <button id="sendBtn" onclick="processAndSend()">🚀 Send Announcement</button>
 
@@ -157,12 +158,11 @@
 </div>
 
 <!-- Replace your existing <script> section with this -->
+
 <script>
-    // --- 1. YOUR TWO SCRIPT LINKS ---
-    const GET_EMAILS_URL = "https://script.google.com/macros/s/AKfycbz7xG5gki0Jr8TidIbKKpT8YM52XDxTK_6JN2XcX7xESn8ABgdp98E_Q9WS2D8geKfB/exec"; // The one that returns the list
-    const SEND_EMAILS_URL = "https://script.google.com/macros/s/AKfycbxCmeDGNmRD0Z_FJm6LM897IC-oN0DGuh_R-kLz-49pseLEAL4ftx8tzwtvtBaGNT1dEA/exec"; // The one that sends the Gmail
+    const GET_EMAILS_URL = "https://script.google.com/macros/s/AKfycbz7xG5gki0Jr8TidIbKKpT8YM52XDxTK_6JN2XcX7xESn8ABgdp98E_Q9WS2D8geKfB/exec"; 
+    const SEND_EMAILS_URL = "https://script.google.com/macros/s/AKfycbxCmeDGNmRD0Z_FJm6LM897IC-oN0DGuh_R-kLz-49pseLEAL4ftx8tzwtvtBaGNT1dEA/exec"; 
     
-    // Security and UI logic
     if (sessionStorage.getItem("isAllowed") !== "true") { window.location.href = "login.html"; }
 
     function logout() {
@@ -175,45 +175,82 @@
         element.style.height = (element.scrollHeight) + "px";
     }
 
-    let emails = [];
+    let memberData = [];
 
-    // --- 2. GET FUNCTION (Uses GET_EMAILS_URL) ---
     async function loadEmailsFromSheet() {
         const container = document.getElementById("emailList");
         try {
-            // We call the GET link here to fill the list
             const response = await fetch(GET_EMAILS_URL);
-            emails = await response.json();
-            renderEmails();
+            // Expecting array of objects: [{name: "...", ministry: "...", email: "..."}, ...]
+            memberData = await response.json();
+            renderGroupedEmails();
         } catch (error) { 
-            console.error("Error loading email list:", error);
+            console.error("Error loading list:", error);
             container.innerHTML = `<div style="color: #ef4444; font-size: 12px;">Failed to fetch list.</div>`;
         }
     }
 
-    function renderEmails() {
+    function renderGroupedEmails() {
         const container = document.getElementById("emailList");
         container.innerHTML = "";
-        if (emails.length === 0) {
-            container.innerHTML = `<div style="text-align:center; padding: 10px; color: #9ca3af;">No emails found.</div>`;
+
+        if (memberData.length === 0) {
+            container.innerHTML = `<div style="text-align:center; padding: 10px; color: #9ca3af;">No members found.</div>`;
             return;
         }
-        emails.forEach((email) => {
-            const div = document.createElement('div');
-            div.className = 'email-item';
-            div.innerHTML = `<span>${email}</span><input type="checkbox" class="emailCheck" value="${email}">`;
-            div.onclick = function(e) {
-                if(e.target.type !== 'checkbox') {
-                    const cb = this.querySelector('.emailCheck');
-                    cb.checked = !cb.checked;
-                }
-            };
-            container.appendChild(div);
+
+        // 1. Group the data by Ministry
+        const groups = memberData.reduce((acc, obj) => {
+            const key = obj.ministry || "Unassigned";
+            if (!acc[key]) acc[key] = [];
+            acc[key].push(obj);
+            return acc;
+        }, {});
+
+        // 2. Render each Group
+        Object.keys(groups).sort().forEach(ministry => {
+            // Ministry Header
+            const groupHeader = document.createElement('div');
+            groupHeader.style = "background: #eef2ff; padding: 5px 10px; margin-top: 10px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center;";
+            groupHeader.innerHTML = `
+                <span style="font-size: 12px; font-weight: 800; color: #4338ca;">🏛️ ${ministry.toUpperCase()}</span>
+                <input type="checkbox" class="ministry-check" data-ministry="${ministry}" onclick="toggleMinistry(this)">
+            `;
+            container.appendChild(groupHeader);
+
+            // Members in that Ministry
+            groups[ministry].forEach(member => {
+                const div = document.createElement('div');
+                div.className = 'email-item';
+                div.style.paddingLeft = "15px";
+                div.innerHTML = `
+                    <div style="display:flex; flex-direction:column;">
+                        <span style="font-weight:600; font-size:13px;">${member.name}</span>
+                        <span style="font-size:11px; color:#6b7280;">${member.email}</span>
+                    </div>
+                    <input type="checkbox" class="emailCheck" data-group="${ministry}" value="${member.email}">
+                `;
+                
+                div.onclick = function(e) {
+                    if(e.target.type !== 'checkbox') {
+                        const cb = this.querySelector('.emailCheck');
+                        cb.checked = !cb.checked;
+                    }
+                };
+                container.appendChild(div);
+            });
         });
     }
 
+    // Select everyone in a specific ministry
+    function toggleMinistry(source) {
+        const ministryName = source.getAttribute('data-ministry');
+        const checkboxes = document.querySelectorAll(`.emailCheck[data-group="${ministryName}"]`);
+        checkboxes.forEach(cb => cb.checked = source.checked);
+    }
+
     function toggleAll(source) {
-        const checkboxes = document.querySelectorAll(".emailCheck");
+        const checkboxes = document.querySelectorAll(".emailCheck, .ministry-check");
         checkboxes.forEach(cb => cb.checked = source.checked);
     }
 
@@ -226,71 +263,66 @@
         });
     }
 
-    // --- 3. POST FUNCTION (Uses SEND_EMAILS_URL) ---
-   async function processAndSend() {
-    const caption = document.getElementById("caption").value;
-    const fileInput = document.getElementById("generalFiles");
-    const selected = Array.from(document.querySelectorAll(".emailCheck:checked")).map(cb => cb.value);
-    const status = document.getElementById("status");
-    const sendBtn = document.getElementById("sendBtn");
+    async function processAndSend() {
+        const caption = document.getElementById("caption").value;
+        const fileInput = document.getElementById("generalFiles");
+        const selected = Array.from(document.querySelectorAll(".emailCheck:checked")).map(cb => cb.value);
+        const status = document.getElementById("status");
+        const sendBtn = document.getElementById("sendBtn");
 
-    if (selected.length === 0 || !caption) return alert("Select recipients and enter a message.");
+        if (selected.length === 0 || !caption) return alert("Select recipients and enter a message.");
 
-    sendBtn.disabled = true;
-    status.style.color = "#4f46e5";
+        sendBtn.disabled = true;
+        status.style.color = "#4f46e5";
 
-    // 1. Prepare Attachments once
-    let attachments = [];
-    if (fileInput.files.length > 0) {
-        status.innerText = `⚙️ Preparing ${fileInput.files.length} files...`;
-        for (let i = 0; i < fileInput.files.length; i++) {
-            const file = fileInput.files[i];
-            const base64Data = await getBase64(file);
-            attachments.push({
-                fileName: file.name,
-                fileType: file.type,
-                fileContent: base64Data.split(",")[1]
-            });
+        let attachments = [];
+        if (fileInput.files.length > 0) {
+            status.innerText = `⚙️ Preparing files...`;
+            for (let i = 0; i < fileInput.files.length; i++) {
+                const file = fileInput.files[i];
+                const base64Data = await getBase64(file);
+                attachments.push({
+                    fileName: file.name,
+                    fileType: file.type,
+                    fileContent: base64Data.split(",")[1]
+                });
+            }
         }
+
+        let successCount = 0;
+        for (let i = 0; i < selected.length; i++) {
+            const currentEmail = selected[i];
+            status.innerText = `⏳ Sending to ${i + 1} of ${selected.length}...`;
+
+            const payload = {
+                recipient: currentEmail,
+                message: caption,
+                attachments: attachments
+            };
+
+            try {
+                await fetch(SEND_EMAILS_URL, {
+                    method: "POST",
+                    mode: "no-cors", 
+                    body: JSON.stringify(payload)
+                });
+                successCount++;
+            } catch (error) {
+                console.error(`Error sending to ${currentEmail}`, error);
+            }
+        }
+
+        status.innerText = `✅ Finished! Successfully sent to ${successCount} members.`;
+        status.style.color = "#059669";
+
+        // Reset UI
+        document.getElementById("caption").value = "";
+        fileInput.value = "";
+        document.querySelectorAll(".emailCheck, .ministry-check").forEach(cb => cb.checked = false);
+        document.getElementById("selectAllBox").checked = false;
+        sendBtn.disabled = false;
     }
 
-    // 2. Loop through each email and send one by one
-    let successCount = 0;
-    for (let i = 0; i < selected.length; i++) {
-        const currentEmail = selected[i];
-        status.innerText = `⏳ Sending to ${i + 1} of ${selected.length}: ${currentEmail}`;
-
-        const payload = {
-            recipient: currentEmail, // Notice: Single recipient now
-            message: caption,
-            attachments: attachments
-        };
-
-        try {
-            await fetch(SEND_EMAILS_URL, {
-                method: "POST",
-                mode: "no-cors", 
-                body: JSON.stringify(payload)
-            });
-            successCount++;
-        } catch (error) {
-            console.error(`Failed to send to ${currentEmail}`, error);
-        }
-    }
-
-    // 3. Final Status Update
-    status.innerText = `✅ Finished! Successfully sent to ${successCount} members.`;
-    status.style.color = "#059669";
-
-    // Reset UI
-    document.getElementById("caption").value = "";
-    fileInput.value = "";
-    document.querySelectorAll(".emailCheck").forEach(cb => cb.checked = false);
-    document.getElementById("selectAllBox").checked = false;
-    sendBtn.disabled = false;
-}
-
-    // Start by loading the list
     loadEmailsFromSheet();
 </script>
 
