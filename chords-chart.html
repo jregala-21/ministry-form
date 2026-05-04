@@ -112,10 +112,15 @@
     <button class="mobile-toggle" onclick="toggleSidebar()" id="menuBtn">☰</button>
 
     <div class="sidebar collapsed" id="sidebar">
-        <div class="sidebar-header">
-            <h3 style="margin:0; color:var(--primary)">🎵 Library</h3>
-            <button onclick="loadLibrary()" style="border:none; background:none; cursor:pointer;">🔄</button>
-        </div>
+       <div class="sidebar-header">
+    <h3 style="margin:0; color:var(--primary)">🎵 Library</h3>
+    <div style="display: flex; gap: 10px; align-items: center;">
+    <input type="file" id="sbpUpload" accept=".sbp" style="display:none;" onchange="handleSBP(event)">
+    <!-- Direct click opens the file browser immediately -->
+    <button onclick="document.getElementById('sbpUpload').click()" title="Import .sbp" style="border:none; background:none; cursor:pointer; font-size: 18px;">📤</button>
+    <button onclick="loadLibrary()" title="Refresh" style="border:none; background:none; cursor:pointer; font-size: 18px;">🔄</button>
+</div>
+</div>
         <div class="search-container">
             <input type="text" id="searchInput" class="search-input" placeholder="Search songs..." oninput="filterSongs()">
         </div>
@@ -128,7 +133,8 @@
                 <a href="index.html" class="btn-action btn-home" style="text-decoration: none; display: inline-flex; align-items: center;">🏠 Home</a>
                 <button class="btn-action btn-edit" id="editBtn" onclick="toggleEditMode()">📝 EDIT</button>
                 <select id="transposeSelect" onchange="applyTransposition()" style="font-size:10px;"></select>
-                <button class="btn-action btn-save" id="saveBtn" onclick="saveSongUpdates()">💾 SAVE</button>
+                <!-- Change your Save button to this -->
+                <button class="btn-action btn-save" id="saveBtn" onclick="checkAuth('save')">💾 SAVE</button>
             </div>
             <span id="songTitleDisplay" style="font-size: 10px; font-weight: bold; color: #64748b; text-overflow: ellipsis; overflow: hidden; max-width: 80px;"></span>
         </div>
@@ -155,6 +161,22 @@
     let isEditMode = false;
     const notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
     const flatMap = { 'Db': 'C#', 'Eb': 'D#', 'Gb': 'F#', 'Ab': 'G#', 'Bb': 'A#' };
+
+    const APP_PASSWORD = "JAMTAGUIG123"; // Change this!
+
+    function checkAuth(action) {
+    const userInput = prompt("Enter Password to perform this action:");
+    
+    if (userInput === APP_PASSWORD) {
+        if (action === 'import') {
+            document.getElementById('sbpUpload').click();
+        } else if (action === 'save') {
+            saveSongUpdates();
+        }
+    } else {
+        alert("Incorrect password. Action denied.");
+    }
+}
 
     async function loadLibrary() {
         const listContainer = document.getElementById('songList');
@@ -308,7 +330,13 @@
 }
 
 async function saveSongUpdates() {
-    // If user is currently editing, parse the textarea back to bracket format before saving
+    // 1. Password Check
+    const userInput = prompt("Enter Password to SAVE changes:");
+    if (userInput !== "JAMTAGUIG123") {
+        alert("Incorrect password. Save cancelled.");
+        return;
+    }
+
     if (isEditMode) {
         currentRawContent = parseBackToBrackets(document.getElementById('chartEditor').value);
     }
@@ -326,7 +354,6 @@ async function saveSongUpdates() {
     };
 
     try {
-        // Sending the updated content to your Google Apps Script URL
         await fetch(SCRIPT_URL, { 
             method: "POST", 
             mode: "no-cors", 
@@ -349,6 +376,72 @@ async function saveSongUpdates() {
     }
 
     window.onload = loadLibrary;
+
+    // Handle .sbp file import
+async function handleSBP(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // 1. Password check happens AFTER file selection
+    const userInput = prompt("Enter Password to confirm upload:");
+    if (userInput !== APP_PASSWORD) {
+        alert("Incorrect password. Upload cancelled.");
+        event.target.value = ''; // Reset the input
+        return;
+    }
+
+    try {
+        const zip = await JSZip.loadAsync(file);
+        const internalFiles = Object.keys(zip.files);
+        const dataFileName = internalFiles.find(name => 
+            name.toLowerCase().includes('data') || name.toLowerCase().includes('song')
+        );
+
+        if (!dataFileName) throw new Error("Could not find song data.");
+
+        let rawText = await zip.files[dataFileName].async("string");
+        const firstBrace = rawText.indexOf('{');
+        if (firstBrace !== -1) rawText = rawText.substring(firstBrace);
+
+        const jsonData = JSON.parse(rawText);
+        const songs = jsonData.SONGS || jsonData.songs || [];
+        
+        const songArray = songs.map(song => ({
+            title: song.TITLE || song.title || song.Name || song.name,
+            content: song.CONTENT || song.content || song.Lyrics || song.lyrics
+        })).filter(s => s.title && s.content);
+
+        // 2. Proceed to upload
+        const payload = { batch: true, songs: songArray };
+        await fetch(SCRIPT_URL, {
+            method: "POST",
+            mode: "no-cors", 
+            body: JSON.stringify(payload)
+        });
+
+        alert(`Successfully imported ${songArray.length} songs!`);
+        event.target.value = ''; // Clear input for next time
+        loadLibrary();
+        
+    } catch (e) {
+        alert("Import Error: " + e.message);
+    }
+}
+
+// Helper function to send data to your Apps Script
+async function uploadToCloud(title, content) {
+    const payload = {
+        action: "updateSong", // Uses your existing update logic
+        title: title,
+        content: content
+    };
+
+    return fetch(SCRIPT_URL, {
+        method: "POST",
+        mode: "no-cors",
+        body: JSON.stringify(payload)
+    });
+}
 </script>
 </body>
 </html>
