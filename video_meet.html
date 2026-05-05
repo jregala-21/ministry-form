@@ -1,6 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+
+    <script src="https://8x8.vc/external_api.js"></script>
+
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ministry Video Meet</title>
@@ -61,46 +65,36 @@
     align-items: center; 
 }
 
-.control-btn { 
-    width: 48px; 
-    height: 48px; 
-    border-radius: 50%; 
-    border: 1px solid #5f6368; 
-    background: #3c4043; 
-    color: white; 
-    font-size: 20px; 
-    cursor: pointer; 
-    transition: background 0.2s, border 0.2s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
+    /* Cleaned up CSS */
+    #meeting-ui { display: none; flex-direction: column; height: 100vh; background: #202124; }
+    .video-grid { flex-grow: 1; overflow: hidden; background: #000; }
+    
+    .controls { 
+        height: 80px; 
+        display: flex; 
+        justify-content: space-between; 
+        align-items: center; 
+        padding: 0 20px; 
+        background: #202124; 
+    }
 
-.control-btn:hover {
-    background: #4a4e52;
-}
+    .control-btn { 
+        width: 48px; 
+        height: 48px; 
+        border-radius: 50%; 
+        border: 1px solid #5f6368; 
+        background: #3c4043; 
+        color: white; 
+        font-size: 22px; 
+        cursor: pointer; 
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.2s;
+    }
 
-/* State when Muted/Camera Off */
-.control-btn.off {
-    background: #ea4335; /* Google Meet Red */
-    border-color: #ea4335;
-}
-
-.control-btn.off:hover {
-    background: #d93025;
-}
-
-.btn-hangup { 
-    background: #ea4335; 
-    width: 65px; 
-    border-radius: 32px; 
-    border: none;
-}
-
-.btn-hangup:hover {
-    background: #d93025;
-    box-shadow: 0 1px 3px 0 rgba(60,64,67,0.3), 0 4px 8px 3px rgba(60,64,67,0.15);
-}
+    .control-btn:hover { background: #4a4e52; }
+    .meeting-info { width: 200px; font-size: 14px; color: #9aa0a6; }
     </style>
 </head>
 <body>
@@ -123,162 +117,125 @@
 
     <div id="meeting-ui">
     <div class="video-grid">
-        <div class="video-wrapper">
-            <video id="localVideo" autoplay playsinline></video>
-            <!-- Name Label -->
-            <div id="video-name-label" class="name-tag">Connecting...</div>
-        </div>
+        <div id="meet-container" style="width:100%; height:100%;"></div>
     </div>
+    
     <div class="controls">
         <div class="meeting-info" id="display-time"></div>
+        
         <div class="button-group">
-    <button class="control-btn" onclick="toggleMic()" id="mic-btn">🎤</button>
-    <button class="control-btn" onclick="toggleCam()" id="cam-btn">📷</button>
-    <!-- Screenshot Button -->
-    <button class="control-btn" onclick="takeScreenshot()" title="Screenshot">📸</button> 
-    <button class="control-btn btn-hangup" onclick="location.reload()">📞</button>
-</div>
+            <button class="control-btn" onclick="takeScreenshot()" title="Take Screenshot">📸</button>
+        </div>
+        
         <div style="width: 200px;"></div>
     </div>
 </div>
 
     <script>
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz7xG5gki0Jr8TidIbKKpT8YM52XDxTK_6JN2XcX7xESn8ABgdp98E_Q9WS2D8geKfB/exec";
+let api = null; // Global variable to control the meeting
 
-       async function verifyEmail() {
-        const email = document.getElementById('userEmail').value;
-        const msg = document.getElementById('msg');
-        
-        if(!email) return alert("Enter email");
-        msg.innerText = "Checking registry...";
-
-        try {
-            // Check against your Google Sheet
-            const resp = await fetch(SCRIPT_URL, {
-                method: "POST",
-                body: new URLSearchParams({ action: "checkAccess", email: email })
-            });
-            const result = await resp.text();
-
-            if (result === "AUTHORIZED") {
-                // Fetch the name from your doGet function to display on the label
-                const memberResp = await fetch(SCRIPT_URL);
-                const members = await memberResp.json();
-                const user = members.find(m => m.email.toLowerCase().trim() === email.toLowerCase().trim());
-                
-                const displayName = user ? user.name : "Guest";
-                startMeeting(displayName);
-            } else {
-                msg.innerText = "❌ Email not found in Ministry Registry.";
-            }
-        } catch (e) {
-            msg.innerText = "Error connecting to server.";
-        }
-    }
-
-    async function startMeeting(userName) {
-    document.getElementById('login-screen').style.display = 'none';
-    document.getElementById('meeting-ui').style.display = 'flex';
-    document.getElementById('video-name-label').innerText = userName;
+async function verifyEmail() {
+    const email = document.getElementById('userEmail').value;
+    const msg = document.getElementById('msg');
+    
+    if(!email) return alert("Enter email");
+    msg.innerText = "Checking registry...";
 
     try {
-        // Adding advanced constraints to prevent echo
-        const constraints = { 
-            video: true, 
-            audio: {
-                echoCancellation: true,
-                noiseSuppression: true,
-                autoGainControl: true
-            } 
-        };
+        const resp = await fetch(SCRIPT_URL, {
+            method: "POST",
+            body: new URLSearchParams({ action: "checkAccess", email: email })
+        });
+        const result = await resp.text();
 
-        const stream = await navigator.mediaDevices.getUserMedia(constraints);
-        const localVideo = document.getElementById('localVideo');
-        
-        localVideo.srcObject = stream;
-        
-        // CRITICAL: Mute the local video element
-        // This stops your speakers from playing back your own mic
-        localVideo.muted = true; 
-        localVideo.volume = 0;
-
-    } catch (err) {
-        console.error("Error accessing media devices.", err);
-        alert("Camera/Mic access denied.");
+        if (result === "AUTHORIZED") {
+            const memberResp = await fetch(SCRIPT_URL);
+            const members = await memberResp.json();
+            const user = members.find(m => m.email.toLowerCase().trim() === email.toLowerCase().trim());
+            
+            const displayName = user ? user.name : "Guest";
+            startMeeting(displayName);
+        } else {
+            msg.innerText = "❌ Email not found in Ministry Registry.";
+        }
+    } catch (e) {
+        msg.innerText = "Error connecting to server.";
+        console.error(e);
     }
 }
 
-    let isCamOn = true;
-let isMicOn = true;
-
-function toggleCam() {
-    const videoTrack = document.getElementById('localVideo').srcObject.getVideoTracks()[0];
-    const btn = document.getElementById('cam-btn');
+function startMeeting(userName) {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('meeting-ui').style.display = 'flex';
     
-    isCamOn = !isCamOn;
-    videoTrack.enabled = isCamOn;
-
-    if (isCamOn) {
-        btn.classList.remove('off');
-        btn.innerText = "📷"; // Camera On Icon
-    } else {
-        btn.classList.add('off');
-        btn.innerText = "🔇"; // Camera Off/Slash Icon (using emoji for simplicity)
-    }
-}
-
-function toggleMic() {
-    const audioTrack = document.getElementById('localVideo').srcObject.getAudioTracks()[0];
-    const btn = document.getElementById('mic-btn');
+    // Clear your "local" video placeholder to ensure a fresh container
+    document.querySelector('.video-grid').innerHTML = '<div id="meet-container" style="width:100%; height:100%;"></div>';
     
-    isMicOn = !isMicOn;
-    audioTrack.enabled = isMicOn;
+    // YOUR JAAS DETAILS
+    const APP_ID = "vpaas-magic-cookie-d9dd4038ca054df78413e65aacc3e5a7"; 
+    const domain = "8x8.vc"; 
+    
+    const options = {
+        roomName: APP_ID + "/MinistryConference_Room1", 
+        width: '100%',
+        height: '100%',
+        parentNode: document.querySelector('#meet-container'),
+        userInfo: {
+            displayName: userName
+        },
+        interfaceConfigOverwrite: {
+            // Ensures Jitsi handles the core meeting controls
+            TOOLBAR_BUTTONS: ['microphone', 'camera', 'hangup', 'desktop', 'tileview', 'chat', 'raisehand']
+        }
+    };
+    
+    // Initialize the Jitsi API
+    api = new JitsiMeetExternalAPI(domain, options);
 
-    if (isMicOn) {
-        btn.classList.remove('off');
-        btn.innerText = "🎤"; // Mic On Icon
-    } else {
-        btn.classList.add('off');
-        btn.innerText = "🎙️"; // Mic Muted Icon
-    }
+    // --- NEW: Handle the Hangup Event ---
+    api.addEventListener('videoConferenceLeft', () => {
+        console.log("User left the conference. Cleaning up...");
+        
+        // 1. Remove the Jitsi iframe and free up browser memory
+        api.dispose();
+        api = null;
+
+        // 2. Switch UI back to the Login Screen
+        document.getElementById('meeting-ui').style.display = 'none';
+        document.getElementById('login-screen').style.display = 'flex';
+        
+        // 3. Reset the login form for the next join
+        document.getElementById('userEmail').value = "";
+        document.getElementById('msg').innerText = "You have left the meeting.";
+        
+        // 4. Reset the video grid so it's ready for a new session later
+        document.querySelector('.video-grid').innerHTML = '<div id="meet-container" style="width:100%; height:100%;"></div>';
+    });
 }
+
+// Updated control functions to talk to Jitsi
+function toggleCam() { if(api) api.executeCommand('toggleVideo'); }
+function toggleMic() { if(api) api.executeCommand('toggleAudio'); }
 
 async function takeScreenshot() {
     try {
-        // 1. Capture the screen stream
-        const captureStream = await navigator.mediaDevices.getDisplayMedia({
-            video: { cursor: "always" },
-            audio: false
-        });
-
-        // 2. Create a hidden video element to hold the stream frame
+        const captureStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
         const video = document.createElement("video");
         video.srcObject = captureStream;
-        
         video.onloadedmetadata = () => {
             video.play();
-            
-            // 3. Draw the current frame to a canvas
             const canvas = document.createElement("canvas");
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
-            const ctx = canvas.getContext("2d");
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-            // 4. Convert canvas to image and download
-            const image = canvas.toDataURL("image/png");
+            canvas.getContext("2d").drawImage(video, 0, 0);
             const link = document.createElement("a");
-            link.href = image;
-            link.download = `Meeting_Screenshot_${new Date().getTime()}.png`;
+            link.href = canvas.toDataURL("image/png");
+            link.download = `Meeting_${new Date().getTime()}.png`;
             link.click();
-
-            // 5. Stop all tracks to turn off the "Recording" indicator in browser
             captureStream.getTracks().forEach(track => track.stop());
         };
-    } catch (err) {
-        console.error("Screenshot failed: ", err);
-        alert("Screen capture was cancelled or failed.");
-    }
+    } catch (err) { alert("Screenshot cancelled."); }
 }
     </script>
 </body>
