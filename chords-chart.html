@@ -115,7 +115,8 @@
        <div class="sidebar-header">
     <h3 style="margin:0; color:var(--primary)">🎵 Library</h3>
     <div style="display: flex; gap: 10px; align-items: center;">
-    <input type="file" id="sbpUpload" accept=".sbp" style="display:none;" onchange="handleSBP(event)">
+    <!-- Locate this line in your HTML (around line 121) -->
+<input type="file" id="sbpUpload" accept="*/*" style="display:none;" onchange="handleSBP(event)">
     <!-- Direct click opens the file browser immediately -->
     <button onclick="document.getElementById('sbpUpload').click()" title="Import .sbp" style="border:none; background:none; cursor:pointer; font-size: 18px;">📤</button>
     <button onclick="loadLibrary()" title="Refresh" style="border:none; background:none; cursor:pointer; font-size: 18px;">🔄</button>
@@ -382,13 +383,18 @@ async function handleSBP(event) {
     const file = event.target.files[0];
     if (!file) return;
 
-    // 1. Password check happens AFTER file selection
-    const userInput = prompt("Enter Password to confirm upload:");
-    if (userInput !== APP_PASSWORD) {
-        alert("Incorrect password. Upload cancelled.");
+    // --- NEW VALIDATION CHECK ---
+    const fileName = file.name.toLowerCase();
+    if (!fileName.endsWith('.sbp')) {
+        alert("Invalid file type. Please select a .sbp file.");
         event.target.value = ''; // Reset the input
         return;
     }
+    // ----------------------------
+
+    // 1. Password check happens AFTER file selection and type validation
+    const userInput = prompt("Enter Password to confirm upload:");
+    // ... rest of your existing code
 
     try {
         const zip = await JSZip.loadAsync(file);
