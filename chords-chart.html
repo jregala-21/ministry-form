@@ -118,7 +118,7 @@
     <!-- Locate this line in your HTML (around line 121) -->
 <input type="file" id="sbpUpload" accept="*/*" style="display:none;" onchange="handleSBP(event)">
     <!-- Direct click opens the file browser immediately -->
-    <button onclick="document.getElementById('sbpUpload').click()" title="Import .sbp" style="border:none; background:none; cursor:pointer; font-size: 18px;">📤</button>
+    <button onclick="checkAuth('import')" title="Import .sbp" style="border:none; background:none; cursor:pointer; font-size: 18px;">📤</button>
     <button onclick="loadLibrary()" title="Refresh" style="border:none; background:none; cursor:pointer; font-size: 18px;">🔄</button>
 </div>
 </div>
@@ -170,6 +170,7 @@
     
     if (userInput === APP_PASSWORD) {
         if (action === 'import') {
+            // Only now does the file window open
             document.getElementById('sbpUpload').click();
         } else if (action === 'save') {
             saveSongUpdates();
