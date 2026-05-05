@@ -4,12 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Setlist Archive | Full Manager</title>
+    <!-- Include html2pdf.js Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         :root {
             --bg: #0f172a; --card-bg: #1e293b; --text-main: #f8fafc;
             --accent: #10b981; --service-header: #4f46e5; --danger: #ef4444;
             --chord-color: #fbbf24; --header-color: #fb923c; --sub-text: #94a3b8;
-            --communion-purple: #a78bfa; /* Matches image_e3ea17.png */
+            --communion-purple: #a78bfa;
         }
         body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text-main); padding: 10px; max-width: 800px; margin: auto; }
         
@@ -21,15 +23,13 @@
 
         .song-list-container { padding: 10px 0; }
         .song-item { display: flex; align-items: center; padding: 10px 20px; border-bottom: 1px solid rgba(255,255,255,0.03); }
-        .song-item:last-child { border-bottom: none; }
 
-        /* Categorized Badges */
         .cat-badge { font-size: 9px; font-weight: 800; text-transform: uppercase; padding: 3px 8px; border-radius: 4px; margin-right: 15px; min-width: 85px; text-align: center; letter-spacing: 0.5px; }
         .cat-intro { background: #334155; color: #cbd5e1; }
         .cat-praise { background: rgba(16, 185, 129, 0.2); color: var(--accent); }
         .cat-worship { background: rgba(251, 191, 36, 0.2); color: var(--chord-color); }
         .cat-ministerial { background: rgba(99, 102, 241, 0.2); color: #818cf8; }
-        .cat-communion { background: rgba(167, 139, 250, 0.2); color: var(--communion-purple); } /* New Communion Style */
+        .cat-communion { background: rgba(167, 139, 250, 0.2); color: var(--communion-purple); }
         .cat-victory { background: rgba(167, 139, 250, 0.2); color: #a78bfa; } 
         .cat-closing { background: rgba(239, 68, 68, 0.2); color: var(--danger); }
 
@@ -38,19 +38,24 @@
         .controls { display: flex; gap: 8px; }
         .btn { padding: 8px 12px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; border: none; text-transform: uppercase; transition: 0.2s; text-decoration: none; display: inline-block; }
         .btn-view { background: var(--accent); color: #064e3b; }
+        .btn-pdf { background: #f1f5f9; color: #0f172a; } /* PDF Button Style */
         .btn-edit { background: #334155; color: #fff; }
         .btn-danger { background: var(--danger); color: white; }
 
         .full-modal { display: none; position: fixed; inset: 0; background: var(--bg); z-index: 2000; flex-direction: column; }
         .modal-nav { padding: 10px 15px; background: #111827; border-bottom: 1px solid #334155; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; }
-        #contentContainer, #libList { flex-grow: 1; overflow-y: auto; padding: 20px; }
+        #contentContainer { flex-grow: 1; overflow-y: auto; padding: 20px; }
 
         .chord-line { line-height: 2.4; font-family: 'Consolas', monospace; font-size: 16px; white-space: pre; position: relative; margin-top: 1.2em; }
         .chord-wrap { position: absolute; top: -1.1em; color: var(--chord-color); font-weight: bold; }
         .section-tag { color: var(--header-color); font-weight: bold; display: block; margin: 15px 0 5px 0; border-bottom: 1px solid #334155; }
         
         .loading-toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--accent); color: #000; padding: 10px 25px; border-radius: 30px; font-weight: bold; z-index: 4000; }
-        #libSearch { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #475569; background: #1e293b; color: white; }
+        
+        /* Styles used specifically for PDF output to ensure readability on white paper */
+        .pdf-export-mode { background: white !important; color: black !important; }
+        .pdf-export-mode .chord-wrap { color: #b45309 !important; }
+        .pdf-export-mode .section-tag { color: #4338ca !important; border-bottom: 1px solid #ddd !important; }
     </style>
 </head>
 <body>
@@ -64,6 +69,7 @@
         <div style="text-align: center; color: var(--sub-text); margin-top: 50px;">Loading archive...</div>
     </div>
 
+    <!-- Modal for Previewing -->
     <div id="viewerModal" class="full-modal">
         <div class="modal-nav">
             <div id="modalTitle" style="font-weight:bold;">Setlist</div>
@@ -72,25 +78,16 @@
         <div id="contentContainer"></div>
     </div>
 
-    <div id="selectorModal" class="full-modal" style="z-index: 3000;">
-        <div class="modal-nav">
-            <input type="text" id="libSearch" placeholder="Search song..." oninput="filterLibrary()">
-            <button onclick="closeSelector()" class="btn btn-danger" style="margin-left:10px;">CANCEL</button>
-        </div>
-        <div id="libList"></div>
-    </div>
+    <!-- Hidden Container for PDF generation -->
+    <div id="pdf-template" style="display:none;"></div>
 
     <script>
         const ARCHIVE_URL = "https://script.google.com/macros/s/AKfycbw11UhydEjyfPDlr5s43nddQn0rHHbRF4AIYtfNnnm3kmjkErPZm5rwCjEc18MUTVje/exec"; 
         const LIB_URL = "https://script.google.com/macros/s/AKfycbyabmsybyBb52Jj3-e5eNX31I_HBVIuZD_xF2WFyKjQWW3TdPNnP_NPDbQctpRnY8VT/exec";
 
-        // Added "Communion" to the flow list
         const flowCategories = ["Intro", "Praise", "Worship", "Ministerial", "Communion", "Victory", "Closing"];
-
         let archiveCache = [];
         let libraryCache = {};
-        let currentServiceName = "";
-        let currentCategory = "";
 
         async function init() {
             try {
@@ -140,6 +137,7 @@
                         <span class="service-name">🗓️ ${sName}</span>
                         <div class="controls">
                             <button class="btn btn-view" onclick="openPreviewAll('${sName.replace(/'/g, "\\'")}')">CHORDS</button>
+                            <button class="btn btn-pdf" onclick="exportToPDF('${sName.replace(/'/g, "\\'")}')">PDF</button>
                             <button class="btn btn-edit" onclick="enterEditMode('${sName.replace(/'/g, "\\'")}')">EDIT</button>
                         </div>
                     </div>
@@ -149,78 +147,57 @@
             });
         }
 
-        function enterEditMode(sName) {
-            currentServiceName = sName;
-            const songs = archiveCache.filter(i => i.serviceName === sName);
-            let html = `<h3 style="color:var(--accent); margin-bottom:20px; padding-left:5px;">Editing: ${sName}</h3>`;
-            
-            flowCategories.forEach(cat => {
-                const catSongs = songs.filter(s => s.category === cat);
-                html += `
-                    <div style="margin-bottom:20px; background:rgba(255,255,255,0.02); border-radius:8px; padding:10px;">
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; border-bottom:1px solid #334155; padding-bottom:8px;">
-                            <span class="cat-badge cat-${cat.toLowerCase()}">${cat}</span>
-                            <button class="btn" style="background:var(--accent); color:#000; font-size:9px;" onclick="openSelector('${cat}')">+ ADD</button>
-                        </div>
-                        ${catSongs.map(s => `
-                            <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 5px;">
-                                <span style="font-size:14px;">${s.title}</span>
-                                <button class="btn btn-danger" style="font-size:9px;" onclick="removeSong('${s.title.replace(/'/g, "\\'")}', '${cat}')">REMOVE</button>
-                            </div>
-                        `).join('')}
-                    </div>`;
-            });
+        // --- PDF EXPORT LOGIC ---
+        // --- UPDATED PDF EXPORT LOGIC ---
+function exportToPDF(sName) {
+    showToast("Generating PDF...");
+    
+    const songs = archiveCache.filter(i => i.serviceName === sName);
+    
+    // Create a dedicated container for PDF content with specific styling
+    let pdfHtml = `<div class="pdf-export-mode" style="background: white; color: black; padding: 0; margin: 0;">`;
+    
+    // Header for the Setlist
+    pdfHtml += `<h1 style="text-align:center; padding: 20px; border-bottom: 2px solid #000; margin-bottom: 0;">${sName}</h1>`;
+    
+    flowCategories.forEach(cat => {
+        songs.filter(s => s.category === cat).forEach((s) => {
+            // "page-break-before: always" ensures every song starts on a new page
+            pdfHtml += `
+                <div style="page-break-before: always; padding: 40px; min-height: 100%;">
+                    <div style="display:inline-block; font-size:10px; font-weight:bold; padding:2px 8px; border:1px solid #000; border-radius:4px; text-transform:uppercase; margin-bottom: 10px;">${cat}</div>
+                    <h2 style="margin: 0 0 20px 0; font-size: 24px; border-bottom: 1px solid #eee;">${s.title}</h2>
+                    <div style="font-size: 14px; line-height: 1.6;"> 
+                        ${parseChords(libraryCache[s.title] || "[Lyrics not found]")}
+                    </div>
+                </div>`;
+        });
+    });
+    pdfHtml += `</div>`;
 
-            html += `<button class="btn btn-danger" style="width:100%; margin-top:20px; padding:15px;" onclick="deleteEntireSetlist()">🗑️ DELETE ENTIRE SETLIST</button>`;
+    const element = document.getElementById('pdf-template');
+    element.innerHTML = pdfHtml;
+    element.style.display = 'block';
 
-            document.getElementById('modalTitle').innerText = "Manage Setlist";
-            document.getElementById('contentContainer').innerHTML = html;
-            document.getElementById('viewerModal').style.display = 'flex';
-        }
+    const opt = {
+        margin:       0, // Margins handled by inner padding for better control
+        filename:     `Setlist_${sName.replace(/\s+/g, '_')}.pdf`,
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { 
+            scale: 2, 
+            useCORS: true,
+            letterRendering: true 
+        },
+        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        // Use 'always' to respect the page-break-before style
+        pagebreak:    { mode: ['avoid-all', 'css', 'legacy'], before: '.page-break-always' }
+    };
 
-        async function removeSong(title, cat) {
-            if(!confirm(`Remove "${title}"?`)) return;
-            showToast("Removing...");
-            await fetch(ARCHIVE_URL, {
-                method: "POST", mode: "no-cors",
-                body: JSON.stringify({ action: "deleteSong", serviceName: currentServiceName, songTitle: title, category: cat })
-            });
-            setTimeout(async () => { await loadArchive(); enterEditMode(currentServiceName); hideToast(); }, 1200);
-        }
-
-        async function addSong(title) {
-            closeSelector();
-            showToast("Adding...");
-            await fetch(ARCHIVE_URL, {
-                method: "POST", mode: "no-cors",
-                body: JSON.stringify({ action: "saveSetlist", serviceName: currentServiceName, songTitle: title, category: currentCategory })
-            });
-            setTimeout(async () => { await loadArchive(); enterEditMode(currentServiceName); hideToast(); }, 1200);
-        }
-
-        async function deleteEntireSetlist() {
-            if(!confirm("Delete ENTIRE setlist?")) return;
-            showToast("Deleting...");
-            await fetch(ARCHIVE_URL, {
-                method: "POST", mode: "no-cors",
-                body: JSON.stringify({ action: "deleteSetlist", serviceName: currentServiceName })
-            });
-            setTimeout(async () => { await loadArchive(); closeModal(); hideToast(); }, 1500);
-        }
-
-        function openSelector(cat) {
-            currentCategory = cat;
-            const list = document.getElementById('libList');
-            list.innerHTML = "";
-            Object.keys(libraryCache).sort().forEach(title => {
-                const div = document.createElement('div');
-                div.style = "display:flex; justify-content:space-between; align-items:center; padding:12px; border-bottom:1px solid #334155;";
-                div.innerHTML = `<span style="font-size:14px;">${title}</span><button class="btn btn-view" style="font-size:9px;">SELECT</button>`;
-                div.onclick = () => addSong(title);
-                list.appendChild(div);
-            });
-            document.getElementById('selectorModal').style.display = 'flex';
-        }
+    html2pdf().set(opt).from(element).save().then(() => {
+        element.style.display = 'none';
+        hideToast();
+    });
+}
 
         function openPreviewAll(sName) {
             const songs = archiveCache.filter(i => i.serviceName === sName);
@@ -241,6 +218,7 @@
         }
 
         function parseChords(text) {
+            if (!text) return "";
             return text.split('\n').map(line => {
                 if (line.startsWith('{')) return `<span class="section-tag">${line.match(/:(.*)}/)?.[1] || "SECTION"}</span>`;
                 if (line.includes('[')) {
@@ -255,17 +233,16 @@
             }).join('');
         }
 
-        function filterLibrary() {
-            const term = document.getElementById('libSearch').value.toLowerCase();
-            const items = document.getElementById('libList').children;
-            Array.from(items).forEach(it => it.style.display = it.innerText.toLowerCase().includes(term) ? "flex" : "none");
+        function showToast(m) { 
+            const t = document.createElement('div'); 
+            t.id="toast"; 
+            t.className="loading-toast"; 
+            t.innerText=m; 
+            document.body.appendChild(t); 
         }
-
-        function showToast(m) { const t = document.createElement('div'); t.id="toast"; t.className="loading-toast"; t.innerText=m; document.body.appendChild(t); }
         function hideToast() { const t=document.getElementById("toast"); if(t) t.remove(); }
         function closeModal() { document.getElementById('viewerModal').style.display = 'none'; }
-        function closeSelector() { document.getElementById('selectorModal').style.display = 'none'; }
-
+        
         window.onload = init;
     </script>
 </body>
