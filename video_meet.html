@@ -123,9 +123,12 @@
     <div class="controls">
         <div class="meeting-info" id="display-time"></div>
         
-        <div class="button-group">
-            <button class="control-btn" onclick="takeScreenshot()" title="Take Screenshot">📸</button>
-        </div>
+        <!-- Inside the <div class="button-group"> -->
+<div class="button-group">
+    <button class="control-btn" onclick="takeScreenshot()" title="Take Screenshot">📸</button>
+    <!-- New Invite Button -->
+    <button class="control-btn" onclick="copyInviteLink()" title="Copy Invite Link">🔗</button>
+</div>
         
         <div style="width: 200px;"></div>
     </div>
@@ -236,6 +239,26 @@ async function takeScreenshot() {
             captureStream.getTracks().forEach(track => track.stop());
         };
     } catch (err) { alert("Screenshot cancelled."); }
+}
+
+function copyInviteLink() {
+    // Get the current URL of this webpage
+    const inviteUrl = window.location.href;
+
+    // Copy it to the clipboard
+    navigator.clipboard.writeText(inviteUrl).then(() => {
+        alert("Invite link copied to clipboard! You can now send it to others.");
+    }).catch(err => {
+        console.error('Failed to copy: ', err);
+        // Fallback for older browsers
+        const dummy = document.createElement('input');
+        document.body.appendChild(dummy);
+        dummy.value = inviteUrl;
+        dummy.select();
+        document.execCommand('copy');
+        document.body.removeChild(dummy);
+        alert("Invite link copied!");
+    });
 }
     </script>
 </body>
