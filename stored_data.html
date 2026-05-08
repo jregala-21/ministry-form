@@ -103,20 +103,26 @@
 
 async function refreshFiles() {
   document.getElementById('status').innerText = "Connecting to Drive...";
+  
   try {
-    // Adding 'mode: cors' and 'redirect: follow' ensures it works on GitHub
-    const response = await fetch(SCRIPT_URL, {
-      method: 'GET',
-      mode: 'cors', 
-      redirect: 'follow'
-    });
+    // Add a unique timestamp to force Google to give us fresh data
+    const urlWithCacheBuster = SCRIPT_URL + "?t=" + new Date().getTime();
     
+    const response = await fetch(urlWithCacheBuster, {
+      method: "GET",
+      redirect: "follow" // This is vital for GitHub -> Google
+    });
+
+    if (!response.ok) throw new Error('Network response was not ok');
+
     const items = await response.json();
+    console.log("Files received:", items); // Check your F12 console to see this!
     renderFiles(items);
     document.getElementById('status').innerText = "";
+    
   } catch (err) {
-    console.error(err);
-    document.getElementById('status').innerText = "Connection Failed. Ensure your App Script is deployed as 'Anyone'.";
+    console.error("Fetch error:", err);
+    document.getElementById('status').innerText = "Connection Failed. Try opening the App Script URL in a new tab first.";
   }
 }
 
