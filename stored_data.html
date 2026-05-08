@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <style>
+    :root { --accent: #f6ad55; --bg: #0f172a; --card: #1e293b; --text: #f8fafc; }
+    body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; padding: 20px; }
+    .container { max-width: 800px; margin: 0 auto; }
+    .header-nav { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; padding-bottom: 10px; margin-bottom: 20px; }
+    .folder-path { color: var(--accent); font-weight: bold; cursor: pointer; }
+    
+    .upload-box { background: var(--card); padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px dashed #475569; }
+    .file-item { background: var(--card); padding: 10px 15px; border-radius: 6px; display: flex; justify-content: space-between; margin-bottom: 6px; }
+    .folder-link { color: #60a5fa; cursor: pointer; text-decoration: underline; }
+    .btn { padding: 6px 12px; border-radius: 4px; border: none; cursor: pointer; font-weight: bold; }
+    .btn-up { background: var(--accent); color: #1e293b; }
+    .btn-del { background: #ef4444; color: white; margin-left: 10px; }
+    #status { color: var(--accent); font-size: 13px; margin-bottom: 10px; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header-nav">
+    <div class="folder-path" onclick="loadFolder()">📂 <span id="folderName">Root</span></div>
+    <button class="btn" style="background:#475569; color:white;" onclick="loadFolder()">Back to Main</button>
+  </div>
+
+  <div id="status"></div>
+
+  <div class="upload-box">
+    <input type="file" id="fileInput">
+    <button id="uploadBtn" class="btn btn-up" onclick="processUpload()">UPLOAD HERE</button>
+  </div>
+
+  <div id="fileList">Loading...</div>
+</div>
+
+<script>
+ const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz2XvDFjql9Qg602MTohW70hrNW_NiceAwQeJJ2rXDrAD9R1jgmcvgJ4X0UIJsI62kZ/exec";
+
+async function refreshFiles() {
+  document.getElementById('status').innerText = "Connecting to Drive...";
+  try {
+    // Adding 'mode: cors' and 'redirect: follow' ensures it works on GitHub
+    const response = await fetch(SCRIPT_URL, {
+      method: 'GET',
+      mode: 'cors', 
+      redirect: 'follow'
+    });
+    
+    const items = await response.json();
+    renderFiles(items);
+    document.getElementById('status').innerText = "";
+  } catch (err) {
+    console.error(err);
+    document.getElementById('status').innerText = "Connection Failed. Ensure your App Script is deployed as 'Anyone'.";
+  }
+}
+
+async function processUpload() {
+  const fileInput = document.getElementById('fileInput');
+  if (!fileInput.files[0]) return;
+
+  const file = fileInput.files[0];
+  const reader = new FileReader();
+  document.getElementById('status').innerText = "Uploading " + file.name + "...";
+
+  reader.onload = async (e) => {
+    const payload = { action: "upload", base64: e.target.result, filename: file.name };
+
+    try {
+      await fetch(SCRIPT_URL, {
+        method: "POST",
+        body: JSON.stringify(payload),
+        redirect: "follow" // Essential for POST requests from local
+      });
+      document.getElementById('status').innerText = "Upload Complete!";
+      fileInput.value = "";
+      refreshFiles();
+    } catch (err) {
+      document.getElementById('status').innerText = "Upload error.";
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
+  function renderFiles(items) {
+    const container = document.getElementById('fileList');
+    container.innerHTML = items.map(item => `
+      <div class="file-item">
+        <span>📄 ${item.name}</span>
+        <div>
+          <a href="${item.link}" target="_blank" class="btn-view" style="color:#f6ad55; text-decoration:none; margin-right:10px;">VIEW</a>
+          <button class="btn btn-del" onclick="processDelete('${item.id}')" style="background:#ef4444; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer;">DELETE</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+
+  async function processDelete(id) {
+    if (!confirm("Delete this file?")) return;
+    document.getElementById('status').innerText = "Deleting...";
+    
+    await fetch(SCRIPT_URL, {
+      method: "POST",
+      body: JSON.stringify({ action: "delete", id: id })
+    });
+    refreshFiles();
+  }
+</script>
+</body>
+</html>
