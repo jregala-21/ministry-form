@@ -339,8 +339,24 @@ async function saveSongUpdates() {
         return;
     }
 
+    // 2. Capture content from Editor if user is currently editing
     if (isEditMode) {
         currentRawContent = parseBackToBrackets(document.getElementById('chartEditor').value);
+    }
+    
+    // 3. --- NEW LOGIC: Apply Transposition to the content permanently ---
+    const steps = parseInt(document.getElementById('transposeSelect').value || 0);
+    let finalContent = currentRawContent;
+
+    if (steps !== 0) {
+        if (confirm(`You are saving this song in a new key (+${steps}). Do you want to permanently change the original key?`)) {
+            // Transpose the raw brackets content
+            finalContent = currentRawContent.replace(/\[(.*?)\]/g, (match, chord) => {
+                return "[" + transpose(chord, steps) + "]";
+            });
+        } else {
+            return; // Cancel save if they don't want to overwrite the key
+        }
     }
     
     if (!confirm("Save changes to Cloud?")) return;
@@ -352,7 +368,7 @@ async function saveSongUpdates() {
     const payload = { 
         action: "updateSong", 
         title: currentSelectedSongTitle, 
-        content: currentRawContent 
+        content: finalContent // We send the transposed version
     };
 
     try {
@@ -361,7 +377,12 @@ async function saveSongUpdates() {
             mode: "no-cors", 
             body: JSON.stringify(payload) 
         });
-        alert("Success!");
+        
+        // Update local variable so the UI stays in sync
+        currentRawContent = finalContent;
+        document.getElementById('transposeSelect').value = "0"; // Reset dropdown to Orig
+        
+        alert("Success! Key updated in Cloud.");
     } catch (e) { 
         alert("Error saving to cloud."); 
     } finally { 
