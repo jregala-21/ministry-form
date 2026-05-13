@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>History of JIL Taguig</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --accent: #d4af37;
+            --bg: #1a1a1a;
+            --card-bg: #2a2a2a;
+            --text: #ffffff;
+        }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            margin: 0;
+            background-color: var(--bg);
+            color: var(--text);
+        }
+
+        header {
+            text-align: center;
+            padding: 60px 20px;
+            background: linear-gradient(rgba(0,0,0,0.8), rgba(0,0,0,0.8));
+            border-bottom: 3px solid var(--accent);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .folder-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 25px;
+        }
+
+        .folder-card {
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 40px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid #444;
+        }
+
+        .folder-card:hover { transform: scale(1.05); border-color: var(--accent); }
+        .folder-icon { font-size: 60px; display: block; margin-bottom: 15px; }
+
+        #photo-viewer { display: none; }
+
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        @media (min-width: 600px) {
+            .controls { flex-direction: row; justify-content: space-between; align-items: center; }
+        }
+
+        .back-btn {
+            background: transparent;
+            color: var(--accent);
+            border: 2px solid var(--accent);
+            padding: 10px 20px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .zip-btn {
+            background: var(--accent);
+            color: black;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .photo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+        }
+
+        .photo-grid img {
+            width: 100%;
+            height: 250px;
+            object-fit: cover;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+
+        /* Lightbox */
+        #lightbox {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.95);
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #lightbox-img { max-width: 90%; max-height: 80%; border: 2px solid white; }
+        .lightbox-btns { margin-top: 20px; display: flex; gap: 20px; }
+        .dl-btn, .close-btn { padding: 12px 25px; border-radius: 5px; cursor: pointer; font-weight: bold; border: none; text-decoration: none; }
+        .dl-btn { background: var(--accent); color: black; }
+        .close-btn { background: #e74c3c; color: white; }
+
+        footer { text-align: center; padding: 50px; opacity: 0.6; }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>HISTORY OF JIL TAGUIG</h1>
+    <p style="color: var(--accent);">Honoring the Past, Celebrating the Future</p>
+</header>
+
+<div class="container">
+    <div id="folder-view" class="folder-grid"></div>
+
+    <div id="photo-viewer">
+        <div class="controls">
+            <button class="back-btn" onclick="showFolders()">← BACK TO ALBUMS</button>
+            <h2 id="album-title" style="margin: 0; color: var(--accent);"></h2>
+            <a id="zip-link" class="zip-btn" href="#" download>📦 DOWNLOAD FULL ALBUM (.ZIP)</a>
+        </div>
+        <div class="photo-grid" id="photo-list"></div>
+    </div>
+</div>
+
+<div id="lightbox">
+    <img id="lightbox-img" src="" alt="Full View">
+    <div class="lightbox-btns">
+        <a id="download-link" class="dl-btn" download>DOWNLOAD THIS IMAGE</a>
+        <button class="close-btn" onclick="closeLightbox()">CLOSE</button>
+    </div>
+</div>
+
+<footer>&copy; 2026 JIL Taguig Heritage Project</footer>
+
+<script>
+    // CRITICAL: Ensure these filenames match EXACTLY (including .jpg vs .JPG)
+    const albumData = {
+        "16th": ["16th_image1.jpg", "16th_image2.jpg", "16th_image3.jpg", "16th_image4.jpg", "16th_image5.jpg", "16th_image6.jpg", "16th_image7.jpg", "16th_image8.jpg"],
+        "17th": ["17th image1.jpg", "17th_image2.jpg", "17th_image3.jpg", "17th_image4.jpg", "17th_image5.jpg", "17th_image6.jpg", "17th_image7.jpg", "17th_image8.jpg","17th_image9.jpg", "17th_image10.jpg", "17th_image11.jpg", "17th_image12.jpg", "17th_image13.jpg", "17th_image14.jpg", "17th_image15.jpg", "17th_image16.jpg", "17th_image17.jpg", "17th_image18.jpg"],
+        "18th": ["18th image1.jpg", "18th image2.jpg", "18th image3.jpg", "18th image4.jpg", "18th image5.jpg", "18th image6.jpg", "18th image7.jpg", "18th image8.jpg"],
+        "19th": ["19th image1.jpg", "19th image2.jpg", "19th image3.jpg", "19th image4.jpg", "19th image5.jpg", "19th image6.jpg", "19th image7.jpg", "19th image8.jpg"],
+        "20th": ["20th image1.jpg", "20th image2.jpg", "20th image3.jpg", "20th image4.jpg", "20th image5.jpg", "20th image6.jpg", "20th image7.jpg", "20th image8.jpg"],
+        "21st": ["21st image1.jpg", "21st image2.jpg", "21st image3.jpg", "21st image4.jpg", "21st image5.jpg", "21st image6.jpg", "21st image7.jpg", "21st image8.jpg"],
+        "22nd": ["22nd image1.jpg", "22nd image2.jpg", "22nd image3.jpg", "22nd image4.jpg", "22ndimage5.jpg", "22ndimage6.jpg", "22ndimage7.jpg", "22ndimage8.jpg"],
+        "23rd": ["23rd image1.jpg", "23rd image2.jpg", "23rd image3.jpg", "23rd image4.jpg"],
+        "24th": [],
+        "25th": [],
+        "26th": [],
+        "27th": [],
+        "28th": [],
+        "29th": [],
+        "30th": [],
+        "HALOHALO OLD PICS": ["old_memories.jpg"]
+    };
+
+    const folderGrid = document.getElementById('folder-view');
+    const photoViewer = document.getElementById('photo-viewer');
+    const photoList = document.getElementById('photo-list');
+    const albumTitle = document.getElementById('album-title');
+    const zipLink = document.getElementById('zip-link');
+    const lightbox = document.getElementById('lightbox');
+    const lightboxImg = document.getElementById('lightbox-img');
+    const downloadLink = document.getElementById('download-link');
+
+    function init() {
+        Object.keys(albumData).forEach(folderName => {
+            const card = document.createElement('div');
+            card.className = 'folder-card';
+            const icon = folderName.includes('HALOHALO') ? '🖼️' : '📁';
+            card.innerHTML = `<span class="folder-icon">${icon}</span><strong>${folderName}</strong>`;
+            card.onclick = () => openAlbum(folderName);
+            folderGrid.appendChild(card);
+        });
+    }
+
+   function openAlbum(name) {
+    folderGrid.style.display = 'none';
+    photoViewer.style.display = 'block';
+    albumTitle.innerText = name;
+    
+    // Assumes zip is inside images folder: images/16th.zip
+    zipLink.href = `images/${name}.zip`; 
+    
+    photoList.innerHTML = '';
+
+    if(albumData[name].length === 0) {
+        photoList.innerHTML = '<p>No images found.</p>';
+    } else {
+        albumData[name].forEach(fileName => {
+            const img = document.createElement('img');
+            
+            // 1. Define the possible paths
+            const triplePath = `images/${name}/${name}/images/${fileName}`;
+            const doublePath = `images/${name}/${name}/${fileName}`;
+            const singlePath = `images/${name}/${fileName}`;
+            
+            // Start with the deepest one
+            img.src = triplePath;
+            
+            img.onerror = function() {
+                if (this.src.includes(triplePath)) {
+                    // Try double folder
+                    this.src = doublePath;
+                } else if (this.src.includes(doublePath)) {
+                    // Try single folder
+                    this.src = singlePath;
+                } else {
+                    // All failed
+                    console.error("FAILED ALL PATHS FOR: " + fileName);
+                    this.style.display = 'none';
+                }
+            };
+            
+            img.onclick = function() { openLightbox(this.src); };
+            photoList.appendChild(img);
+        });
+    }
+    window.scrollTo(0, 0);
+}
+
+    function openLightbox(src) {
+        lightboxImg.src = src;
+        downloadLink.href = src;
+        downloadLink.setAttribute('download', src.split('/').pop());
+        lightbox.style.display = 'flex';
+    }
+
+    function closeLightbox() { lightbox.style.display = 'none'; }
+    function showFolders() { folderGrid.style.display = 'grid'; photoViewer.style.display = 'none'; }
+    lightbox.onclick = function(e) { if (e.target === lightbox) closeLightbox(); };
+
+    init();
+</script>
+
+</body>
+</html>
