@@ -197,7 +197,7 @@
     photoViewer.style.display = 'block';
     albumTitle.innerText = name;
     
-    // This assumes your .zip file is in the same folder as your HTML
+    // The zip file is used ONLY for the download button
     zipLink.href = `${name}.zip`; 
     
     photoList.innerHTML = '';
@@ -208,26 +208,18 @@
         albumData[name].forEach(fileName => {
             const img = document.createElement('img');
             
-            // PATH 1: The "Double Folder" (Mac default: 16th/16th/image.jpg)
-            const macPath = `${name}/${name}/${fileName}`;
-            // PATH 2: The "Single Folder" (Standard: 16th/image.jpg)
-            const standardPath = `${name}/${fileName}`;
+            // This looks into the FOLDER you just unzipped
+            // Path: 16th/16th_image1.jpg
+            const path = `${name}/${fileName}`;
             
-            // Try the Mac path first
-            img.src = macPath;
+            img.src = path;
+            img.onclick = () => openLightbox(path);
             
             img.onerror = function() {
-                if (this.src.includes(macPath)) {
-                    // If Mac path fails, try the standard path
-                    this.src = standardPath;
-                } else {
-                    // If both fail, the file name or folder name is likely wrong
-                    console.error("COULD NOT FIND: " + fileName);
-                    this.style.display = 'none';
-                }
+                console.error("Browser looked for " + path + " but it wasn't there.");
+                this.style.display = 'none';
             };
             
-            img.onclick = function() { openLightbox(this.src); };
             photoList.appendChild(img);
         });
     }
