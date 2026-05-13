@@ -197,7 +197,7 @@
     photoViewer.style.display = 'block';
     albumTitle.innerText = name;
     
-    // Assumes zip is inside images folder: images/16th.zip
+    // This assumes your .zip file is in the same folder as your HTML
     zipLink.href = `${name}.zip`; 
     
     photoList.innerHTML = '';
@@ -208,24 +208,21 @@
         albumData[name].forEach(fileName => {
             const img = document.createElement('img');
             
-            // 1. Define the possible paths
-            const triplePath = `images/${name}/${name}/images/${fileName}`;
-            const doublePath = `images/${name}/${name}/${fileName}`;
-            const singlePath = `images/${name}/${fileName}`;
+            // PATH 1: The "Double Folder" (Mac default: 16th/16th/image.jpg)
+            const macPath = `${name}/${name}/${fileName}`;
+            // PATH 2: The "Single Folder" (Standard: 16th/image.jpg)
+            const standardPath = `${name}/${fileName}`;
             
-            // Start with the deepest one
-            img.src = triplePath;
+            // Try the Mac path first
+            img.src = macPath;
             
             img.onerror = function() {
-                if (this.src.includes(triplePath)) {
-                    // Try double folder
-                    this.src = doublePath;
-                } else if (this.src.includes(doublePath)) {
-                    // Try single folder
-                    this.src = singlePath;
+                if (this.src.includes(macPath)) {
+                    // If Mac path fails, try the standard path
+                    this.src = standardPath;
                 } else {
-                    // All failed
-                    console.error("FAILED ALL PATHS FOR: " + fileName);
+                    // If both fail, the file name or folder name is likely wrong
+                    console.error("COULD NOT FIND: " + fileName);
                     this.style.display = 'none';
                 }
             };
