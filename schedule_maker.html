@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=2.0, user-scalable=yes">
     <title>JIL Schedule Pro - Final</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@700;900&display=swap" rel="stylesheet">
+    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
     :root {
@@ -42,8 +46,9 @@
     .theme-sunday { background-color: var(--sun-bg) !important; color: var(--sun-dark); }
     .theme-midweek { background-color: var(--mid-bg) !important; color: var(--mid-dark); }
 
-    .header h1 { font-size: 65px; margin: 0; font-family: 'Arial Black', sans-serif; text-align: center; text-transform: uppercase; line-height: 1.1; }
-    .header h2 { font-size: 28px; margin: 0 0 10px 0; font-weight: 300; text-align: center; letter-spacing: 5px; text-transform: uppercase; }
+    /* Updated to League Spartan Font Style */
+    .header h1 { font-size: 65px; margin: 0; font-family: 'League Spartan', sans-serif; font-weight: 900; text-align: center; text-transform: uppercase; line-height: 1.1; }
+    .header h2 { font-size: 28px; margin: 0 0 10px 0; font-family: 'League Spartan', sans-serif; font-weight: 700; text-align: center; letter-spacing: 5px; text-transform: uppercase; }
 
     #main-content { flex-grow: 1; display: flex; flex-direction: column; }
 
@@ -51,7 +56,9 @@
     .sunday-grid { display: grid; gap: 6px; flex: 1; margin-top: 10px; }
     .sun-date-header { background: white; font-size: 24px; font-weight: 900; padding: 8px; text-align: center; border-radius: 10px; color: #333; }
     .sun-divider { grid-column: 1 / -1; text-align: center; font-size: 22px; font-weight: 900; letter-spacing: 15px; padding: 4px 0; text-transform: uppercase; }
-    .sun-row-label { background: var(--sun-dark); color: white; padding: 5px; font-size: 13px; font-weight: 900; display: flex; align-items: center; justify-content: center; text-align: center; border-radius: 6px; }
+    
+    /* Expanded Label Font Size to 16px for higher readability */
+    .sun-row-label { background: var(--sun-dark); color: white; padding: 5px; font-size: 16px; font-weight: 900; display: flex; align-items: center; justify-content: center; text-align: center; border-radius: 6px; }
     .sun-cell { background: white; border-radius: 6px; display: flex; align-items: center; justify-content: center; min-height: 54px; text-align: center; }
 
     /* MIDWEEK FLEX */
@@ -106,7 +113,7 @@
     </div>
     <div class="btn-group">
         <button class="clear-btn" onclick="clearAllData()">Reset All</button>
-        <button class="dl-btn" onclick="downloadAll()">Download Both</button>
+        <button id="downloadBtn" class="dl-btn" onclick="downloadCurrentService()">Download Sunday Only</button>
     </div>
 </div>
 
@@ -135,7 +142,55 @@
 </div>
 
 <script>
-    const MASTER_NAMES = ["PTRA. VILMA A.", "SIS. FIDES P.", "BRO. PETE A.", "SIS. CECILLE R.", "BRO. DAVE B.", "BRO. RONALD L.", "SIS. MAE P.", "SIS. JUSA I.", "SIS. MARITES J.", "SIS. MARYANNE L.", "SIS. CHARLENE J.", "SIS. ERICA A.", "BRO. GILBERT I.", "SIS. NENA D.", "SIS. ERIKA E.", "SIS. MERCY D.", "BRO. DAVID S.", "SIS. BELEN A.", "SIS. NUMELA P.", "SIS. LAURIE A.", "SIS. ALLY A.", "SIS. ANN S.", "SIS. ANGIE B.", "BRO. MARC M.", "SIS. PATRICIA D.", "SIS. SHEILAH P.", "BRO. JAZON D.", "SIS. ANABEL L.", "SIS. JOY P.", "SIS. MERIAM G.", "BRO. BONG P.", "BRO. JOJO A.", "BRO. RYAN L.", "SIS. SHELLY P."];
+    const MASTER_NAMES = ["SIS. MELY REGALA",
+                          "SIS. ANGIE BAUTISTA",
+                          "SIS. MILA MIRANDA",
+                          "SIS. CARMELITA CADUADA",
+                          "SIS. SOL ILAGAN",
+                          "SIS. LETTY LA VALLE",
+                          "SIS. NENA DELGADO",
+                          "SIS. CECILLE REYES",
+                          "SIS. JOSEPHINE FELICIA",
+                          "SIS. IMELDA LORENZO",
+                          "SIS. NATIVIDAD BAUTISTA",
+                          "BRO. PETE AGAPAY",
+                          "BRO. BONG PEROCHE",
+                          "BRO. EDUARDO PRADO",
+                          "BRO. CESAR DELA CRUZ",
+                          "BRO. GILBERT PILARCO",
+                          "BRO. ROMAN SARMIENTO",
+                          "BRO. GILBERT ILAGAN",
+                          "BRO. RICHARD VILLANUEVA",
+                          "BRO. ALEX ANCHETA",
+                          "BRO. JOJO ALIX",
+                          "BRO. TONY GUIB",
+                          "BRO. JULIETO MABONG",
+                          "BRO. RUGIN JUMAMOY",
+                          "BRO. DAVE BANEZ",
+                          "BRO. WILLY JAVIEN",
+                          "BRO. CHARLIE PEREZ",
+                          "BRO. RONNIE BADEO",
+                          "SIS. REVY JAVIEN",
+                          "SIS. BELEN AGAPAY",
+                          "SIS. FIDES PRADO",
+                          "SIS. ELLA PEROCHE",
+                          "SIS. VINA FLORES",
+                          "SIS. ANN SARMIENTO",
+                          "SIS. MARILYN ZARAGOZA",
+                          "SIS. MERIAM GUIB",
+                          "SIS. TERE VILLANUEVA",
+                          "SIS. JUSA IGCASAN",
+                          "SIS. ARLENE MIRANDA",
+                          "SIS. ANABEL LAYBA",
+                          "SIS. GENALINE BANEZ",
+                          "SIS. GUADA ARBUENA",
+                          "SIS. WILMA PILARCO",
+                          "SIS. MERCY DIONELA",
+                          "SIS. JASMIN TORRES",
+                          "SIS. JOVELYN KIBATAY",
+                          "SIS. CINDY GALLEGOS",
+                          "SIS. JOY PARAYAOAN",
+                          "PTRA. VILMA ANTIGO"];
     let statusMap = {}; 
     let activeSuggestionBox = null;
 
@@ -181,6 +236,15 @@
         const area = document.getElementById('capture-area');
         area.className = type === 'sunday' ? 'theme-sunday' : 'theme-midweek';
         document.getElementById('h-title').innerText = type.toUpperCase() + " SERVICE SCHEDULE";
+        
+        // Dynamically change the button text to match the currently viewable screen
+        const dlBtn = document.getElementById('downloadBtn');
+        if (type === 'sunday') {
+            dlBtn.innerText = "Download Sunday Only";
+        } else {
+            dlBtn.innerText = "Download Midweek Only";
+        }
+
         const monthName = new Date(year, month).toLocaleString('default', {month:'long'}).toUpperCase();
         document.getElementById('h-month').innerText = `MONTH OF ${monthName} ${year}`;
         const dayToFind = type === 'sunday' ? 0 : 4; 
@@ -253,21 +317,43 @@
 
     function clearAllData() { if(confirm("Erase all data?")) { localStorage.clear(); location.reload(); } }
 
-    async function downloadAll() {
-        const btn = document.querySelector('.dl-btn');
-        const originalType = document.getElementById('srvType').value;
-        btn.innerText = "Capturing..."; btn.disabled = true;
-        for (let type of ['sunday', 'midweek']) {
-            document.getElementById('srvType').value = type; init(); 
-            await new Promise(r => setTimeout(r, 800)); 
-            const canvas = await html2canvas(document.querySelector("#capture-area"), {
-                scale: 2, width: 1700, height: 1080, windowWidth: 1700, windowHeight: 1080, x: 0, y: 0, scrollX: 0, scrollY: 0, useCORS: true,
-                onclone: (clonedDoc) => { const area = clonedDoc.getElementById('capture-area'); area.style.transform = 'none'; area.style.margin = '0'; }
-            });
-            let link = document.createElement('a'); link.download = `JIL-${type.toUpperCase()}.png`; link.href = canvas.toDataURL("image/png"); link.click();
-        }
-        document.getElementById('srvType').value = originalType; init();
-        btn.innerText = "Download Both"; btn.disabled = false;
+    // Completely separated download feature to safely extract only the active screen layout
+    async function downloadCurrentService() {
+        const btn = document.getElementById('downloadBtn');
+        const type = document.getElementById('srvType').value;
+        const originalText = btn.innerText;
+        
+        btn.innerText = "Capturing..."; 
+        btn.disabled = true;
+        
+        // Brief freeze mitigation layout check
+        await new Promise(r => setTimeout(r, 400)); 
+        
+        const canvas = await html2canvas(document.querySelector("#capture-area"), {
+            scale: 2, 
+            width: 1700, 
+            height: 1080, 
+            windowWidth: 1700, 
+            windowHeight: 1080, 
+            x: 0, 
+            y: 0, 
+            scrollX: 0, 
+            scrollY: 0, 
+            useCORS: true,
+            onclone: (clonedDoc) => { 
+                const area = clonedDoc.getElementById('capture-area'); 
+                area.style.transform = 'none'; 
+                area.style.margin = '0'; 
+            }
+        });
+        
+        let link = document.createElement('a'); 
+        link.download = `JIL-${type.toUpperCase()}.png`; 
+        link.href = canvas.toDataURL("image/png"); 
+        link.click();
+        
+        btn.innerText = originalText; 
+        btn.disabled = false;
     }
     window.onload = init;
 </script>
