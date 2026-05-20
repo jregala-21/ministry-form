@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JIL WAN-MAN Taguig Portal</title>
+    <title>JIL Taguig Portal</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -34,6 +34,32 @@
 
         .menu-btn:hover { background: #e5e7eb; transform: translateY(-2px); }
 
+        /* Portal Selection Specific Buttons */
+        .btn-portal-selection {
+            background: #ffffff;
+            color: #4f46e5;
+            border: 2px solid #4f46e5;
+            padding: 20px;
+            font-size: 18px;
+        }
+        .btn-portal-selection:hover {
+            background: #4f46e5;
+            color: #ffffff;
+            box-shadow: 0 8px 15px rgba(79, 70, 229, 0.3);
+        }
+
+        /* New Prominent Style for History Button on Home Page */
+        .btn-history-home {
+            background: #f59e0b;
+            color: white;
+            padding: 16px;
+            font-size: 16px;
+        }
+        .btn-history-home:hover {
+            background: #d97706;
+            box-shadow: 0 8px 15px rgba(245, 158, 11, 0.3);
+        }
+
         /* Category Colors */
         .btn-via { background: #4f46e5; color: white; }
         .btn-via:hover { background: #4338ca; box-shadow: 0 8px 15px rgba(79, 70, 229, 0.3); }
@@ -41,12 +67,27 @@
         .btn-jam { background: #10b981; color: white; }
         .btn-jam:hover { background: #059669; box-shadow: 0 8px 15px rgba(16, 185, 129, 0.3); }
 
-        /* New MAN Button Style */
+        /* Secondary MAN layout configurations */
         .btn-man { background: #f59e0b; color: white; }
         .btn-man:hover { background: #d97706; box-shadow: 0 8px 15px rgba(245, 158, 11, 0.3); }
 
         .btn-preacher { background: #374151; color: white; }
         .btn-preacher:hover { background: #1f2937; box-shadow: 0 8px 15px rgba(55, 65, 81, 0.3); }
+
+        /* Back Button Style */
+        .btn-back {
+            background: none;
+            border: none;
+            color: #6b7280;
+            font-size: 14px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-bottom: 15px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .btn-back:hover { color: #1f2937; }
 
         /* Submenu Styling */
         .submenu {
@@ -76,6 +117,10 @@
 
         .sub-btn:hover { background: #f9fafb; border-color: #d1d5db; }
 
+        /* View State Management */
+        .portal-section { display: none; }
+        .portal-section.active-view { display: block; }
+
         .footer { margin-top: 30px; font-size: 12px; color: #9ca3af; }
         .arrow { font-size: 12px; transition: 0.3s; }
         .rotate { transform: rotate(180deg); }
@@ -84,60 +129,65 @@
 <body>
 
 <div class="container">
-    <h2>⛪ JIL WAN-MAN TAGUIG PORTAL</h2>
+    <h2>⛪ JIL TAGUIG PORTAL</h2>
 
-    <!-- VIA Section -->
-    <button class="menu-btn btn-via" onclick="toggleMenu('viaMenu', 'viaArrow')">
-        ⭐ VIA <span id="viaArrow" class="arrow">▼</span>
-    </button>
-    <div id="viaMenu" class="submenu">
-        <button class="menu-btn sub-btn" onclick="location.href='lineup_creator.html'">📝 Lineup Creator</button>
-        <button class="menu-btn sub-btn" onclick="location.href='voice_tracks.html'">🎤 Vocal Key Track</button>
+    <div id="selectionView" class="portal-section active-view">
+        <p style="color: #6b7280; margin-bottom: 25px; font-weight: 500;">Please select your access gateway:</p>
+        
+        <button class="menu-btn btn-portal-selection" onclick="switchView('wanmanView')">
+            🎵 WAN-MAN PORTAL
+        </button>
+        
+        <button class="menu-btn btn-portal-selection" onclick="switchView('pastorsView')">
+            💼 PASTORS / ADMIN PORTAL
+        </button>
+
+        <button class="menu-btn btn-history-home" onclick="location.href='Album.html'">
+            📖 View JIL Taguig History
+        </button>
     </div>
 
-    <!-- JAM Section -->
-    <button class="menu-btn btn-jam" onclick="toggleMenu('jamMenu', 'jamArrow')">
-        🎸 JAM <span id="jamArrow" class="arrow">▼</span>
-    </button>
-    <div id="jamMenu" class="submenu">
-        <button class="menu-btn sub-btn" onclick="location.href='chords-chart.html'">🎼 Chords Chart</button>
-        <button class="menu-btn sub-btn" onclick="location.href='Setlist.html'">🎼 Setlist</button>
+    <div id="wanmanView" class="portal-section">
+        <button class="btn-back" onclick="switchView('selectionView')">⬅️ Back to Main Menu</button>
+        
+        <button class="menu-btn btn-via" onclick="toggleMenu('viaMenu', 'viaArrow')">
+            ⭐ VIA <span id="viaArrow" class="arrow">▼</span>
+        </button>
+        <div id="viaMenu" class="submenu">
+            <button class="menu-btn sub-btn" onclick="location.href='lineup_creator.html'">📝 Lineup Creator</button>
+            <button class="menu-btn sub-btn" onclick="location.href='voice_tracks.html'">🎤 Vocal Key Track</button>
+        </div>
+
+        <button class="menu-btn btn-jam" onclick="toggleMenu('jamMenu', 'jamArrow')">
+            🎸 JAM <span id="jamArrow" class="arrow">▼</span>
+        </button>
+        <div id="jamMenu" class="submenu">
+            <button class="menu-btn sub-btn" onclick="location.href='chords-chart.html'">🎼 Chords Chart</button>
+            <button class="menu-btn sub-btn" onclick="location.href='Setlist.html'">🎼 Setlist</button>
+        </div>
+
+        <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+
+        <button class="menu-btn" onclick="location.href='video_meet.html'">📋 Video Conference</button>
+        <button class="menu-btn" onclick="location.href='index - Copy.html'">📋 Ministry Form</button>
+        <button class="menu-btn" onclick="location.href='lineup_viewer.html'">📋 View Saved Lineups</button>
+        <button class="menu-btn" onclick="location.href='announcement.html'">📧 Line Up / Announcement Sender</button>
     </div>
 
-    <!-- MAN Section -->
-    <button class="menu-btn btn-man" onclick="toggleMenu('manMenu', 'manArrow')">
-        🖥️ MAN <span id="manArrow" class="arrow">▼</span>
-    </button>
-    <div id="manMenu" class="submenu">
-        <button class="menu-btn sub-btn" onclick="location.href='schedule_maker.html'">✨ Midweek / Sunday Scheduler</button>
-        <button class="menu-btn sub-btn" onclick="location.href='album.html'">✨ View JIL Taguig History</button>
+    <div id="pastorsView" class="portal-section">
+        <button class="btn-back" onclick="switchView('selectionView')">⬅️ Back to Main Menu</button>
+
+        <button class="menu-btn btn-man" onclick="location.href='schedule_maker.html'">
+            🖥️ Sunday / Midweek Scheduler
+        </button>
+
+        <button class="menu-btn btn-preacher" onclick="toggleMenu('preachMenu', 'preachArrow')">
+            📖 Pastors / Pulpit Ministers <span id="preachArrow" class="arrow">▼</span>
+        </button>
+        <div id="preachMenu" class="submenu">
+            <button class="menu-btn sub-btn" onclick="location.href='preacher_upload.html'">📤 Upload Your File / Teaching</button>
+        </div>
     </div>
-    
-    <!-- Pastors Section -->
-    <button class="menu-btn btn-preacher" onclick="toggleMenu('preachMenu', 'preachArrow')">
-        📖 Pastors/Pulpit Ministers <span id="preachArrow" class="arrow">▼</span>
-    </button>
-    <div id="preachMenu" class="submenu">
-        <button class="menu-btn sub-btn" onclick="location.href='preacher_upload.html'">📤 Upload Your File / Teaching</button>
-    </div>
-
-    <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
-
-    <button class="menu-btn" onclick="location.href='video_meet.html'">
-        📋 Video Conference
-    </button>
-
-    <button class="menu-btn" onclick="location.href='index - Copy.html'">
-        📋 Ministry Form
-    </button>
-
-    <button class="menu-btn" onclick="location.href='lineup_viewer.html'">
-        📋 View Saved Lineups
-    </button>
-
-    <button class="menu-btn" onclick="location.href='announcement.html'">
-        📧 Line Up / Announcement Sender
-    </button>
 
     <div class="footer">
         Digital WAN-MAN Portal &bull; 2026
@@ -145,12 +195,22 @@
 </div>
 
 <script>
+    function switchView(viewId) {
+        document.querySelectorAll('.portal-section').forEach(view => {
+            view.classList.remove('active-view');
+        });
+        
+        document.querySelectorAll('.submenu').forEach(m => m.classList.remove("active"));
+        document.querySelectorAll('.arrow').forEach(a => a.classList.remove("rotate"));
+
+        document.getElementById(viewId).classList.add('active-view');
+    }
+
     function toggleMenu(menuId, arrowId) {
         const menu = document.getElementById(menuId);
         const arrow = document.getElementById(arrowId);
         const isActive = menu.classList.contains("active");
 
-        // Auto-close other menus
         document.querySelectorAll('.submenu').forEach(m => m.classList.remove("active"));
         document.querySelectorAll('.arrow').forEach(a => a.classList.remove("rotate"));
 
