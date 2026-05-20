@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Drive Cloud Manager</title>
+    <title>Drive Cloud Manager & Broadcast Portal</title>
     <style>
         body {
             font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             background: linear-gradient(135deg, #4f46e5, #6d28d9);
             display: flex; justify-content: center; align-items: flex-start;
-            min-height: 100vh; margin: 0; padding: 20px 10px; /* Adjusted for mobile */
+            min-height: 100vh; margin: 0; padding: 20px 10px;
             box-sizing: border-box;
         }
 
@@ -27,7 +27,6 @@
             border-bottom: 2px solid #f0f0f0;
             padding-bottom: 25px;
             margin-bottom: 25px;
-            text-align: center;
         }
 
         .input-group { margin-bottom: 15px; display: flex; flex-direction: column; text-align: left; }
@@ -44,26 +43,49 @@
             background: #f9f9ff; cursor: pointer; transition: 0.3s;
         }
 
+        /* Modal/Extra Recipients Section */
+        .extra-recipients-toggle {
+            background: none; border: none; color: #6366f1; 
+            font-size: 12px; font-weight: bold; cursor: pointer;
+            padding: 5px 0; margin-bottom: 10px; text-align: left;
+            display: inline-block; text-decoration: underline;
+        }
+
+        .extra-box {
+            display: none; background: #f9fafb; border: 1px solid #e5e7eb;
+            padding: 15px; border-radius: 12px; margin-bottom: 20px;
+        }
+
+        .extra-box textarea {
+            width: 100%; padding: 10px; border: 1px solid #d1d5db;
+            border-radius: 8px; font-size: 13px; resize: none;
+            box-sizing: border-box; font-family: inherit;
+        }
+
+        .default-badge-container {
+            display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 20px;
+        }
+        .email-badge {
+            background: #f3f4f6; color: #4b5563; font-size: 11px;
+            padding: 4px 10px; border-radius: 20px; border: 1px solid #e5e7eb;
+        }
+
         .btn-upload { 
             background: #4f46e5; color: white; width: 100%; 
             justify-content: center; padding: 14px; font-size: 15px;
             border: none; border-radius: 10px; font-weight: 700;
             cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 8px;
+            box-shadow: 0 4px 6px rgba(79, 70, 229, 0.2);
         }
         .btn-upload:active { transform: scale(0.98); }
+        .btn-upload:disabled { background: #a5a2e1; cursor: not-allowed; transform: none; }
         
         .btn-refresh { background: #f3f4f6; color: #4b5563; font-size: 11px; padding: 8px 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
         
-        /* Responsive File List */
         .file-item {
-            background: #fff;
-            border: 1px solid #f0f0f0;
-            padding: 15px;
-            border-radius: 12px;
-            margin-bottom: 12px;
-            display: flex;
-            flex-direction: column; /* Stack on mobile */
-            gap: 12px;
+            background: #fff; border: 1px solid #f0f0f0; padding: 15px;
+            border-radius: 12px; margin-bottom: 12px; display: flex;
+            flex-direction: column; gap: 12px;
         }
 
         @media (min-width: 480px) {
@@ -72,10 +94,10 @@
             .card { padding: 40px; }
         }
 
-        .file-info { flex-grow: 1; min-width: 0; }
+        .file-info { flex-grow: 1; min-width: 0; text-align: left; }
         .file-name { 
             font-weight: 600; color: #333; font-size: 14px; display: block; 
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; /* Prevent long names from breaking layout */
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
         
         .file-date { font-size: 11px; color: #888; display: block; margin-top: 4px; font-style: italic; }
@@ -84,8 +106,7 @@
         .file-actions a, .file-actions button {
             text-decoration: none; font-size: 10px; font-weight: bold;
             padding: 8px 10px; border-radius: 6px; border: none; cursor: pointer;
-            text-transform: uppercase; flex: 1; text-align: center; /* Buttons fill space on small screens */
-            min-width: 70px;
+            text-transform: uppercase; flex: 1; text-align: center; min-width: 70px;
         }
         
         .view-btn { color: #4f46e5; background: #eef2ff; }
@@ -101,15 +122,34 @@
 <body>
 
 <div class="card">
-    <h2>☁️ Drive Cloud Manager</h2>
-    <p class="subtitle">Securely upload, view, and delete your cloud files</p>
+    <h2>☁️ UPLOAD YOUR FILES HERE:</h2>
+    <p class="subtitle">Upload resources to Drive and automatically notify core ministry team members</p>
 
     <div class="upload-section">
         <div class="input-group">
-            <label>Select File</label>
+            <label>Select Document File</label>
             <input type="file" id="fileInput">
         </div>
-        <button class="btn-upload" onclick="uploadFile()">🚀 Upload to Drive</button>
+
+        <div class="input-group">
+            <label>👥 Automatic Recipients (${DEFAULT_EMAILS.length} Core Members)</label>
+            <div class="default-badge-container">
+                <span class="email-badge">jazondecena@gmail.com</span>
+                <span class="email-badge">Arlieconejar123@gmail.com</span>
+                <span class="email-badge">regalajohndavid@gmail.com</span>
+                <span class="email-badge">shellypilarcooo@gmail.com</span>
+                <span class="email-badge">javienchawish@gmail.com</span>
+                <span class="email-badge">maritesjamito04@gmail.com</span>
+            </div>
+            
+            <button class="extra-recipients-toggle" onclick="toggleExtraBox()">➕ Need to add extra email targets?</button>
+            <div class="extra-box" id="extraBox">
+                <label style="font-size: 10px; color: #4b5563;">Enter additional emails separated by commas:</label>
+                <textarea id="extraEmailsField" placeholder="example1@gmail.com, example2@gmail.com"></textarea>
+            </div>
+        </div>
+
+        <button class="btn-upload" id="uploadBtn" onclick="uploadAndBroadcastFile()">🚀 Upload to Drive & Dispatch</button>
         <p id="status">Ready</p>
     </div>
 
@@ -131,13 +171,30 @@
 <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzeu4VmiBQaF5lHW0U3kIb7ibu3Z5sIdMMVHui921JfvwlzPwgurGxl9k_vQBsN45yn/exec";
     const SCRIPT_URL1 = "https://script.google.com/macros/s/AKfycby60xVkMGA3DPHNIX0qxxPF4pluT2R7GSs7VggkbyvXRAxN_eGFygXgOvYptfqjME02/exec";
+    const SEND_EMAILS_URL = "https://script.google.com/macros/s/AKfycbxCmeDGNmRD0Z_FJm6LM897IC-oN0DGuh_R-kLz-49pseLEAL4ftx8tzwtvtBaGNT1dEA/exec";
 
-    window.onload = loadFiles;
+    // Static automated lists assigned directly
+    const DEFAULT_EMAILS = [
+        "jazondecena@gmail.com",
+        "Arlieconejar123@gmail.com",
+        "regalajohndavid@gmail.com",
+        "shellypilarcooo@gmail.com",
+        "javienchawish@gmail.com",
+        "maritesjamito04@gmail.com"
+    ];
+
+    window.onload = function() {
+        loadFiles();
+    };
+
+    function toggleExtraBox() {
+        const box = document.getElementById("extraBox");
+        box.style.display = (box.style.display === "block") ? "none" : "block";
+    }
 
     async function loadFiles() {
         const container = document.getElementById('fileListContainer');
         container.innerHTML = '<p style="text-align: center; color: #999; font-size: 13px;">Updating files...</p>';
-
         try {
             const response = await fetch(SCRIPT_URL1);
             const files = await response.json();
@@ -168,50 +225,146 @@
         }
     }
 
-    async function uploadFile() {
+    async function uploadAndBroadcastFile() {
         const fileInput = document.getElementById('fileInput');
+        const uploadBtn = document.getElementById('uploadBtn');
         const status = document.getElementById('status');
-        if (fileInput.files.length === 0) { status.innerText = "❌ Select a file"; return; }
+        
+        // Build targets array starting with default contacts
+        let targetEmails = [...DEFAULT_EMAILS];
+        
+        // Parse extra addresses if typed into input container
+        const extraInput = document.getElementById("extraEmailsField").value.trim();
+        if (extraInput) {
+            const extraArray = extraInput.split(",").map(email => email.trim()).filter(email => email.length > 0);
+            targetEmails = targetEmails.concat(extraArray);
+        }
+
+        if (fileInput.files.length === 0) { alert("Please select a file to upload."); return; }
+
+        uploadBtn.disabled = true;
+        status.innerText = "⏳ Step 1: Uploading file to Google Drive...";
+        status.style.color = "#4f46e5";
 
         const file = fileInput.files[0];
         const reader = new FileReader();
-        status.innerText = "⏳ Uploading...";
 
         reader.onload = async function() {
             const base64 = reader.result.split(',')[1];
+            let uploadedFileUrl = "";
+
+            const uploadPayload = {
+                base64: base64,
+                mimeType: file.type,
+                fileName: file.name
+            };
+
             try {
                 const response = await fetch(SCRIPT_URL, {
                     method: 'POST',
-                    body: JSON.stringify({ base64: base64, mimeType: file.type, fileName: file.name })
+                    body: JSON.stringify(uploadPayload)
                 });
+                
                 const result = await response.json();
+                
                 if (result.status === "success") {
-                    status.innerText = "✅ Uploaded!";
-                    fileInput.value = ""; 
-                    loadFiles();
+                    status.innerText = "⏳ File saved! Fetching trackable access URL...";
+                    const listResponse = await fetch(SCRIPT_URL1);
+                    const currentFiles = await listResponse.json();
+                    
+                    const cleanMatch = currentFiles.find(f => f.name === file.name);
+                    uploadedFileUrl = cleanMatch ? cleanMatch.url : "https://drive.google.com";
+                } else {
+                    status.innerText = "❌ File Upload failed: " + (result.message || "Backend rejected parameters");
+                    status.style.color = "#dc2626";
+                    uploadBtn.disabled = false;
+                    return;
                 }
-            } catch (error) { status.innerText = "❌ Failed"; }
+            } catch (error) {
+                status.innerText = "❌ Network connection to Drive dropped.";
+                status.style.color = "#dc2626";
+                uploadBtn.disabled = false;
+                return;
+            }
+
+            let successCount = 0;
+            const customMessage = `Greetings Ministers,\n\nA new teaching file/resource has been successfully uploaded to the cloud system portal.\n\n📄 File Name: ${file.name}\n🔗 Access Link: ${uploadedFileUrl}\n\nJIL WAN-MAN Taguig Portal`;
+
+            for (let i = 0; i < targetEmails.length; i++) {
+                const currentEmail = targetEmails[i];
+                status.innerText = `⏳ Step 2: Mailing resource sheet to member ${i + 1} of ${targetEmails.length}...`;
+
+                const mailPayload = {
+                    recipient: currentEmail,
+                    message: customMessage,
+                    attachments: [
+                        {
+                            fileName: file.name,
+                            fileType: file.type,
+                            fileContent: base64
+                        }
+                    ]
+                };
+
+                try {
+                    await fetch(SEND_EMAILS_URL, {
+                        method: "POST",
+                        mode: "no-cors", 
+                        body: JSON.stringify(mailPayload)
+                    });
+                    successCount++;
+                } catch (error) {
+                    console.error(`Error delivering notification package to ${currentEmail}`, error);
+                }
+            }
+
+            status.innerText = `✅ Success! Uploaded & distributed to ${successCount} targets safely.`;
+            status.style.color = "#059669";
+            
+            // Clear items
+            fileInput.value = ""; 
+            document.getElementById("extraEmailsField").value = "";
+            document.getElementById("extraBox").style.display = "none";
+            uploadBtn.disabled = false;
+            loadFiles();
         };
+
         reader.readAsDataURL(file);
     }
 
     async function deleteFile(fileId) {
-        if (!confirm("Delete this file?")) return;
+        if (!confirm("Are you sure you want to delete this file?")) return;
         const status = document.getElementById('status');
+        status.style.color = "#4f46e5";
         status.innerText = "🗑️ Deleting...";
+        
+        const deletePayload = {
+            action: "delete",
+            fileId: fileId
+        };
+
         try {
-            const response = await fetch(SCRIPT_URL, {
+            const response = await fetch(SCRIPT_URL1, {
                 method: 'POST',
-                body: JSON.stringify({ action: "delete", fileId: fileId })
+                body: JSON.stringify(deletePayload)
             });
+            
             const result = await response.json();
+            
             if (result.status === "success") {
-                status.innerText = "✅ Deleted";
+                status.innerText = "✅ Deleted Successfully!";
+                status.style.color = "#059669";
                 loadFiles();
+            } else {
+                status.innerText = "❌ Delete failed: " + (result.message || "Error context missing");
+                status.style.color = "#dc2626";
             }
-        } catch (error) { status.innerText = "❌ Error"; }
+        } catch (error) { 
+            status.innerText = "❌ Error processing request"; 
+            status.style.color = "#dc2626";
+            console.error(error);
+        }
     }
 </script>
-
 </body>
 </html>
