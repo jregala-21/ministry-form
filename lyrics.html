@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lyrics Library & Setlist Builder</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --bg-main: #f9fafb;
+            --bg-card: #ffffff;
+            --text-main: #1f2937;
+            --text-muted: #6b7280;
+            --border: #e5e7eb;
+            --danger: #ef4444;
+            --danger-hover: #dc2626;
+            --success: #10b981;
+            --success-hover: #059669;
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            margin: 0; padding: 0;
+            color: var(--text-main);
+            background-color: var(--bg-main);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Responsive Sidebar Panel */
+        .sidebar {
+            width: 340px;
+            background: var(--bg-card);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 90;
+        }
+
+        .sidebar-header { padding: 20px; border-bottom: 1px solid var(--border); }
+        .sidebar-header h2 { margin: 0 0 15px 0; font-size: 20px; color: var(--primary); }
+
+        .search-box { display: flex; gap: 8px; }
+        .search-box input {
+            flex: 1; padding: 12px; border: 1px solid var(--border);
+            border-radius: 8px; font-size: 14px; outline: none; background: #f9fafb;
+        }
+        .search-box input:focus { border-color: var(--primary); background: #fff; }
+
+        .song-list {
+            flex: 1; overflow-y: auto; list-style: none;
+            margin: 0; padding: 10px; -webkit-overflow-scrolling: touch;
+        }
+
+        .song-item {
+            padding: 14px; border-radius: 10px; cursor: pointer; margin-bottom: 8px;
+            display: flex; flex-direction: column; gap: 10px;
+            border: 1px solid #f1f5f9; background: #ffffff;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.02); transition: all 0.2s ease;
+        }
+        .song-item:hover { background: #f9fafb; border-color: var(--border); }
+        .song-item.active { background: #eef2ff; border-color: #c7d2fe; }
+
+        .song-info-row { display: flex; justify-content: space-between; align-items: center; }
+        .song-title { font-weight: 600; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; text-align: left; }
+
+        .category-select {
+            padding: 10px; font-size: 13px; border-radius: 8px; border: 1px solid var(--border);
+            background: white; outline: none; width: 100%; cursor: pointer; color: #4b5563;
+        }
+
+        /* Central Layout Frame Workspace */
+        .main-content {
+            flex: 1; display: flex; flex-direction: column; background: #ffffff;
+            height: 100%; overflow-y: auto; position: relative; -webkit-overflow-scrolling: touch;
+        }
+
+        .lyrics-placeholder {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            height: 100%; color: var(--text-muted); padding: 20px; text-align: center;
+        }
+
+        .lyrics-display { padding: 40px 24px; max-width: 750px; margin: 0 auto; width: 100%; display: none; }
+        .lyrics-header {
+            border-bottom: 2px solid var(--border); padding-bottom: 20px; margin-bottom: 30px;
+            display: flex; justify-content: space-between; align-items: center; gap: 15px;
+        }
+        .lyrics-header h1 { margin: 0; font-size: 26px; text-align: left; word-break: break-word; }
+
+        .action-bar-top { display: flex; flex-direction: column; gap: 8px; margin-top: 15px; padding: 0 20px; }
+        .btn-action {
+            width: 100%; padding: 12px; font-weight: bold; font-size: 14px;
+            border: none; border-radius: 8px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            transition: background 0.2s ease;
+        }
+        .btn-manage-setlist { background: var(--success); color: white; }
+        .btn-manage-setlist:hover { background: var(--success-hover); }
+        .btn-pdf { background: var(--danger); color: white; }
+        .btn-pdf:hover { background: var(--danger-hover); }
+
+        /* Structure Content Formatting Blocks */
+        .lyric-section {
+            margin-bottom: 25px; padding: 18px 20px; border-radius: 12px;
+            background: var(--bg-main); border-left: 5px solid var(--border);
+            text-align: left; box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+        }
+        .lyric-section.verse { border-left-color: #3b82f6; background: #f8fafc; }
+        .lyric-section.chorus { border-left-color: var(--success); background: #f0fdf4; }
+        .lyric-section.bridge { border-left-color: #f59e0b; background: #fffbeb; }
+        .lyric-section.pre-chorus { border-left-color: #8b5cf6; background: #f5f3ff; }
+
+        .section-label { font-size: 11px; text-transform: uppercase; font-weight: 800; letter-spacing: 1.2px; margin-bottom: 10px; }
+        .lyric-section.verse .section-label { color: #2563eb; }
+        .lyric-section.chorus .section-label { color: var(--success-hover); }
+        .lyric-section.bridge .section-label { color: #d97706; }
+        .lyric-section.pre-chorus .section-label { color: #6d28d9; }
+        .section-content { font-size: 16px; line-height: 1.8; white-space: pre-line; color: #2d3748; }
+
+        /* Modal Dashboard Architecture Frame */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px);
+            display: flex; align-items: center; justify-content: center;
+            z-index: 1000; opacity: 0; pointer-events: none;
+            transition: opacity 0.3s ease; padding: 10px;
+        }
+        .modal-overlay.active { opacity: 1; pointer-events: auto; }
+
+        .modal-window {
+            background: white; border-radius: 16px; width: 100%;
+            max-width: 950px; height: 90vh; display: flex;
+            flex-direction: column; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+            transform: scale(0.97); transition: transform 0.3s ease; overflow: hidden;
+        }
+        .modal-overlay.active .modal-window { transform: scale(1); }
+
+        .modal-header {
+            padding: 16px 20px; border-bottom: 1px solid var(--border);
+            display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;
+        }
+        .modal-header h3 { margin: 0; font-size: 18px; color: #1f2937; }
+        
+        .modal-tabs { display: flex; background: #f1f5f9; padding: 4px; border-radius: 8px; gap: 4px; }
+        .modal-tab-btn {
+            padding: 8px 14px; font-size: 13px; font-weight: 600; border: none; 
+            background: none; border-radius: 6px; cursor: pointer; color: #64748b; white-space: nowrap;
+        }
+        .modal-tab-btn.active { background: white; color: var(--primary); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .close-modal-btn { background: none; border: none; font-size: 28px; color: var(--text-muted); cursor: pointer; line-height: 1; }
+
+        .modal-view-panel { display: none; flex: 1; overflow: hidden; }
+        .modal-view-panel.active { display: flex; }
+
+        .modal-body-planner {
+            flex: 1; padding: 20px; overflow-y: auto; display: grid; grid-template-columns: 280px 1fr; gap: 20px; width: 100%; -webkit-overflow-scrolling: touch;
+        }
+        .modal-body-database { flex: 1; padding: 20px; overflow-y: auto; width: 100%; display: flex; flex-direction: column; gap: 15px; text-align: left; -webkit-overflow-scrolling: touch; }
+
+        .form-panel { display: flex; flex-direction: column; gap: 14px; border-right: 1px solid var(--border); padding-right: 10px; text-align: left; }
+        .form-group { display: flex; flex-direction: column; gap: 6px; }
+        .form-group label { font-size: 12px; font-weight: 700; color: #4b5563; text-transform: uppercase; letter-spacing: 0.5px;}
+        .form-group input, .form-group textarea {
+            padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; outline: none; font-family: inherit; background: #f9fafb;
+        }
+        .form-group input:focus, .form-group textarea:focus { border-color: var(--primary); background: white; }
+
+        .categories-board { display: flex; flex-direction: column; gap: 15px; text-align: left; }
+        .category-bucket { background: var(--bg-main); border: 1px dashed #cbd5e1; border-radius: 12px; padding: 14px; }
+        .bucket-title { font-size: 12px; font-weight: 800; color: #475569; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .bucket-songs { display: flex; flex-direction: column; gap: 8px; }
+        .bucket-song-pill {
+            background: white; border: 1px solid var(--border); padding: 8px 12px; border-radius: 8px; font-size: 13px;
+            display: flex; justify-content: space-between; align-items: center; box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+        }
+        .remove-pill { background: none; border: none; color: var(--danger); font-size: 18px; cursor: pointer; padding: 0 4px; }
+
+        /* Card Engine Setup */
+        .saved-setlist-card {
+            background: white; border: 1px solid var(--border); border-radius: 14px; padding: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.02); display: flex; flex-direction: column; gap: 12px; position: relative;
+        }
+        .saved-card-header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid #f1f5f9; padding-bottom: 12px; gap: 15px; }
+        .saved-card-actions { display: flex; gap: 8px; align-items: center; }
+        
+        .btn-card-delete {
+            background: #fef2f2; color: var(--danger); border: 1px solid #fee2e2;
+            padding: 8px 12px; border-radius: 8px; font-size: 13px; font-weight: 600;
+            cursor: pointer; display: flex; align-items: center; gap: 4px; transition: all 0.2s ease;
+        }
+        .btn-card-delete:hover { background: var(--danger); color: white; border-color: var(--danger); }
+
+        .saved-meta-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; font-size: 13px; color: #475569; background: #f8fafc; padding: 12px; border-radius: 8px; }
+        .saved-categories-preview { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+        .saved-tag-pill { background: #e0e7ff; color: #4338ca; font-size: 12px; padding: 4px 10px; border-radius: 6px; font-weight: 600; }
+
+        .modal-footer { padding: 15px 20px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: #f9fafb; flex-wrap: wrap; gap: 15px; }
+        .save-setlist-btn { background: var(--primary); color: white; border: none; padding: 10px 20px; font-weight: bold; border-radius: 8px; cursor: pointer; font-size: 14px; transition: background 0.2s ease; }
+        .save-setlist-btn:hover { background: var(--primary-hover); }
+        .save-setlist-btn:disabled { background: #9ca3af; cursor: not-allowed; }
+        
+        .home-btn { display: block; text-decoration: none; text-align: center; padding: 12px; margin: 10px; background: #f3f4f6; color: #4b5563; font-size: 13px; font-weight: bold; border-radius: 8px; }
+        .home-btn:hover { background: #e5e7eb; }
+
+        .mobile-toggle-bar { display: none; position: fixed; bottom: 20px; right: 20px; z-index: 100; gap: 10px; }
+        .btn-toggle-float { background: var(--primary); color: white; border: none; width: 56px; height: 56px; border-radius: 50%; box-shadow: 0 4px 14px rgba(79, 70, 229, 0.4); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 22px; }
+
+        @media (max-width: 768px) {
+            body { position: relative; }
+            .sidebar { position: absolute; top: 0; left: 0; transform: translateX(-100%); box-shadow: 5px 0 25px rgba(0,0,0,0.1); width: 300px; }
+            .sidebar.open { transform: translateX(0); }
+            .mobile-toggle-bar { display: flex; }
+            .lyrics-display { padding: 30px 16px 80px 16px; }
+            .lyrics-header { flex-direction: column; align-items: flex-start; }
+            .lyrics-header .btn-pdf { width: 100%; margin-top: 10px; }
+            .modal-body-planner { grid-template-columns: 1fr; }
+            .form-panel { border-right: none; border-bottom: 1px solid var(--border); padding-right: 0; padding-bottom: 20px; }
+            .modal-footer { flex-direction: column; align-items: stretch; }
+            .modal-footer div { display: flex; flex-direction: column; gap: 10px; }
+            .modal-header { flex-direction: column; align-items: flex-start; }
+            .modal-tabs { width: 100%; overflow-x: auto; }
+            .saved-card-header { flex-direction: column; align-items: stretch; gap: 12px; }
+            .saved-card-actions { justify-content: space-between; width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="sidebarMenu" class="sidebar">
+        <div class="sidebar-header">
+            <h2>🎵 Songs Directory</h2>
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="Search track name..." oninput="filterSongs()">
+            </div>
+        </div>
+        <div class="action-bar-top">
+            <button class="btn-action btn-manage-setlist" onclick="toggleSetlistModal(true)">📋 Setlist Manager Panel</button>
+        </div>
+        <ul class="song-list" id="songListContainer">
+            <p style="text-align:center; color:var(--text-muted); font-size:13px;">Fetching library records...</p>
+        </ul>
+        <a href="index.html" class="home-btn">← Back to Portal Home</a>
+    </div>
+
+    <div class="main-content" onclick="closeSidebarOnOutsideClick(event)">
+        <div id="placeholderView" class="lyrics-placeholder">
+            <h3>No Track Selected</h3>
+            <p>Select any song from the directory panel to view cleaned lyric structural verses.</p>
+        </div>
+        <div id="lyricsView" class="lyrics-display">
+            <div class="lyrics-header">
+                <div><h1 id="displayTitle">Track Title</h1></div>
+                <button class="btn-pdf" onclick="generateSingleSongPDF()">🖨️ Export Track</button>
+            </div>
+            <div id="parsedLyricsContainer"></div>
+        </div>
+    </div>
+
+    <div class="mobile-toggle-bar">
+        <button class="btn-toggle-float" id="menuToggleBtn" onclick="toggleMobileSidebar()">☰</button>
+    </div>
+
+    <div id="setlistModal" class="modal-overlay">
+        <div class="modal-window">
+            <div class="modal-header">
+                <div style="display:flex; align-items:center; gap:20px; flex-wrap:wrap; width: 100%; justify-content: space-between;">
+                    <div style="display:flex; align-items:center; gap:15px;">
+                        <h3>📋 Setlist Workspace</h3>
+                        <div class="modal-tabs">
+                            <button class="modal-tab-btn active" id="tabBtnPlanner" onclick="switchModalTab('planner')">Setlist Planner</button>
+                            <button class="modal-tab-btn" id="tabBtnDatabase" onclick="switchModalTab('database')">📦 Saved Setlists Data</button>
+                        </div>
+                    </div>
+                    <button class="close-modal-btn" onclick="toggleSetlistModal(false)">&times;</button>
+                </div>
+            </div>
+
+            <div id="modalViewPlanner" class="modal-view-panel active">
+                <div class="modal-body-planner">
+                    <div class="form-panel">
+                        <div class="form-group">
+                            <label>Worship Leader</label>
+                            <input type="text" id="leaderName" placeholder="Enter full name...">
+                        </div>
+                        <div class="form-group">
+                            <label>Date Scheduled</label>
+                            <input type="date" id="lineupDate">
+                        </div>
+                        <div class="form-group">
+                            <label>Service Description / Notes</label>
+                            <textarea id="lineupDesc" rows="4" placeholder="Add custom instructions or theme notes..."></textarea>
+                        </div>
+                    </div>
+                    <div class="categories-board" id="categoriesBoard"></div>
+                </div>
+                <div class="modal-footer">
+                    <span id="saveStatusMsg" style="font-size:13px; font-weight:600;"></span>
+                    <div>
+                        <button class="btn-action btn-pdf" style="padding:10px 20px; width:auto; display:inline-flex;" onclick="generateMasterSetlistPDF()">🖨️ Bundled PDF</button>
+                        <button class="save-setlist-btn" id="saveSetlistBtn" onclick="saveSetlistToCloud()">💾 Save Setlist Database</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="modalViewDatabase" class="modal-view-panel">
+                <div class="modal-body-database" id="databaseRecordsContainer">
+                    <p style="text-align:center; color:var(--text-muted); font-size:14px; margin-top:30px;">Loading lineups database tables...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script>
+    // Replace these URLs exactly with your active AppScript Exec URLs!
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyabmsybyBb52Jj3-e5eNX31I_HBVIuZD_xF2WFyKjQWW3TdPNnP_NPDbQctpRnY8VT/exec"; 
+    const SCRIPT_URL1 = "https://script.google.com/macros/s/AKfycbxLLel0UhMhjDJCNez1Iu3odylE77weUNkaGrjZH3MuAFP1mOXDhDDzJe0UpWEIC9XggQ/exec"; 
+
+    let songsData = [];
+    let savedSetlistsData = [];
+    let selectedSongIndex = null;
+
+    const CATEGORIES = ["Intro", "Praise", "Worship", "Communion", "Ministerial", "Victory", "Closing"];
+    let setlistStorage = { Intro: [], Praise: [], Worship: [], Communion: [], Ministerial: [], Victory: [], Closing: [] };
+
+    window.onload = function() {
+        document.getElementById('lineupDate').valueAsDate = new Date();
+        fetchSongs();
+        buildCategoriesBoard();
+    };
+
+    function toggleMobileSidebar() {
+        const sidebar = document.getElementById("sidebarMenu");
+        const btn = document.getElementById("menuToggleBtn");
+        sidebar.classList.toggle("open");
+        btn.innerText = sidebar.classList.contains("open") ? "✕" : "☰";
+    }
+
+    function closeSidebarOnOutsideClick(event) {
+        const sidebar = document.getElementById("sidebarMenu");
+        if (window.innerWidth <= 768 && sidebar.classList.contains("open")) {
+            sidebar.classList.remove("open");
+            document.getElementById("menuToggleBtn").innerText = "☰";
+        }
+    }
+
+    async function fetchSongs() {
+        try {
+            const response = await fetch(SCRIPT_URL);
+            songsData = await response.json();
+            renderSongList(songsData);
+        } catch (e) {
+            document.getElementById("songListContainer").innerHTML = `<p style="color:#ef4444; padding:20px; text-align:center; font-size:13px;">Failed to fetch library records.</p>`;
+        }
+    }
+
+    async function fetchSavedSetlists() {
+        const container = document.getElementById("databaseRecordsContainer");
+        container.innerHTML = `<p style="text-align:center; color:var(--text-muted); font-size:14px; margin-top:30px;">⏳ Syncing data logs...</p>`;
+        try {
+            const response = await fetch(SCRIPT_URL1);
+            savedSetlistsData = await response.json();
+            renderSavedSetlists(savedSetlistsData);
+        } catch(e) {
+            container.innerHTML = `<p style="color:#ef4444; text-align:center; font-size:14px; margin-top:30px;">Failed to load data. Verify SCRIPT_URL1 deployment connection.</p>`;
+        }
+    }
+
+    function renderSongList(data) {
+        const container = document.getElementById("songListContainer");
+        container.innerHTML = "";
+        if(data.length === 0) {
+            container.innerHTML = '<p style="text-align:center; color:var(--text-muted); font-size:13px; margin-top:20px;">No match found.</p>';
+            return;
+        }
+        data.forEach((song) => {
+            const masterIndex = songsData.findIndex(s => s.title === song.title);
+            const li = document.createElement("li");
+            li.className = "song-item";
+            li.setAttribute("data-index", masterIndex);
+            if(selectedSongIndex === masterIndex) li.classList.add("active");
+            
+            li.onclick = (e) => {
+                if(e.target.tagName !== 'SELECT') {
+                    selectSong(masterIndex);
+                    if (window.innerWidth <= 768) toggleMobileSidebar();
+                }
+            };
+
+            let optionsHTML = `<option value="" disabled selected>➕ Add to Category...</option>`;
+            CATEGORIES.forEach(cat => { optionsHTML += `<option value="${cat}">${cat}</option>`; });
+
+            li.innerHTML = `
+                <div class="song-info-row"><span class="song-title">${song.title}</span></div>
+                <select class="category-select" onchange="addSongToCategory(this, ${masterIndex})">${optionsHTML}</select>
+            `;
+            container.appendChild(li);
+        });
+    }
+
+    function renderSavedSetlists(data) {
+        const container = document.getElementById("databaseRecordsContainer");
+        container.innerHTML = "";
+
+        if(!data || data.length === 0) {
+            container.innerHTML = '<p style="text-align:center; color:var(--text-muted); font-size:14px; margin-top:30px;">No saved setlists found inside sheets data log.</p>';
+            return;
+        }
+
+        data.slice().reverse().forEach((record) => {
+            let parsedLayout = {};
+            try { parsedLayout = JSON.parse(record.setlistLayout); } catch(e) { parsedLayout = {}; }
+
+            const card = document.createElement("div");
+            card.className = "saved-setlist-card";
+            card.setAttribute("data-id", record.timestamp);
+
+            let tagsHTML = "";
+            let uniqueSongTitlesList = [];
+            CATEGORIES.forEach(cat => {
+                if(parsedLayout[cat] && parsedLayout[cat].length > 0) {
+                    parsedLayout[cat].forEach(t => {
+                        tagsHTML += `<span class="saved-tag-pill">${cat}: ${t}</span>`;
+                        uniqueSongTitlesList.push({ title: t, category: cat });
+                    });
+                }
+            });
+
+            // Clean single quote escapes safely for inline attributes
+            const cleanLeader = (record.worshipLeader || '').replace(/'/g, "\\'");
+            const cleanDesc = (record.description || '').replace(/'/g, "\\'");
+
+            card.innerHTML = `
+                <div class="saved-card-header">
+                    <div>
+                        <h4 style="margin:0 0 4px 0; font-size:16px; color:var(--primary);">🎤 ${record.worshipLeader}</h4>
+                        <span style="font-size:12px; color:var(--text-muted);">Scheduled Date: <b>${record.date}</b></span>
+                    </div>
+                    <div class="saved-card-actions">
+                        <button class="btn-pdf" style="padding:8px 12px; font-size:12px; width:auto;" onclick="exportHistoricalLineupPDF('${cleanLeader}', '${record.date}', '${cleanDesc}', ${JSON.stringify(uniqueSongTitlesList)})">🖨️ Export PDF</button>
+                        <button class="btn-card-delete" onclick="deleteSetlistFromCloud('${record.timestamp}')">🗑️ Delete</button>
+                    </div>
+                </div>
+                <div class="saved-meta-grid">
+                    <div><b>Description/Notes:</b> ${record.description || "N/A"}</div>
+                    <div><b>Record ID Reference:</b> ${record.timestamp}</div>
+                </div>
+                <div class="saved-categories-preview">${tagsHTML || "<span style='color:var(--text-muted); font-style:italic;'>No songs allocated.</span>"}</div>
+            `;
+            container.appendChild(card);
+        });
+    }
+
+    async function deleteSetlistFromCloud(timestampId) {
+        if (!confirm("Are you sure you want to permanently delete this lineup entry?")) return;
+        
+        const cardElement = document.querySelector(`.saved-setlist-card[data-id="${timestampId}"]`);
+        if (cardElement) cardElement.style.opacity = "0.3";
+
+        const packet = {
+            action: "deleteSetlist",
+            timestamp: String(timestampId)
+        };
+
+        try {
+            // Using standard text/plain boundary formatting to completely bypass CORS Preflight blocks in Google Apps Script endpoints
+            const response = await fetch(SCRIPT_URL1, {
+                method: "POST",
+                mode: "cors",
+                headers: { "Content-Type": "text/plain;charset=utf-8" },
+                body: JSON.stringify(packet)
+            });
+            
+            const res = await response.json();
+            if (res.status === "success") {
+                alert("Setlist configuration entry safely removed.");
+                fetchSavedSetlists(); 
+            } else {
+                alert("Backend Error: " + (res.message || "Unknown error occurred."));
+                if (cardElement) cardElement.style.opacity = "1";
+            }
+        } catch (e) {
+            alert("Network connection failure. Make sure you deployed your AppScript project code change as a 'New Version' inside Google.");
+            if (cardElement) cardElement.style.opacity = "1";
+        }
+    }
+
+    function filterSongs() {
+        const query = document.getElementById("searchInput").value.toLowerCase().trim();
+        const filtered = songsData.filter(song => song.title.toLowerCase().includes(query));
+        renderSongList(filtered);
+    }
+
+    function selectSong(index) {
+        selectedSongIndex = index;
+        document.querySelectorAll(".song-item").forEach(item => item.classList.remove("active"));
+        const targetItem = document.querySelector(`.song-item[data-index="${index}"]`);
+        if (targetItem) targetItem.classList.add("active");
+
+        const song = songsData[index];
+        document.getElementById("placeholderView").style.display = "none";
+        document.getElementById("lyricsView").style.display = "block";
+        document.getElementById("displayTitle").innerText = song.title;
+
+        parseAndRenderLyrics(song.content);
+    }
+
+    function parseAndRenderLyrics(rawText) {
+        const container = document.getElementById("parsedLyricsContainer");
+        container.innerHTML = "";
+        if(!rawText) return;
+
+        const lines = rawText.split("\n");
+        let currentLines = [];
+        let currentHeader = null;
+
+        function flushBlock() {
+            if (currentLines.length === 0 && !currentHeader) return;
+            let bodyLines = currentLines.map(line => {
+                return line.replace(/\{[^\}]+\}/g, '').replace(/\[[^\]]+\]/g, '').trim();
+            }).filter(line => line !== "");
+
+            if (bodyLines.length > 0) {
+                let blockTitleHeader = "VERSE", typeClass = "verse";
+                if (currentHeader) {
+                    const hc = currentHeader.toLowerCase().trim();
+                    if (hc.includes("pre-chorus") || hc.includes("pre chorus") || hc.includes("prechorus")) { blockTitleHeader = "PRE-CHORUS"; typeClass = "pre-chorus"; }
+                    else if (hc.includes("chorus")) { blockTitleHeader = currentHeader.toUpperCase().trim(); typeClass = "chorus"; }
+                    else if (hc.includes("bridge")) { blockTitleHeader = currentHeader.toUpperCase().trim(); typeClass = "bridge"; }
+                    else { blockTitleHeader = currentHeader.toUpperCase().trim(); typeClass = "verse"; }
+                }
+
+                const sectionDiv = document.createElement("div");
+                sectionDiv.className = `lyric-section ${typeClass}`;
+                sectionDiv.innerHTML = `
+                    <div class="section-label">${blockTitleHeader}</div>
+                    <div class="section-content">${bodyLines.join("\n")}</div>
+                `;
+                container.appendChild(sectionDiv);
+            }
+            currentLines = []; currentHeader = null;
+        }
+
+        let skipChordBlock = false;
+        lines.forEach(line => {
+            const tl = line.trim();
+            if (tl === "") return;
+            if (tl.match(/^(\[)([^\]]+)(\])/)) { flushBlock(); skipChordBlock = true; return; }
+            const isLyricsHeader = tl.match(/^(\{)([^\}]+)(\})/);
+            if (isLyricsHeader) { flushBlock(); skipChordBlock = false; currentHeader = isLyricsHeader[2]; return; }
+            if (!skipChordBlock) currentLines.push(line);
+        });
+        flushBlock();
+    }
+
+    function toggleSetlistModal(open) {
+        const modal = document.getElementById("setlistModal");
+        if(open) { modal.classList.add("active"); switchModalTab('planner'); }
+        else { modal.classList.remove("active"); }
+    }
+
+    function switchModalTab(tabId) {
+        document.getElementById("tabBtnPlanner").classList.remove("active");
+        document.getElementById("tabBtnDatabase").classList.remove("active");
+        document.getElementById("modalViewPlanner").classList.remove("active");
+        document.getElementById("modalViewDatabase").classList.remove("active");
+
+        if(tabId === 'planner') {
+            document.getElementById("tabBtnPlanner").classList.add("active");
+            document.getElementById("modalViewPlanner").classList.add("active");
+        } else if(tabId === 'database') {
+            document.getElementById("tabBtnDatabase").classList.add("active");
+            document.getElementById("modalViewDatabase").classList.add("active");
+            fetchSavedSetlists();
+        }
+    }
+
+    function buildCategoriesBoard() {
+        const board = document.getElementById("categoriesBoard");
+        board.innerHTML = "";
+        CATEGORIES.forEach(cat => {
+            const div = document.createElement("div");
+            div.className = "category-bucket";
+            div.innerHTML = `
+                <div class="bucket-title"><span>⚡ ${cat.toUpperCase()} SECTION</span><span style="font-weight:normal; color:var(--text-muted);" id="count-${cat}">0 tracks assigned</span></div>
+                <div class="bucket-songs" id="bucket-${cat}"><p style="font-size:12px; color:var(--text-muted); margin:5px 0;">No tracks mapped.</p></div>
+            `;
+            board.appendChild(div);
+        });
+    }
+
+    function addSongToCategory(selectElement, index) {
+        const category = selectElement.value;
+        if(!category) return;
+        const song = songsData[index];
+        if(setlistStorage[category].some(s => s.title === song.title)) { selectElement.value = ""; alert("This song is already added to this section category."); return; }
+        setlistStorage[category].push(song);
+        selectElement.value = ""; 
+        updateCategoryBucketUI(category);
+    }
+
+    function removeSongFromCategory(category, index) {
+        setlistStorage[category].splice(index, 1);
+        updateCategoryBucketUI(category);
+    }
+
+    function updateCategoryBucketUI(category) {
+        const container = document.getElementById(`bucket-${category}`);
+        const countLabel = document.getElementById(`count-${category}`);
+        container.innerHTML = "";
+        const songs = setlistStorage[category];
+        countLabel.innerText = `${songs.length} track${songs.length === 1 ? '' : 's'} assigned`;
+
+        if(songs.length === 0) {
+            container.innerHTML = `<p style="font-size:12px; color:var(--text-muted); margin:5px 0;">No tracks mapped.</p>`;
+            return;
+        }
+        songs.forEach((song, idx) => {
+            const pill = document.createElement("div");
+            pill.className = "bucket-song-pill";
+            pill.innerHTML = `
+                <span style="font-weight:600;">${song.title}</span>
+                <button class="remove-pill" onclick="removeSongFromCategory('${category}', ${idx})">&times;</button>
+            `;
+            container.appendChild(pill);
+        });
+    }
+
+    async function saveSetlistToCloud() {
+        const btn = document.getElementById("saveSetlistBtn");
+        const status = document.getElementById("saveStatusMsg");
+        const leader = document.getElementById("leaderName").value.trim();
+        const date = document.getElementById("lineupDate").value;
+        const desc = document.getElementById("lineupDesc").value.trim();
+
+        if(!leader) { alert("Please input the Worship Leader Name before saving."); return; }
+
+        btn.disabled = true;
+        status.innerText = "⏳ Syncing data pipeline...";
+        status.style.color = "var(--primary)";
+
+        let compressedPayload = {};
+        CATEGORIES.forEach(cat => { compressedPayload[cat] = setlistStorage[cat].map(s => s.title); });
+
+        const packet = { action: "saveSetlist", leader: leader, date: date, description: desc, setlistData: JSON.stringify(compressedPayload) };
+
+        try {
+            const response = await fetch(SCRIPT_URL1, {
+                method: "POST",
+                mode: "cors",
+                headers: { "Content-Type": "text/plain;charset=utf-8" },
+                body: JSON.stringify(packet)
+            });
+            const res = await response.json();
+            if(res.status === "success") {
+                status.innerText = "✅ Setlist saved successfully!";
+                status.style.color = "#059669";
+                setTimeout(() => { status.innerText = ""; }, 4000);
+            } else { throw new Error(); }
+        } catch(e) {
+            status.innerText = "❌ Database response error.";
+            status.style.color = "#ef4444";
+        } finally { btn.disabled = false; }
+    }
+
+    function generateSingleSongPDF() {
+        if (selectedSongIndex === null) return;
+        const song = songsData[selectedSongIndex];
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        renderPDFSongBlock(doc, song, song.title.toUpperCase(), 25);
+        doc.save(`${song.title.replace(/[^a-zA-Z0-9]/g, "_")}_Lyrics.pdf`);
+    }
+
+    function generateMasterSetlistPDF() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        const leader = document.getElementById("leaderName").value.trim() || "N/A";
+        const date = document.getElementById("lineupDate").value || "N/A";
+        const desc = document.getElementById("lineupDesc").value.trim() || "No extra programmatic description notes provided.";
+
+        let flatCompilationSequenceList = [];
+        CATEGORIES.forEach(cat => {
+            setlistStorage[cat].forEach(song => {
+                flatCompilationSequenceList.push({ songObjectRef: song, headerLabelTag: `${song.title.toUpperCase()} [${cat.toUpperCase()}]` });
+            });
+        });
+        renderMasterDocumentStructure(doc, leader, date, desc, flatCompilationSequenceList);
+    }
+
+    function exportHistoricalLineupPDF(leader, date, description, uniqueSongsList) {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        let compiledSequenceList = [];
+        uniqueSongsList.forEach(item => {
+            const masterMatch = songsData.find(s => s.title.toLowerCase().trim() === item.title.toLowerCase().trim());
+            if(masterMatch) {
+                compiledSequenceList.push({ songObjectRef: masterMatch, headerLabelTag: `${masterMatch.title.toUpperCase()} [${item.category.toUpperCase()}]` });
+            } else {
+                compiledSequenceList.push({ songObjectRef: { title: item.title, content: "{VERSE}\n(Lyrics details unavailable)" }, headerLabelTag: `${item.title.toUpperCase()} [${item.category.toUpperCase()}]` });
+            }
+        });
+        renderMasterDocumentStructure(doc, leader, date, description, compiledSequenceList);
+    }
+
+    function renderMasterDocumentStructure(doc, leader, date, desc, trackSequenceArray) {
+        doc.setFillColor(79, 70, 229); doc.rect(0, 0, 220, 75, "F");
+        doc.setFont("Helvetica", "bold"); doc.setFontSize(26); doc.setTextColor(255, 255, 255); doc.text("WORSHIP SERVICE SETLIST", 20, 45);
+        doc.setFontSize(11); doc.setFont("Helvetica", "normal"); doc.setTextColor(220, 218, 255); doc.text(`Generated: ${new Date().toLocaleDateString()}`, 20, 58);
+        doc.setFont("Helvetica", "bold"); doc.setFontSize(13); doc.setTextColor(71, 85, 105); doc.text("LINEUP SYSTEM INFORMATION PROFILE", 20, 95);
+        doc.setDrawColor(226, 232, 240); doc.line(20, 100, 190, 100);
+
+        doc.setFontSize(11); doc.text("WORSHIP LEADER:", 20, 113); doc.setFont("Helvetica", "normal"); doc.setTextColor(30, 41, 59); doc.text(leader, 65, 113);
+        doc.setFont("Helvetica", "bold"); doc.setTextColor(71, 85, 105); doc.text("SERVICE DATE:", 20, 125); doc.setFont("Helvetica", "normal"); doc.setTextColor(30, 41, 59); doc.text(date, 65, 125);
+        doc.setFont("Helvetica", "bold"); doc.setTextColor(71, 85, 105); doc.text("SUMMARY NOTES:", 20, 137); doc.setFont("Helvetica", "normal"); doc.setTextColor(30, 41, 59);
+        
+        let textLinesSplitArr = doc.splitTextToSize(desc, 125); doc.text(textLinesSplitArr, 65, 137);
+
+        let yPointer = 165;
+        doc.setFont("Helvetica", "bold"); doc.setTextColor(71, 85, 105); doc.text("CHRONOLOGICAL TRACKLINE SCHEDULE INDEX", 20, yPointer);
+        yPointer += 5; doc.line(20, yPointer, 190, yPointer); yPointer += 10;
+
+        if(trackSequenceArray.length === 0) {
+            doc.setFont("Helvetica", "italic"); doc.setTextColor(148, 163, 184); doc.text("No tracks mapped inside workflow storage index buffers.", 25, yPointer);
+        } else {
+            trackSequenceArray.forEach((item, idx) => {
+                doc.setFont("Helvetica", "bold"); doc.setTextColor(79, 70, 229); doc.text(`${idx + 1}.`, 25, yPointer);
+                doc.setFont("Helvetica", "normal"); doc.setTextColor(51, 65, 85); doc.text(item.headerLabelTag, 35, yPointer);
+                yPointer += 7; if(yPointer > 270) { doc.addPage(); yPointer = 25; }
+            });
+        }
+
+        trackSequenceArray.forEach(item => { doc.addPage(); renderPDFSongBlock(doc, item.songObjectRef, item.headerLabelTag, 25); });
+        doc.save(`Setlist_${date.replace(/[^a-zA-Z0-9]/g, "_")}_Bundled.pdf`);
+    }
+
+    function renderPDFSongBlock(doc, song, mainHeaderTitleText, startY) {
+        doc.setFont("Helvetica", "bold"); doc.setFontSize(20); doc.setTextColor(79, 70, 229); doc.text(mainHeaderTitleText, 20, startY);
+        doc.setDrawColor(229, 231, 235); doc.setLineWidth(1); doc.line(20, startY + 7, 190, startY + 7);
+        let currentY = startY + 17; const pageHeightBound = 275; 
+
+        if (!song.content) { doc.setFont("Helvetica", "normal"); doc.setFontSize(12); doc.text("No lyric block entries recorded.", 20, currentY); return; }
+        const lines = song.content.split("\n");
+        let currentLines = []; let currentHeader = null;
+
+        function flushPDFBlock() {
+            if (currentLines.length === 0 && !currentHeader) return;
+            let bodyLines = currentLines.map(line => {
+                return line.replace(/\{[^\}]+\}/g, '').replace(/\[[^\]]+\]/g, '').trim();
+            }).filter(line => line !== "");
+
+            if (bodyLines.length > 0) {
+                let label = "VERSE";
+                if (currentHeader) {
+                    const hc = currentHeader.toLowerCase().trim();
+                    if (hc.includes("pre-chorus") || hc.includes("pre chorus") || hc.includes("prechorus")) { label = "PRE-CHORUS"; }
+                    else { label = currentHeader.toUpperCase().trim(); }
+                }
+
+                const blockHeightEst = (bodyLines.length * 7) + 12;
+                if (currentY + blockHeightEst > pageHeightBound) { doc.addPage(); currentY = 25; }
+
+                doc.setFont("Helvetica", "bold"); doc.setFontSize(10); doc.setTextColor(107, 114, 128); doc.text(`{${label}}`, 20, currentY);
+                currentY += 6; doc.setFont("Helvetica", "normal"); doc.setFontSize(12); doc.setTextColor(31, 41, 55);
+
+                bodyLines.forEach(lineText => { doc.text(lineText, 22, currentY); currentY += 7; });
+                currentY += 5;
+            }
+            currentLines = []; currentHeader = null;
+        }
+
+        let skipChordBlock = false;
+        lines.forEach(line => {
+            const tl = line.trim();
+            if (tl === "") return;
+            if (tl.match(/^(\[)([^\]]+)(\])/)) { flushPDFBlock(); skipChordBlock = true; return; }
+            const isLyricsHeader = tl.match(/^(\{)([^\}]+)(\})/);
+            if (isLyricsHeader) { flushPDFBlock(); skipChordBlock = false; currentHeader = isLyricsHeader[2]; return; }
+            if (!skipChordBlock) currentLines.push(line);
+        });
+        flushPDFBlock();
+    }
+</script>
+</body>
+</html>
