@@ -3,139 +3,265 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>History of JIL Taguig</title>
+    <title>History of JIL Taguig - Gallery</title>
     <style>
         :root {
-            --primary: #2c3e50;
-            --accent: #d4af37;
-            --bg: #1a1a1a;
-            --card-bg: #2a2a2a;
+            --primary: #11141a;
+            --accent: #d4af37; /* Elegant Anniversary Gold */
+            --accent-hover: #f3cf5f;
+            --bg: #0b0d11;
+            --card-bg: #171b24;
+            --card-hover: #222834;
             --text: #ffffff;
+            --text-muted: #a0aec0;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
         }
 
         body {
-            font-family: 'Segoe UI', Arial, sans-serif;
-            margin: 0;
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
             background-color: var(--bg);
             color: var(--text);
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
         }
 
         header {
             text-align: center;
-            padding: 60px 20px;
-            background: linear-gradient(rgba(0,0,0,0.8), rgba(0,0,0,0.8));
-            border-bottom: 3px solid var(--accent);
+            padding: 40px 20px;
+            background: linear-gradient(180deg, rgba(23, 27, 36, 0.8) 0%, rgba(11, 13, 17, 1) 100%);
+            border-bottom: 2px solid var(--accent);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        }
+
+        header h1 {
+            font-size: 2.2rem;
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.6);
+        }
+
+        header p {
+            color: var(--accent);
+            font-size: 1rem;
+            font-weight: 500;
+            letter-spacing: 1px;
         }
 
         .container {
-            max-width: 1200px;
+            max-width: 1300px;
             margin: 0 auto;
-            padding: 40px 20px;
+            padding: 24px 16px;
         }
 
-        .folder-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 25px;
-        }
-
-        .folder-card {
-            background: var(--card-bg);
-            border-radius: 15px;
-            padding: 40px 20px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            border: 1px solid #444;
-        }
-
-        .folder-card:hover { transform: scale(1.05); border-color: var(--accent); }
-        .folder-icon { font-size: 60px; display: block; margin-bottom: 15px; }
-
-        #photo-viewer { display: none; }
-
-        .controls {
+        /* Nav Header Area */
+        .nav-bar {
             display: flex;
-            flex-direction: column;
-            gap: 20px;
+            justify-content: space-between;
+            align-items: center;
             margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #222834;
         }
 
-        @media (min-width: 600px) {
-            .controls { flex-direction: row; justify-content: space-between; align-items: center; }
-        }
-
-        .back-btn {
+        /* Action Buttons */
+        .nav-btn {
             background: transparent;
-            color: var(--accent);
-            border: 2px solid var(--accent);
-            padding: 10px 20px;
-            border-radius: 30px;
+            color: var(--text);
+            border: 1px solid #3f4a60;
+            padding: 10px 18px;
+            border-radius: 50px;
             cursor: pointer;
-            font-weight: bold;
+            font-weight: 600;
+            font-size: 0.9rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+            text-decoration: none;
+        }
+
+        .nav-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: rgba(212, 175, 55, 0.05);
         }
 
         .zip-btn {
             background: var(--accent);
-            color: black;
-            text-decoration: none;
-            padding: 10px 20px;
-            border-radius: 30px;
-            font-weight: bold;
-            font-size: 0.9rem;
+            color: #000000;
+            border: none;
+        }
+
+        .zip-btn:hover {
+            background: var(--accent-hover);
+            color: #000000;
+            box-shadow: 0 0 12px rgba(212, 175, 55, 0.3);
+        }
+
+        /* Folder Grid Layout */
+        .folder-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 20px;
+            padding: 10px 0;
+        }
+
+        .folder-card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 30px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s ease, border-color 0.2s ease;
+            border: 1px solid #222834;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+        }
+
+        .folder-card:hover {
+            transform: translateY(-5px);
+            background-color: var(--card-hover);
+            border-color: var(--accent);
+        }
+
+        .folder-icon {
+            font-size: 50px;
+            display: block;
+            margin-bottom: 12px;
+            user-select: none;
+        }
+
+        .folder-card strong {
+            display: block;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        /* Photo Viewer Display */
+        #photo-viewer { display: none; }
+        
+        .album-header-title {
+            font-size: 1.5rem;
+            color: var(--accent);
+            font-weight: 700;
         }
 
         .photo-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 15px;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 12px;
         }
 
         .photo-grid img {
             width: 100%;
-            height: 250px;
+            aspect-ratio: 1 / 1;
             object-fit: cover;
-            border-radius: 10px;
+            border-radius: 12px;
             cursor: pointer;
+            transition: transform 0.2s ease, opacity 0.2s ease;
+            border: 1px solid #1c212c;
+            background-color: #171b24;
         }
 
-        /* Lightbox */
+        .photo-grid img:hover {
+            transform: scale(1.03);
+            opacity: 0.95;
+        }
+
+        /* Lightbox Overlay */
         #lightbox {
             display: none;
             position: fixed;
-            z-index: 1000;
+            z-index: 2000;
             top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: rgba(0,0,0,0.95);
+            width: 100vw; height: 100vh;
+            background: rgba(5, 6, 8, 0.98);
             flex-direction: column;
             justify-content: center;
             align-items: center;
+            padding: 16px;
         }
 
-        #lightbox-img { max-width: 90%; max-height: 80%; border: 2px solid white; }
-        .lightbox-btns { margin-top: 20px; display: flex; gap: 20px; }
-        .dl-btn, .close-btn { padding: 12px 25px; border-radius: 5px; cursor: pointer; font-weight: bold; border: none; text-decoration: none; }
-        .dl-btn { background: var(--accent); color: black; }
-        .close-btn { background: #e74c3c; color: white; }
+        #lightbox-img {
+            max-width: 100%;
+            max-height: 75vh;
+            object-fit: contain;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+        }
 
-        footer { text-align: center; padding: 50px; opacity: 0.6; }
+        .lightbox-btns {
+            margin-top: 24px;
+            display: flex;
+            gap: 16px;
+            width: 100%;
+            justify-content: center;
+        }
+
+        .dl-btn, .close-btn {
+            padding: 12px 24px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 0.95rem;
+            border: none;
+            text-decoration: none;
+            text-align: center;
+            transition: transform 0.2s ease;
+        }
+
+        .dl-btn { background: var(--accent); color: #000000; }
+        .close-btn { background: #222834; color: #fff; border: 1px solid #3f4a60; }
+        .dl-btn:hover, .close-btn:hover { transform: scale(1.05); }
+
+        footer {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            border-top: 1px solid #171b24;
+            margin-top: 60px;
+        }
+
+        /* Desktop Adjustments */
+        @media (min-width: 768px) {
+            header { padding: 60px 20px; }
+            header h1 { font-size: 2.8rem; }
+            .container { padding: 40px 24px; }
+            .photo-grid { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px; }
+            .photo-grid img { aspect-ratio: 4 / 3; }
+            .album-header-title { font-size: 1.8rem; }
+            #lightbox-img { max-height: 80vh; }
+        }
     </style>
 </head>
 <body>
 
 <header>
-    <h1>HISTORY OF JIL TAGUIG</h1>
-    <p style="color: var(--accent);">Honoring the Past, Celebrating the Future</p>
+    <h1>History of JIL Taguig</h1>
+    <p>Honoring the Past, Celebrating the Future</p>
 </header>
 
 <div class="container">
-    <div id="folder-view" class="folder-grid"></div>
+    <div id="main-view">
+        <div class="nav-bar">
+            <a href="index.html" class="nav-btn">🏠 Home</a>
+            <span style="color: var(--text-muted); font-size: 0.9rem; font-weight: 500;">Select an Album</span>
+        </div>
+        <div id="folder-view" class="folder-grid"></div>
+    </div>
 
     <div id="photo-viewer">
-        <div class="controls">
-            <button class="back-btn" onclick="showFolders()">← BACK TO ALBUMS</button>
-            <h2 id="album-title" style="margin: 0; color: var(--accent);"></h2>
-            <a id="zip-link" class="zip-btn" href="#" download>📦 DOWNLOAD FULL ALBUM (.ZIP)</a>
+        <div class="nav-bar">
+            <button class="nav-btn" onclick="showFolders()">← Albums</button>
+            <h2 id="album-title" class="album-header-title"></h2>
+            <a id="zip-link" class="nav-btn zip-btn" href="#" download>📦 Download ZIP</a>
         </div>
         <div class="photo-grid" id="photo-list"></div>
     </div>
@@ -144,16 +270,18 @@
 <div id="lightbox">
     <img id="lightbox-img" src="" alt="Full View">
     <div class="lightbox-btns">
-        <a id="download-link" class="dl-btn" download>DOWNLOAD THIS IMAGE</a>
-        <button class="close-btn" onclick="closeLightbox()">CLOSE</button>
+        <a id="download-link" class="dl-btn" download>Download Image</a>
+        <button class="close-btn" onclick="closeLightbox()">Close</button>
     </div>
 </div>
 
-<footer>&copy; 2026 JIL Taguig Church History</footer>
+<footer>
+    <p>&copy; 2026 JIL Taguig Heritage Project</p>
+</footer>
 
 <script>
-    // CRITICAL: Ensure these filenames match EXACTLY (including .jpg vs .JPG)
     const albumData = {
+        "1st-15th": ["old_image1.jpg", "old_image2.jpg", "old_image3.jpg", "old_image4.jpg", "old_image5.jpg", "old_image6.jpg", "old_image7.jpg", "old_image8.jpg", "old_image9.jpg", "old_image10.jpg", "old_image11.jpg", "old_image12.jpg", "old_image13.jpg", "old_image14.jpg", "old_image15.jpg", "old_image16.jpg", "old_image17.jpg", "old_image18.jpg", "old_image19.jpg"],
         "16th": ["16th_image1.jpg", "16th_image2.jpg", "16th_image3.jpg", "16th_image4.jpg", "16th_image5.jpg", "16th_image6.jpg", "16th_image7.jpg", "16th_image8.jpg"],
         "17th": ["17th_image1.jpg", "17th_image2.jpg", "17th_image3.jpg", "17th_image4.jpg", "17th_image5.jpg", "17th_image6.jpg", "17th_image7.jpg", "17th_image8.jpg","17th_image9.jpg", "17th_image10.jpg", "17th_image11.jpg", "17th_image12.jpg", "17th_image13.jpg", "17th_image14.jpg", "17th_image15.jpg", "17th_image16.jpg", "17th_image17.jpg", "17th_image18.jpg"],
         "18th": ["18th_image1.jpg", "18th_image2.jpg", "18th_image3.jpg", "18th_image4.jpg", "18th_image5.jpg", "18th_image6.jpg", "18th_image7.jpg", "18th_image8.jpg"],
@@ -163,15 +291,15 @@
         "22nd": ["22nd_image1.jpg", "22nd_image2.jpg", "22nd_image3.jpg", "22nd_image4.jpg", "22nd_image5.jpg", "22nd_image6.jpg", "22nd_image7.jpg", "22nd_image8.jpg" , "22nd_image9.jpg", "22nd_image10.jpg", "22nd_image11.jpg", "22nd_image12.jpg", "22nd_image13.jpg", "22nd_image14.jpg", "22nd_image15.jpg"],
         "23rd": ["23rd_image1.jpg", "23rd_image2.jpg", "23rd_image3.jpg", "23rd_image4.jpg", "23rd_image5.jpg", "23rd_image6.jpg", "23rd_image7.jpg", "23rd_image8.jpg", "23rd_image9.jpg", "23rd_image10.jpg", "23rd_image11.jpg", "23rd_image12.jpg", "23rd_image13.jpg"],
         "24th": ["24th_image1.jpg", "24th_image2.jpg", "24th_image3.jpg", "24th_image4.jpg", "24th_image5.jpg", "24th_image6.jpg", "24th_image7.jpg", "24th_image8.jpg", "24th_image9.jpg", "24th_image10.jpg", "24th_image11.jpg", "24th_image12.jpg"],
-        "25th": ["25th_image1.jpg", "25th_image2.jpg", "25th_image3.jpg", "25th_image4.jpg", "25th_image5.jpg", "25th_image6.jpg", "25th_image7.jpg", "25th_image8.jpg", "25th_image9.jpg", "25th_image10.jpg", "25th_image11.jpg", "25th_image12.jpg", "25th_image13.jpg", "25th_image14.jpg"],
+        "25th": ["25th_image1.jpg", "25th_image2.jpg", "25th_image3.jpg", "25th_image4.jpg", "25th_image5.jpg", "26th_image6.jpg", "25th_image7.jpg", "25th_image8.jpg", "25th_image9.jpg", "25th_image10.jpg", "25th_image11.jpg", "25th_image12.jpg", "25th_image13.jpg", "25th_image14.jpg"],
         "26th": ["26th_image1.jpg", "26th_image2.jpg", "26th_image3.jpg", "26th_image4.jpg", "26th_image5.jpg", "26th_image6.jpg", "26th_image7.jpg", "26th_image8.jpg", "26th_image9.jpg", "26th_image10.jpg", "26th_image11.jpg", "26th_image12.jpg", "26th_image13.jpg", "26th_image14.jpg", "26th_image15.jpg", "26th_image16.jpg", "26th_image17.jpg", "26th_image18.jpg", "26th_image19.jpg"],
         "27th": ["27th_image1.jpg", "27th_image2.jpg", "27th_image3.jpg", "27th_image4.jpg", "27th_image5.jpg", "27th_image6.jpg"],
         "28th": ["28th_image1.jpg", "28th_image2.jpg", "28th_image3.jpg", "28th_image4.jpg", "28th_image5.jpg", "28th_image6.jpg", "28th_image7.jpg", "28th_image8.jpg", "28th_image9.jpg", "28th_image10.jpg"],
         "29th": ["29th_image1.jpg", "29th_image2.jpg", "29th_image3.jpg", "29th_image4.jpg", "29th_image5.jpg", "29th_image6.jpg", "29th_image7.jpg", "29th_image8.jpg", "29th_image9.jpg", "29th_image10.jpg", "29th_image11.jpg", "29th_image12.jpg", "29th_image13.jpg", "29th_image14.jpg", "29th_image15.jpg"],
-        "30th": [],
-        "HALOHALO OLD PICS": ["old_memories.jpg"]
+        "30th": ["30th_image1.jpg", "30th_image2.jpg", "30th_image3.jpg", "30th_image4.jpg", "30th_image5.jpg", "30th_image6.jpg", "30th_image7.jpg", "30th_image8.jpg", "30th_image9.jpg", "30th_image10.jpg", "30th_image11.jpg", "30th_image12.jpg", "30th_image13.jpg", "30th_image14.jpg", "30th_image15.jpg", "30th_image16.jpg", "30th_image17.jpg", "30th_image18.jpg", "30th_image19.jpg", "30th_image20.jpg"]
     };
 
+    const mainView = document.getElementById('main-view');
     const folderGrid = document.getElementById('folder-view');
     const photoViewer = document.getElementById('photo-viewer');
     const photoList = document.getElementById('photo-list');
@@ -185,46 +313,42 @@
         Object.keys(albumData).forEach(folderName => {
             const card = document.createElement('div');
             card.className = 'folder-card';
-            const icon = folderName.includes('HALOHALO') ? '🖼️' : '📁';
+            const icon = folderName.includes('1st-15th') ? '🖼️' : '📁';
             card.innerHTML = `<span class="folder-icon">${icon}</span><strong>${folderName}</strong>`;
             card.onclick = () => openAlbum(folderName);
             folderGrid.appendChild(card);
         });
     }
 
-   function openAlbum(name) {
-    folderGrid.style.display = 'none';
-    photoViewer.style.display = 'block';
-    albumTitle.innerText = name;
-    
-    // The zip file is used ONLY for the download button
-    zipLink.href = `${name}.zip`; 
-    
-    photoList.innerHTML = '';
+    function openAlbum(name) {
+        mainView.style.display = 'none';
+        photoViewer.style.display = 'block';
+        albumTitle.innerText = name;
+        
+        zipLink.href = `${name}.zip`; 
+        photoList.innerHTML = '';
 
-    if(albumData[name].length === 0) {
-        photoList.innerHTML = '<p>No images found.</p>';
-    } else {
-        albumData[name].forEach(fileName => {
-            const img = document.createElement('img');
-            
-            // This looks into the FOLDER you just unzipped
-            // Path: 16th/16th_image1.jpg
-            const path = `${name}/${fileName}`;
-            
-            img.src = path;
-            img.onclick = () => openLightbox(path);
-            
-            img.onerror = function() {
-                console.error("Browser looked for " + path + " but it wasn't there.");
-                this.style.display = 'none';
-            };
-            
-            photoList.appendChild(img);
-        });
+        if(albumData[name].length === 0) {
+            photoList.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 40px 0;">No images found.</p>';
+        } else {
+            albumData[name].forEach(fileName => {
+                const img = document.createElement('img');
+                const path = `${name}/${fileName}`;
+                
+                img.src = path;
+                img.alt = fileName;
+                img.onclick = () => openLightbox(path);
+                
+                img.onerror = function() {
+                    console.error("Browser looked for " + path + " but it wasn't there.");
+                    this.style.display = 'none';
+                };
+                
+                photoList.appendChild(img);
+            });
+        }
+        window.scrollTo(0, 0);
     }
-    window.scrollTo(0, 0);
-}
 
     function openLightbox(src) {
         lightboxImg.src = src;
@@ -234,7 +358,12 @@
     }
 
     function closeLightbox() { lightbox.style.display = 'none'; }
-    function showFolders() { folderGrid.style.display = 'grid'; photoViewer.style.display = 'none'; }
+    
+    function showFolders() { 
+        mainView.style.display = 'block'; 
+        photoViewer.style.display = 'none'; 
+    }
+    
     lightbox.onclick = function(e) { if (e.target === lightbox) closeLightbox(); };
 
     init();
