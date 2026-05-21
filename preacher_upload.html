@@ -134,13 +134,13 @@
         <div class="input-group">
             <label>👥 Automatic Recipients (${DEFAULT_EMAILS.length} Core Members)</label>
             <div class="default-badge-container">
-                <!-- <span class="email-badge">jazondecena@gmail.com</span>
-                <span class="email-badge">cha_tv33@yahoo.com</span> -->
+                <span class="email-badge">jazondecena@gmail.com</span>
+                <span class="email-badge">cha_tv33@yahoo.com</span>
                 <span class="email-badge">regalajohndavid@gmail.com</span>
-                <!-- <span class="email-badge">shellypilarcooo@gmail.com</span>
+                <span class="email-badge">shellypilarcooo@gmail.com</span>
                 <span class="email-badge">javienchawish@gmail.com</span>
                 <span class="email-badge">smaperoche@gmail.com</span>
-                <span class="email-badge">jil.taguig.man@gmail.com</span> -->
+                <span class="email-badge">jil.taguig.man@gmail.com</span>
             </div>
             
             <button class="extra-recipients-toggle" onclick="toggleExtraBox()">➕ Need to add extra email targets?</button>
@@ -177,11 +177,12 @@
     // Static automated lists assigned directly
     const DEFAULT_EMAILS = [
         "jazondecena@gmail.com",
-        "Arlieconejar123@gmail.com",
+        "cha_tv33@yahoo.com",
         "regalajohndavid@gmail.com",
         "shellypilarcooo@gmail.com",
         "javienchawish@gmail.com",
-        "maritesjamito04@gmail.com"
+        "jil.taguig.man@gmail.com",
+        "smaperoche@gmail.com"
     ];
 
     window.onload = function() {
@@ -289,7 +290,7 @@
             }
 
             let successCount = 0;
-            const customMessage = `Greetings Ministers,\n\nA new teaching file/resource has been successfully uploaded to the cloud system portal.\n\n📄 File Name: ${file.name}\n🔗 Access Link: ${uploadedFileUrl}\n\nJIL WAN-MAN Taguig Portal`;
+            const customMessage = `Greetings Ministers,\n\nA new teaching file/resource has been successfully uploaded to the cloud system portal.\n\nFile Name: ${file.name}\nAccess Link: ${uploadedFileUrl}\n\nJIL WAN-MAN Taguig Portal`;
 
             for (let i = 0; i < targetEmails.length; i++) {
                 const currentEmail = targetEmails[i];
