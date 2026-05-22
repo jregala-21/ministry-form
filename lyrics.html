@@ -114,7 +114,7 @@
         .lyrics-placeholder h3 { font-size: 20px; margin: 0; color: #94a3b8; font-weight: 600; }
         .lyrics-placeholder p { font-size: 15px; margin: 0; max-width: 300px; line-height: 1.5; }
 
-        .lyrics-display { padding: 50px 32px; max-width: 800px; margin: 0; width: 100%; display: none; }
+        .lyrics-display { padding: 50px 32px; max-width: 800px; margin: 0 auto; width: 100%; display: none; }
         .lyrics-header {
             border-bottom: 2px solid var(--border); padding-bottom: 24px; margin-bottom: 40px;
             display: flex; justify-content: space-between; align-items: flex-end; gap: 20px;
@@ -244,7 +244,7 @@
             gap: 20px; 
             width: 100%;
         }
-        .category-bucket { background: white; border: 1px solid var(--border); border-radius: 16px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); display: flex; flex-direction: column; gap: 12px; }
+        .category-bucket { background: white; border: 1px solid var(--border); border-radius: 16px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); display: flex; flex-direction: column; gap: 12px; position: relative; }
         .bucket-title { font-size: 13px; font-weight: 800; color: var(--text-main); margin-bottom: 4px; display: flex; justify-content: space-between; align-items: center; }
         
         /* Interactive Bucket Header Buttons */
@@ -264,24 +264,32 @@
         .remove-pill { background: var(--danger-light); border: none; color: var(--danger-hover); width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 18px; cursor: pointer; transition: all 0.2s; }
         .remove-pill:hover { background: var(--danger); color: white; }
 
-        /* Modal Inline Dropdown Selection Box */
+        /* --- MODERN AUTOCOMPLETE SUGGESTION SEARCH LAYOUT --- */
         .inline-selector-wrapper {
-            background: #f1f5f9; border: 1px dashed var(--border); border-radius: 10px;
-            padding: 8px; display: none; animation: slideDown 0.2s ease-out; position: relative;
+            background: #ffffff; border: 1px solid var(--border); border-radius: 12px;
+            padding: 10px; display: none; animation: slideDown 0.2s ease-out;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05), 0 4px 6px -2px rgba(0,0,0,0.05);
+            position: absolute; top: 48px; left: 16px; right: 16px; z-index: 99;
         }
         @keyframes slideDown { from { opacity:0; transform:translateY(-5px); } to { opacity:1; transform:translateY(0); } }
 
-        /* Custom Suggestion Dropdown Elements */
-        .suggestion-list-box {
-            background: white; border: 1px solid var(--border); border-radius: 8px;
-            max-height: 150px; overflow-y: auto; margin-top: 4px; padding: 0; list-style: none;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        .inline-search-input {
+            width: 100%; padding: 10px 14px; border: 1px solid var(--border); border-radius: 8px;
+            font-size: 14px; font-family: inherit; outline: none; background: #f8fafc; transition: all 0.2s;
+        }
+        .inline-search-input:focus { border-color: var(--primary); background: #ffffff; box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1); }
+
+        .suggestions-container {
+            max-height: 180px; overflow-y: auto; margin-top: 8px; list-style: none;
+            padding: 0; margin-bottom: 0; border-top: 1px solid #f1f5f9; display: none;
         }
         .suggestion-item {
-            padding: 10px 12px; font-size: 13px; cursor: pointer; color: var(--text-main);
-            transition: background 0.15s; text-align: left;
+            padding: 10px 12px; font-size: 13.5px; font-weight: 500; border-radius: 6px;
+            cursor: pointer; color: var(--text-main); transition: all 0.15s ease;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
         .suggestion-item:hover { background: var(--primary-light); color: var(--primary-hover); }
+        .suggestion-no-results { padding: 12px; font-size: 13px; color: var(--text-muted); text-align: center; font-style: italic; }
 
         /* Database Item Cards */
         .saved-setlist-card {
@@ -348,7 +356,7 @@
         }
     </style>
 </head>
-<body>
+<body onclick="handleGlobalClick(event)">
 
     <div id="sidebarMenu" class="sidebar">
         <div class="sidebar-header">
@@ -438,7 +446,6 @@
     let songsData = [];
     let savedSetlistsData = [];
     let selectedSongIndex = null;
-    let currentEditingSetlistTimestamp = null; // Overwrites target row on update
 
     const CATEGORIES = ["Intro", "Praise", "Worship", "Communion", "Ministerial", "Victory", "Closing"];
     let setlistStorage = { Intro: [], Praise: [], Worship: [], Communion: [], Ministerial: [], Victory: [], Closing: [] };
@@ -460,6 +467,13 @@
         if (window.innerWidth <= 768 && sidebar.classList.contains("open")) {
             sidebar.classList.remove("open");
             document.getElementById("menuToggleBtn").innerText = "☰";
+        }
+    }
+
+    // Dismiss custom dropdown windows when tracking global body canvas layout hits
+    function handleGlobalClick(event) {
+        if (!event.target.closest('.category-bucket')) {
+            document.querySelectorAll(".inline-selector-wrapper").forEach(w => w.style.display = "none");
         }
     }
 
@@ -512,7 +526,7 @@
             CATEGORIES.forEach(cat => { optionsHTML += `<option value="${cat}">${cat}</option>`; });
 
             li.innerHTML = `
-                <div class="song-info-row"><span class="song-title">${song.title}</span></div>
+                <div class="song-info-row"><span class="song-title">${song.title || "Untitled Track"}</span></div>
                 <select class="category-select" onchange="addSongToCategory(this, ${masterIndex})">${optionsHTML}</select>
             `;
             container.appendChild(li);
@@ -575,9 +589,6 @@
             return;
         }
 
-        // Set editing target reference pointer context safely
-        currentEditingSetlistTimestamp = timestamp;
-
         document.getElementById("leaderName").value = record.worshipLeader || "";
         document.getElementById("lineupDate").value = record.date || "";
         document.getElementById("lineupDesc").value = record.description || "";
@@ -593,7 +604,7 @@
                         if (foundSong) {
                             setlistStorage[cat].push(foundSong);
                         } else {
-                            setlistStorage[cat].push({ title: songTitle, lyrics: "{Verse}\n[No loaded data]" });
+                            setlistStorage[cat].push({ title: songTitle, content: "{c: Verse}\n[No loaded data]" });
                         }
                     });
                 }
@@ -608,7 +619,7 @@
             setTimeout(() => { msgSpan.innerText = ""; }, 5000);
 
         } catch (err) {
-            console.error("Error structural re-load layout map execution path:", err);
+            console.error("Error path layout map mapping:", err);
             alert("Failed to read historical song layouts map data.");
         }
     }
@@ -650,12 +661,12 @@
             bucket.innerHTML = `
                 <div class="bucket-title">
                     <span>📂 ${cat.toUpperCase()}</span>
-                    <button class="btn-bucket-add" onclick="toggleInlineSelector('${cat}')">➕ Add Song</button>
+                    <button class="btn-bucket-add" onclick="toggleInlineSelector(event, '${cat}')">➕ Add Song</button>
                 </div>
                 
                 <div class="inline-selector-wrapper" id="selector-wrapper-${cat}">
-                    <input type="text" placeholder="Type to search track..." class="category-select" style="width:100%; margin-bottom:0; background:#fff;" oninput="getAutoSuggestions(this, '${cat}')">
-                    <ul class="suggestion-list-box" id="suggestions-${cat}" style="display:none;"></ul>
+                    <input type="text" class="inline-search-input" id="search-input-${cat}" placeholder="Type to search song..." oninput="filterInlineSuggestions('${cat}')" onkeydown="handleInlineInputKey(event, '${cat}')">
+                    <ul class="suggestions-container" id="suggestions-${cat}"></ul>
                 </div>
 
                 <div class="bucket-songs" id="bucket-${cat}"></div>
@@ -665,42 +676,59 @@
         });
     }
 
-    // New Function to show instant search options list while typing inside the planner input box
-    function getAutoSuggestions(inputElem, cat) {
-        const query = inputElem.value.toLowerCase().trim();
-        const suggestionBox = document.getElementById(`suggestions-${cat}`);
-        if (!suggestionBox) return;
-
-        if (!query) {
-            suggestionBox.innerHTML = "";
-            suggestionBox.style.display = "none";
-            return;
+    function toggleInlineSelector(event, cat) {
+        event.stopPropagation();
+        const targetWrapper = document.getElementById(`selector-wrapper-${cat}`);
+        if(!targetWrapper) return;
+        
+        const currentlyOpen = targetWrapper.style.display === "block";
+        document.querySelectorAll(".inline-selector-wrapper").forEach(w => w.style.display = "none");
+        
+        if (!currentlyOpen) {
+            targetWrapper.style.display = "block";
+            const inputField = document.getElementById(`search-input-${cat}`);
+            inputField.value = "";
+            inputField.focus();
+            filterInlineSuggestions(cat); // Populate list on empty string initially
         }
-
-        // Sort alphabetically to maintain clean UI rendering patterns
-        const sortedSongs = [...songsData].sort((a, b) => a.title.localeCompare(b.title));
-        const matched = sortedSongs.filter(song => song.title.toLowerCase().includes(query));
-
-        if (matched.length === 0) {
-            suggestionBox.innerHTML = `<li class="suggestion-item" style="color:var(--text-muted); cursor:default; font-style:italic;">No matches found</li>`;
-            suggestionBox.style.display = "block";
-            return;
-        }
-
-        suggestionBox.innerHTML = "";
-        matched.forEach(song => {
-            const li = document.createElement("li");
-            li.className = "suggestion-item";
-            li.innerText = song.title;
-            li.onclick = () => handleDirectSuggestionClick(song.title, cat);
-            suggestionBox.appendChild(li);
-        });
-
-        suggestionBox.style.display = "block";
     }
 
-    // Adds song directly when recommendation list box child gets selected
-    function handleDirectSuggestionClick(songTitle, category) {
+    function filterInlineSuggestions(category) {
+        const inputVal = document.getElementById(`search-input-${category}`).value.toLowerCase().trim();
+        const container = document.getElementById(`suggestions-${category}`);
+        container.innerHTML = "";
+
+        const sortedSongs = [...songsData].sort((a, b) => (a.title || "").localeCompare(b.title || ""));
+        const matched = sortedSongs.filter(s => s.title && s.title.toLowerCase().includes(inputVal));
+
+        if(matched.length === 0) {
+            container.innerHTML = `<li class="suggestion-no-results">No matches found</li>`;
+        } else {
+            matched.forEach(song => {
+                const li = document.createElement("li");
+                li.className = "suggestion-item";
+                li.innerText = song.title;
+                li.onclick = (e) => {
+                    e.stopPropagation();
+                    injectSongIntoBucket(song.title, category);
+                };
+                container.appendChild(li);
+            });
+        }
+        container.style.display = "block";
+    }
+
+    function handleInlineInputKey(event, category) {
+        if (event.key === "Enter") {
+            const container = document.getElementById(`suggestions-${category}`);
+            const topSuggestion = container.querySelector('.suggestion-item');
+            if (topSuggestion) {
+                injectSongIntoBucket(topSuggestion.innerText, category);
+            }
+        }
+    }
+
+    function injectSongIntoBucket(songTitle, category) {
         const song = songsData.find(s => s.title === songTitle);
         if(!song) return;
 
@@ -714,34 +742,7 @@
         setlistStorage[category].push(song);
         updateCategoryBucketUI(category);
         
-        // Collapse selectors and clear parameters completely
-        const wrapper = document.getElementById(`selector-wrapper-${category}`);
-        wrapper.style.display = "none";
-        const input = wrapper.querySelector('input');
-        if (input) input.value = "";
-        const suggestionBox = document.getElementById(`suggestions-${category}`);
-        if (suggestionBox) { suggestionBox.innerHTML = ""; suggestionBox.style.display = "none"; }
-    }
-
-    function toggleInlineSelector(cat) {
-        const targetWrapper = document.getElementById(`selector-wrapper-${cat}`);
-        if(!targetWrapper) return;
-        const currentlyOpen = targetWrapper.style.display === "block";
-        
-        // Collapse other windows to maintain layout uniformity across viewspaces
-        document.querySelectorAll(".inline-selector-wrapper").forEach(w => {
-            w.style.display = "none";
-            const input = w.querySelector('input');
-            if(input) input.value = "";
-            const sug = w.querySelector('.suggestion-list-box');
-            if(sug) { sug.innerHTML = ""; sug.style.display = "none"; }
-        });
-        
-        targetWrapper.style.display = currentlyOpen ? "none" : "block";
-        if (!currentlyOpen) {
-            const input = targetWrapper.querySelector('input');
-            if (input) input.focus();
-        }
+        document.getElementById(`selector-wrapper-${category}`).style.display = "none";
     }
 
     function addSongToCategory(selectElem, songIdx) {
@@ -794,8 +795,10 @@
         const view = document.getElementById("lyricsView");
         view.style.display = "block";
         
-        document.getElementById("displayTitle").innerText = songsData[index].title;
-        parseAndRenderLyrics(songsData[index].lyrics);
+        document.getElementById("displayTitle").innerText = songsData[index].title || "Untitled Track";
+        
+        const rawLyricsData = songsData[index].content || songsData[index].lyrics || "";
+        parseAndRenderLyrics(rawLyricsData);
 
         document.querySelectorAll(".song-item").forEach(li => {
             li.classList.remove("active");
@@ -813,17 +816,20 @@
         let currentContent = [];
 
         function flushSection() {
-            if (currentSection && currentContent.length > 0) {
+            if (currentContent.length > 0) {
+                const label = currentSection ? currentSection : "Lyrics";
+                
                 const div = document.createElement("div");
-                const cleanType = currentSection.toLowerCase();
+                const cleanType = label.toLowerCase();
                 let typeClass = "verse";
+                
                 if(cleanType.includes("chorus") && !cleanType.includes("pre")) typeClass = "chorus";
                 else if(cleanType.includes("pre-chorus") || cleanType.includes("pre chorus")) typeClass = "pre-chorus";
                 else if(cleanType.includes("bridge")) typeClass = "bridge";
 
                 div.className = `lyric-section ${typeClass}`;
                 div.innerHTML = `
-                    <div class="section-label">${currentSection}</div>
+                    <div class="section-label">${label}</div>
                     <div class="section-content">${currentContent.join('\n')}</div>
                 `;
                 container.appendChild(div);
@@ -833,24 +839,27 @@
 
         lines.forEach(line => {
             const trimmed = line.trim();
-            const headerMatch = trimmed.match(/^\{([^}]+)\}/);
+            if (trimmed === "") return;
+
+            const headerMatch = trimmed.match(/^\{(?:\w+:\s*)?([^}]+)\}/);
+            
             if (headerMatch) {
                 flushSection();
-                currentSection = headerMatch[1];
-            } else if (trimmed !== "" || currentContent.length > 0) {
+                currentSection = headerMatch[1].trim();
+            } else {
                 const cleanLine = line.replace(/\[[^\]]+\]/g, '');
                 if (cleanLine.trim() !== "" || currentContent.length > 0) {
                     currentContent.push(cleanLine);
                 }
             }
         });
-        flushSection();
+        flushSection(); 
     }
 
     function filterSongs() {
         const q = document.getElementById("searchInput").value.toLowerCase().trim();
         if(!q) { renderSongList(songsData); return; }
-        const matched = songsData.filter(s => s.title.toLowerCase().includes(q));
+        const matched = songsData.filter(s => (s.title || "").toLowerCase().includes(q));
         renderSongList(matched);
     }
 
@@ -867,13 +876,6 @@
         if(open) {
             const openTab = document.getElementById("tabBtnDatabase").classList.contains("active") ? 'database' : 'planner';
             if(openTab === 'database') fetchSavedSetlists();
-        } else {
-            // Clear editing reference context tracking on modal escape triggers
-            currentEditingSetlistTimestamp = null;
-            document.getElementById("leaderName").value = "";
-            document.getElementById("lineupDesc").value = "";
-            setlistStorage = { Intro: [], Praise: [], Worship: [], Communion: [], Ministerial: [], Victory: [], Closing: [] };
-            CATEGORIES.forEach(cat => updateCategoryBucketUI(cat));
         }
     }
 
@@ -904,8 +906,7 @@
             leader: leader,
             date: date,
             description: desc,
-            setlistData: JSON.stringify(flatDataLayout),
-            timestamp: currentEditingSetlistTimestamp // Pass tracking parameter seamlessly
+            setlistData: JSON.stringify(flatDataLayout)
         };
 
         try {
@@ -921,8 +922,6 @@
             document.getElementById("lineupDesc").value = "";
             setlistStorage = { Intro: [], Praise: [], Worship: [], Communion: [], Ministerial: [], Victory: [], Closing: [] };
             CATEGORIES.forEach(cat => updateCategoryBucketUI(cat));
-            
-            currentEditingSetlistTimestamp = null; // Clean transaction tracking states safely
         } catch(err) {
             msg.style.color = "var(--danger)";
             msg.innerText = "❌ Network transaction failed.";
@@ -960,10 +959,11 @@
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
         
-        doc.setFont("Helvetica", "bold"); doc.setFontSize(24); doc.text(song.title.toUpperCase(), 20, 25);
+        doc.setFont("Helvetica", "bold"); doc.setFontSize(24); doc.text((song.title || "TRACK").toUpperCase(), 20, 25);
         let currentY = 38;
-        renderPDFSongBlock(doc, song.lyrics, currentY, 280);
-        doc.save(`${song.title.replace(/\s+/g, '_')}_Lyrics.pdf`);
+        const targetRawLyrics = song.content || song.lyrics || "";
+        renderPDFSongBlock(doc, targetRawLyrics, currentY, 280);
+        doc.save(`${(song.title || "Track").replace(/\s+/g, '_')}_Lyrics.pdf`);
     }
 
     function exportHistoricalLineupPDF(leader, date, notes, sortedSongArrayObjectsReferenceList) {
@@ -1020,7 +1020,8 @@
             doc.text(`${idx + 1}. ${bundle.headerLabelTag}`, 24, currentY + 7);
             
             currentY += 16;
-            currentY = renderPDFSongBlock(doc, bundle.songObjectRef.lyrics, currentY, pageHeightBound);
+            const targetRawLyrics = bundle.songObjectRef.content || bundle.songObjectRef.lyrics || "";
+            currentY = renderPDFSongBlock(doc, targetRawLyrics, currentY, pageHeightBound);
             currentY += 10;
         });
 
@@ -1070,7 +1071,7 @@
         lines.forEach(line => {
             const tl = line.trim();
             if (tl === "") return;
-            const isLyricsHeader = tl.match(/^\{([^}]+)\}/);
+            const isLyricsHeader = tl.match(/^\{(?:\w+:\s*)?([^}]+)\}/);
             if (isLyricsHeader) { 
                 flushPDFBlock(); 
                 currentHeader = isLyricsHeader[1]; 
