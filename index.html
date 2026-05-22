@@ -4,96 +4,151 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>JIL Taguig Portal</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        :root {
+            --bg: #0f172a;
+            --card-bg: #1e293b;
+            --border: #334155;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            
+            /* Preserved Button Core Colors */
+            --via-blue: #4f46e5;
+            --via-blue-hover: #4338ca;
+            --jam-green: #10b981;
+            --jam-green-hover: #059669;
+            --man-orange: #f59e0b;
+            --man-orange-hover: #d97706;
+            --preacher-dark: #374151;
+            --preacher-dark-hover: #1f2937;
+        }
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #4f46e5, #6d28d9);
-            display: flex; justify-content: center; align-items: center;
-            min-height: 100vh; margin: 0; padding: 20px;
+            background-color: var(--bg);
+            color: var(--text-main);
+            display: flex; 
+            justify-content: center; 
+            align-items: center;
+            min-height: 100vh; 
+            margin: 0; 
+            padding: 20px;
+            box-sizing: border-box;
+            -webkit-font-smoothing: antialiased;
         }
 
         .container {
-            background: #ffffff; padding: 40px; border-radius: 24px;
-            width: 100%; max-width: 400px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.7), rgba(15, 23, 42, 0.8));
+            border: 1px solid var(--border);
+            padding: 40px; 
+            border-radius: 24px;
+            width: 100%; 
+            max-width: 420px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
             text-align: center;
+            box-sizing: border-box;
         }
 
-        h2 { margin-bottom: 30px; color: #1f2937; font-size: 26px; }
+        h2 { 
+            margin-top: 0;
+            margin-bottom: 30px; 
+            color: #fff; 
+            font-size: 26px; 
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
 
-        /* Main Menu Buttons */
+        /* Main Menu Buttons Base Structure */
         .menu-btn {
-            width: 100%; padding: 16px; margin: 8px 0;
-            background: #f3f4f6; color: #374151; border: none;
-            border-radius: 12px; cursor: pointer; font-weight: 700;
-            font-size: 16px; transition: 0.3s ease;
-            display: flex; align-items: center; justify-content: center; gap: 10px;
+            width: 100%; 
+            padding: 16px; 
+            margin: 8px 0;
+            background: var(--card-bg); 
+            color: var(--text-main); 
+            border: 1px solid var(--border);
+            border-radius: 12px; 
+            cursor: pointer; 
+            font-weight: 700;
+            font-size: 16px; 
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            gap: 10px;
             box-sizing: border-box;
             text-decoration: none;
         }
 
-        .menu-btn:hover { background: #e5e7eb; transform: translateY(-2px); }
+        .menu-btn:hover { 
+            background: #273549; 
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px -5px rgba(0,0,0,0.3);
+        }
 
         /* Portal Selection Specific Buttons */
         .btn-portal-selection {
-            background: #ffffff;
-            color: #4f46e5;
-            border: 2px solid #4f46e5;
+            background: rgba(30, 41, 59, 0.4);
+            color: #fff;
+            border: 2px solid var(--border);
             padding: 20px;
             font-size: 18px;
         }
         .btn-portal-selection:hover {
-            background: #4f46e5;
-            color: #ffffff;
-            box-shadow: 0 8px 15px rgba(79, 70, 229, 0.3);
+            background: rgba(79, 70, 229, 0.15);
+            color: #818cf8;
+            border-color: #6366f1;
+            box-shadow: 0 8px 25px rgba(79, 70, 229, 0.2);
         }
 
-        /* New Prominent Style for History Button on Home Page */
+        /* Prominent Style for History Button on Home Page */
         .btn-history-home {
-            background: #f59e0b;
+            background: var(--man-orange);
             color: white;
+            border: none;
             padding: 16px;
             font-size: 16px;
         }
         .btn-history-home:hover {
-            background: #d97706;
-            box-shadow: 0 8px 15px rgba(245, 158, 11, 0.3);
+            background: var(--man-orange-hover);
+            box-shadow: 0 8px 20px rgba(245, 158, 11, 0.25);
         }
 
         /* Category Colors */
-        .btn-via { background: #4f46e5; color: white; }
-        .btn-via:hover { background: #4338ca; box-shadow: 0 8px 15px rgba(79, 70, 229, 0.3); }
+        .btn-via { background: var(--via-blue); color: white; border: none; }
+        .btn-via:hover { background: var(--via-blue-hover); box-shadow: 0 8px 20px rgba(79, 70, 229, 0.25); }
 
-        .btn-jam { background: #10b981; color: white; }
-        .btn-jam:hover { background: #059669; box-shadow: 0 8px 15px rgba(16, 185, 129, 0.3); }
+        .btn-jam { background: var(--jam-green); color: white; border: none; }
+        .btn-jam:hover { background: var(--jam-green-hover); box-shadow: 0 8px 20px rgba(16, 185, 129, 0.25); }
 
         /* Secondary MAN layout configurations */
-        .btn-man { background: #f59e0b; color: white; }
-        .btn-man:hover { background: #d97706; box-shadow: 0 8px 15px rgba(245, 158, 11, 0.3); }
+        .btn-man { background: var(--man-orange); color: white; border: none; }
+        .btn-man:hover { background: var(--man-orange-hover); box-shadow: 0 8px 20px rgba(245, 158, 11, 0.25); }
 
-        .btn-preacher { background: #374151; color: white; }
-        .btn-preacher:hover { background: #1f2937; box-shadow: 0 8px 15px rgba(55, 65, 81, 0.3); }
+        .btn-preacher { background: var(--preacher-dark); color: white; border: none; }
+        .btn-preacher:hover { background: var(--preacher-dark-hover); box-shadow: 0 8px 20px rgba(55, 65, 81, 0.25); }
 
         /* Back Button Style */
         .btn-back {
             background: none;
             border: none;
-            color: #6b7280;
+            color: var(--text-muted);
             font-size: 14px;
             cursor: pointer;
             font-weight: 600;
-            margin-bottom: 15px;
+            margin-bottom: 20px;
             display: inline-flex;
             align-items: center;
-            gap: 5px;
+            gap: 6px;
+            transition: color 0.2s;
         }
-        .btn-back:hover { color: #1f2937; }
+        .btn-back:hover { color: #fff; }
 
         /* Submenu Styling */
         .submenu {
             max-height: 0;
             overflow: hidden;
-            transition: max-height 0.4s ease-out, opacity 0.3s ease, margin 0.3s ease;
+            transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease;
             opacity: 0;
             display: flex;
             flex-direction: column;
@@ -108,22 +163,35 @@
         }
 
         .sub-btn {
-            background: #ffffff;
-            border: 2px solid #eef2ff;
-            color: #4b5563;
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid var(--border);
+            color: var(--text-main);
             font-size: 14px;
             padding: 12px;
+            justify-content: center;
         }
 
-        .sub-btn:hover { background: #f9fafb; border-color: #d1d5db; }
+        .sub-btn:hover { 
+            background: var(--card-bg); 
+            border-color: #475569;
+            color: #fff;
+        }
 
         /* View State Management */
         .portal-section { display: none; }
-        .portal-section.active-view { display: block; }
+        .portal-section.active-view { 
+            display: block; 
+            animation: fadeIn 0.3s ease;
+        }
 
-        .footer { margin-top: 30px; font-size: 12px; color: #9ca3af; }
-        .arrow { font-size: 12px; transition: 0.3s; }
+        .footer { margin-top: 35px; font-size: 12px; color: var(--text-muted); letter-spacing: 0.02em; }
+        .arrow { font-size: 11px; transition: transform 0.25s ease; display: inline-block; }
         .rotate { transform: rotate(180deg); }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
 </head>
 <body>
@@ -132,7 +200,7 @@
     <h2>⛪ JIL TAGUIG PORTAL</h2>
 
     <div id="selectionView" class="portal-section active-view">
-        <p style="color: #6b7280; margin-bottom: 25px; font-weight: 500;">Please select your access gateway:</p>
+        <p style="color: var(--text-muted); margin-bottom: 25px; font-weight: 500; font-size: 14px;">Please select your access gateway:</p>
         
         <button class="menu-btn btn-portal-selection" onclick="switchView('wanmanView')">
             🎵 WAN-MAN PORTAL
@@ -167,7 +235,7 @@
             <button class="menu-btn sub-btn" onclick="location.href='Setlist.html'">🎼 Setlist</button>
         </div>
 
-        <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+        <hr style="border: 0; border-top: 1px solid var(--border); margin: 20px 0;">
 
         <button class="menu-btn" onclick="location.href='video_meet.html'">📋 Video Conference</button>
         <button class="menu-btn" onclick="location.href='index - Copy.html'">📋 Ministry Form</button>
@@ -221,6 +289,5 @@
         }
     }
 </script>
-
 </body>
 </html>

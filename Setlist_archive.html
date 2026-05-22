@@ -4,90 +4,195 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Setlist Archive | Full Manager</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         :root {
-            --bg: #0f172a; --card-bg: #1e293b; --text-main: #f8fafc;
-            --accent: #10b981; --service-header: #4f46e5; --danger: #ef4444;
-            --chord-color: #fbbf24; --header-color: #fb923c; --sub-text: #94a3b8;
+            --bg: #0f172a; 
+            --card-bg: #1e293b; 
+            --border: #334155; 
+            --text-main: #f8fafc;
+            --accent: #10b981; 
+            --service-header: #4f46e5; 
+            --danger: #ef4444;
+            --chord-color: #fbbf24; 
+            --header-color: #fb923c; 
+            --sub-text: #94a3b8;
             --communion-purple: #a78bfa;
         }
-        body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text-main); padding: 10px; max-width: 800px; margin: auto; }
         
-        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #334155; padding-bottom: 15px; margin-bottom: 20px; }
+        body { 
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; 
+            background: var(--bg); 
+            color: var(--text-main); 
+            padding: 16px; 
+            max-width: 800px; 
+            margin: auto; 
+            -webkit-font-smoothing: antialiased;
+        }
         
-        .service-block { margin-bottom: 25px; background: var(--card-bg); border-radius: 12px; overflow: hidden; border: 1px solid #334155; position: relative; }
-        .service-header-row { background: rgba(79, 70, 229, 0.1); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155; }
-        .service-name { font-size: 18px; font-weight: 700; color: #fff; }
+        .header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            border-bottom: 1px solid var(--border); 
+            padding-bottom: 16px; 
+            margin-bottom: 24px; 
+        }
+        
+        .search-container { margin-bottom: 24px; width: 100%; }
+        
+        .archive-search-input {
+            width: 100%; 
+            padding: 14px 16px; 
+            border-radius: 10px; 
+            border: 1px solid var(--border);
+            background: var(--card-bg); 
+            color: var(--text-main); 
+            font-size: 15px; 
+            outline: none;
+            box-sizing: border-box; 
+            transition: all 0.2s;
+        }
+        .archive-search-input:focus { 
+            border-color: var(--service-header); 
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.25);
+        }
 
-        .song-item { display: flex; align-items: center; padding: 10px 20px; border-bottom: 1px solid rgba(255,255,255,0.03); justify-content: space-between; }
+        .service-block { 
+            margin-bottom: 24px; 
+            background: var(--card-bg); 
+            border-radius: 14px; 
+            overflow: hidden; 
+            border: 1px solid var(--border); 
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+        }
+        
+        .service-header-row { 
+            background: rgba(79, 70, 229, 0.15); 
+            padding: 16px 20px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            border-bottom: 1px solid var(--border); 
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        
+        .service-name { font-size: 16px; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 8px; }
+
+        .song-item { 
+            display: flex; 
+            align-items: center; 
+            padding: 12px 20px; 
+            border-bottom: 1px solid rgba(255,255,255,0.04); 
+            justify-content: space-between; 
+            transition: background 0.2s;
+        }
+        .song-item:hover { background: rgba(255,255,255,0.02); }
         .song-info { display: flex; align-items: center; }
+        .song-title-text { font-weight: 500; font-size: 15px; }
 
-        .cat-badge { font-size: 9px; font-weight: 800; text-transform: uppercase; padding: 3px 8px; border-radius: 4px; margin-right: 15px; min-width: 85px; text-align: center; }
+        .cat-badge { 
+            font-size: 10px; 
+            font-weight: 800; 
+            text-transform: uppercase; 
+            padding: 4px 10px; 
+            border-radius: 6px; 
+            margin-right: 15px; 
+            min-width: 90px; 
+            text-align: center; 
+            letter-spacing: 0.03em;
+        }
         .cat-intro { background: #334155; color: #cbd5e1; }
         .cat-praise { background: rgba(16, 185, 129, 0.2); color: var(--accent); }
         .cat-worship { background: rgba(251, 191, 36, 0.2); color: var(--chord-color); }
         .cat-ministerial { background: rgba(99, 102, 241, 0.2); color: #818cf8; }
         .cat-communion { background: rgba(167, 139, 250, 0.2); color: var(--communion-purple); }
-        .cat-victory { background: rgba(167, 139, 250, 0.2); color: #a78bfa; } 
+        .cat-victory { background: rgba(244, 63, 94, 0.2); color: #f43f5e; } 
         .cat-closing { background: rgba(239, 68, 68, 0.2); color: var(--danger); }
 
-        .btn { padding: 8px 12px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; border: none; text-transform: uppercase; transition: 0.2s; }
+        .btn { 
+            display: inline-flex; 
+            align-items: center; 
+            gap: 6px; 
+            padding: 8px 14px; 
+            border-radius: 8px; 
+            font-size: 12px; 
+            font-weight: 700; 
+            cursor: pointer; 
+            border: none; 
+            text-transform: uppercase; 
+            transition: all 0.2s; 
+        }
         .btn-view { background: var(--accent); color: #064e3b; }
+        .btn-view:hover { background: #059669; }
         .btn-pdf { background: #f1f5f9; color: #0f172a; }
+        .btn-pdf:hover { background: #cbd5e1; }
         .btn-edit { background: #334155; color: #fff; }
+        .btn-edit:hover { background: #475569; }
         .btn-danger { background: var(--danger); color: white; }
-        .btn-save { background: #4f46e5; color: white; width: 100%; padding: 15px; border-radius: 0; }
+        .btn-danger:hover { background: #dc2626; }
 
-        .remove-btn { color: var(--danger); background: none; border: none; cursor: pointer; font-weight: bold; font-size: 16px; padding: 5px; }
+        .remove-btn { 
+            color: var(--danger); 
+            background: none; 
+            border: none; 
+            cursor: pointer; 
+            font-weight: bold; 
+            font-size: 16px; 
+            padding: 4px 8px; 
+            transition: transform 0.2s; 
+        }
+        .remove-btn:hover { transform: scale(1.2); }
         
         .full-modal { display: none; position: fixed; inset: 0; background: var(--bg); z-index: 2000; flex-direction: column; }
-        .modal-nav { padding: 10px 15px; background: #111827; border-bottom: 1px solid #334155; display: flex; justify-content: space-between; align-items: center; }
-        #contentContainer { flex-grow: 1; overflow-y: auto; padding: 20px; }
+        .modal-nav { padding: 16px; background: #111827; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        #contentContainer { flex-grow: 1; overflow-y: auto; padding: 24px 16px; }
 
         .chord-line { line-height: 2.4; font-family: 'Consolas', monospace; font-size: 16px; white-space: pre; position: relative; margin-top: 1.2em; }
         .chord-wrap { position: absolute; top: -1.1em; color: var(--chord-color); font-weight: bold; }
-        .section-tag { color: var(--header-color); font-weight: bold; display: block; margin: 15px 0 5px 0; border-bottom: 1px solid #334155; }
+        .section-tag { color: var(--header-color); font-weight: bold; display: block; margin: 15px 0 5px 0; border-bottom: 1px solid var(--border); }
         
-        .loading-toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--accent); color: #000; padding: 10px 25px; border-radius: 30px; font-weight: bold; z-index: 4000; }
+        .loading-toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--accent); color: #000; padding: 12px 28px; border-radius: 30px; font-weight: bold; z-index: 4000; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
         
-        .edit-overlay { display: none; background: rgba(0,0,0,0.8); padding: 10px; text-align: center; border-top: 1px solid #334155; }
+        .edit-controls { display: flex; gap: 4px; align-items: center; }
+        .move-btn { background: #334155; color: white; border: 1px solid var(--border); padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 11px; transition: all 0.2s; }
+        .move-btn:hover { background: var(--service-header); }
 
-        .edit-controls {
-    display: flex;
-    gap: 5px;
-    align-items: center;
-}
-.move-btn {
-    background: #334155;
-    color: white;
-    border: none;
-    padding: 2px 8px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 12px;
-}
-.move-btn:hover {
-    background: #475569;
-}
+        .form-select, .form-input {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            background: #0f172a;
+            color: white;
+            border: 1px solid var(--border);
+            box-sizing: border-box;
+            font-size: 15px;
+        }
+        .form-input { color: #000; background: #fff; }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <h1 style="font-size: 1.2rem;">📋 Setlist Archive</h1>
-        <a href="Setlist.html" class="btn btn-edit">← BACK</a>
+        <h1 style="font-size: 1.3rem; margin:0;"><i class="fa-solid fa-box-archive" style="color:var(--service-header);"></i> Setlist Archive</h1>
+        <a href="Setlist.html" class="btn btn-edit"><i class="fa-solid fa-arrow-left"></i> BACK</a>
+    </div>
+
+    <div class="search-container">
+        <input type="text" id="archiveSearchInput" class="archive-search-input" placeholder="🔍 Search setlists by date or layout name..." oninput="renderArchive()">
     </div>
 
     <div id="archive-container">
-        <div style="text-align: center; color: var(--sub-text); margin-top: 50px;">Loading archive...</div>
+        <div style="text-align: center; color: var(--sub-text); margin-top: 50px;"><i class="fa-solid fa-spinner fa-spin"></i> Loading archive elements...</div>
     </div>
 
     <div id="viewerModal" class="full-modal">
         <div class="modal-nav">
-            <div id="modalTitle" style="font-weight:bold;">Setlist</div>
-            <button onclick="closeModal()" class="btn btn-danger">CLOSE</button>
+            <div id="modalTitle" style="font-weight:700; font-size:16px;">Setlist</div>
+            <button onclick="closeModal()" class="btn btn-danger"><i class="fa-solid fa-xmark"></i> CLOSE</button>
         </div>
         <div id="contentContainer"></div>
     </div>
@@ -120,469 +225,315 @@
             } catch (e) { document.getElementById('archive-container').innerText = "Sync failed."; }
         }
 
-       function renderArchive() {
-    const container = document.getElementById('archive-container');
-    if (!container) return;
+        function renderArchive() {
+            const container = document.getElementById('archive-container');
+            if (!container) return;
 
-    const scrollPos = window.scrollY;
-    container.innerHTML = "";
-    
-    const suggestionHtml = `<datalist id="song-suggestions">${getSuggestionsList()}</datalist>`;
-    container.innerHTML = suggestionHtml;
+            const scrollPos = window.scrollY;
+            container.innerHTML = "";
+            
+            const suggestionHtml = `<datalist id="song-suggestions">${getSuggestionsList()}</datalist>`;
+            container.innerHTML = suggestionHtml;
 
-    const groups = {};
-    archiveCache.forEach(item => {
-        if (!groups[item.serviceName]) groups[item.serviceName] = [];
-        groups[item.serviceName].push(item);
-    });
+            const searchQuery = document.getElementById('archiveSearchInput').value.toLowerCase().trim();
 
-    Object.keys(groups).sort().reverse().forEach(sName => {
-        const isEditing = editingService === sName;
-        const sId = sName.replace(/[^a-zA-Z0-9]/g, ''); 
-        const block = document.createElement('div');
-        block.className = 'service-block';
-        
-        let listHtml = "";
-        flowCategories.forEach(cat => {
-            const catSongs = groups[sName].filter(s => s.category === cat);
-            catSongs.forEach((s, idx) => {
-                listHtml += `
-                    <div class="song-item">
-                        <div class="song-info">
-                            <span class="cat-badge cat-${cat.toLowerCase()}">${cat}</span>
-                            <span class="song-title-text">${s.title}</span>
-                        </div>
-                        <div class="edit-controls">
-                            ${isEditing ? `
-                                <button class="move-btn" onclick="moveSong('${sName.replace(/'/g, "\\'")}', '${cat}', ${idx}, -1)">▲</button>
-                                <button class="move-btn" onclick="moveSong('${sName.replace(/'/g, "\\'")}', '${cat}', ${idx}, 1)">▼</button>
-                                <button class="remove-btn" onclick="removeSongLocally('${sName.replace(/'/g, "\\'")}', '${cat}', '${s.title.replace(/'/g, "\\'")}')">✕</button>
-                            ` : ''}
-                        </div>
-                    </div>`;
+            // Track unique service positions precisely as they arrive sequentially from the spreadsheet array
+            const orderOfAppearance = [];
+            const groups = {};
+
+            archiveCache.forEach(item => {
+                const name = item.serviceName;
+                if (!groups[name]) {
+                    groups[name] = [];
+                    orderOfAppearance.push(name);
+                }
+                groups[name].push(item);
             });
-        });
 
-        block.innerHTML = `
-            <div class="service-header-row">
-                <span class="service-name">🗓️ ${sName}</span>
-                <div class="controls">
-                    ${isEditing ? 
-                        `<button class="btn btn-view" onclick="showAddForm('${sId}')">+ ADD SONG</button>
-                         <button class="btn btn-danger" onclick="deleteEntireSetlist('${sName.replace(/'/g, "\\'")}')">DELETE ALL</button>
-                         <button class="btn btn-edit" onclick="toggleEditMode(null)">CANCEL</button>` :
-                        `<button class="btn btn-view" onclick="openPreviewAll('${sName.replace(/'/g, "\\'")}')">CHORDS</button>
-                         <button class="btn btn-pdf" onclick="exportToPDF('${sName.replace(/'/g, "\\'")}')">PDF</button>
-                         <button class="btn btn-edit" onclick="toggleEditMode('${sName.replace(/'/g, "\\'")}')">EDIT</button>`
-                    }
-                </div>
-            </div>
+            // FIXED CRITICAL ORDERING: Reverse orderOfAppearance to ensure bottom sheet rows show up cleanly at the top of the webpage view
+            const orderedKeys = orderOfAppearance.reverse();
+            const filteredKeys = orderedKeys.filter(sName => sName.toLowerCase().includes(searchQuery));
 
-            <div id="add-form-${sId}" style="display:${isEditing ? 'block' : 'none'}; padding: 15px; background: rgba(0,0,0,0.2); border-bottom: 1px solid #334155;">
-                <div style="display: flex; gap: 10px; flex-direction: column;">
-                    <select id="cat-select-${sId}" style="padding: 8px; border-radius: 4px; background: #0f172a; color: white;">
-                        ${flowCategories.map(c => `<option value="${c}">${c}</option>`).join('')}
-                    </select>
-                    <input type="text" id="title-input-${sId}" list="song-suggestions" placeholder="Type Song Title..." style="padding: 8px; border-radius: 4px; color: #000;">
-                    <button class="btn btn-view" onclick="addSongLocally('${sName.replace(/'/g, "\\'")}', '${sId}')">INSERT INTO LIST</button>
-                    <button class="btn btn-danger" style="flex: 0.5;" onclick="cancelAdd('${sId}')">
-                CANCEL
-            </button>
-                </div>
-            </div>
-            <div class="song-list-container">${listHtml || '<div style="padding:20px; color:var(--sub-text); text-align:center;">Empty</div>'}</div>
-        `;
-        container.appendChild(block);
-    });
+            if (filteredKeys.length === 0) {
+                container.innerHTML += `<div style="text-align: center; color: var(--sub-text); margin-top: 50px;">No matching setlists found.</div>`;
+                return;
+            }
 
-    window.scrollTo(0, scrollPos);
-}
+            filteredKeys.forEach(sName => {
+                const isEditing = editingService === sName;
+                const sId = sName.replace(/[^a-zA-Z0-9]/g, ''); 
+                const block = document.createElement('div');
+                block.className = 'service-block';
+                
+                let listHtml = "";
+                flowCategories.forEach(cat => {
+                    const catSongs = groups[sName].filter(s => s.category === cat);
+                    catSongs.forEach((s, idx) => {
+                        listHtml += `
+                            <div class="song-item">
+                                <div class="song-info">
+                                    <span class="cat-badge cat-${cat.toLowerCase()}">${cat}</span>
+                                    <span class="song-title-text">${s.title}</span>
+                                </div>
+                                <div class="edit-controls">
+                                    ${isEditing ? `
+                                        <button class="move-btn" onclick="moveSong('${sName.replace(/'/g, "\\'")}', '${cat}', ${idx}, -1)"><i class="fa-solid fa-chevron-up"></i></button>
+                                        <button class="move-btn" onclick="moveSong('${sName.replace(/'/g, "\\'")}', '${cat}', ${idx}, 1)"><i class="fa-solid fa-chevron-down"></i></button>
+                                        <button class="remove-btn" onclick="removeSongLocally('${sName.replace(/'/g, "\\'")}', '${cat}', '${s.title.replace(/'/g, "\\'")}')">&times;</button>
+                                    ` : ''}
+                                </div>
+                            </div>`;
+                    });
+                });
 
-function cancelAdd(sId) {
-    const form = document.getElementById(`add-form-${sId}`);
-    const input = document.getElementById(`title-input-${sId}`);
-    
-    if (form) {
-        form.style.display = 'none'; // Hide the form
-    }
-    
-    if (input) {
-        input.value = ""; // Clear the input so it's empty next time
-    }
-}
+                block.innerHTML = `
+                    <div class="service-header-row">
+                        <span class="service-name"><i class="fa-regular fa-calendar-days" style="color:var(--sub-text);"></i> ${sName}</span>
+                        <div class="controls" style="display:flex; gap:6px;">
+                            ${isEditing ? 
+                                `<button class="btn btn-view" onclick="showAddForm('${sId}')"><i class="fa-solid fa-plus"></i> ADD</button>
+                                 <button class="btn btn-danger" onclick="deleteEntireSetlist('${sName.replace(/'/g, "\\'")}')"><i class="fa-solid fa-trash"></i> DELETE ALL</button>
+                                 <button class="btn btn-edit" onclick="toggleEditMode(null)">DONE</button>` :
+                                `<button class="btn btn-view" onclick="openPreviewAll('${sName.replace(/'/g, "\\'")}')"><i class="fa-solid fa-music"></i> CHORDS</button>
+                                 <button class="btn btn-pdf" onclick="exportToPDF('${sName.replace(/'/g, "\\'")}')"><i class="fa-solid fa-file-pdf"></i> PDF</button>
+                                 <button class="btn btn-edit" onclick="toggleEditMode('${sName.replace(/'/g, "\\'")}')"><i class="fa-solid fa-pen-to-square"></i> EDIT</button>`
+                            }
+                        </div>
+                    </div>
 
-function getSuggestionsList() {
-    const titles = Object.keys(libraryCache);
-    return titles.map(title => `<option value="${title.replace(/'/g, "&apos;")}">`).join('');
-}
+                    <div id="add-form-${sId}" style="display:none; padding: 16px; background: rgba(0,0,0,0.15); border-bottom: 1px solid var(--border);">
+                        <div style="display: flex; gap: 10px; flex-direction: column;">
+                            <select id="cat-select-${sId}" class="form-select">
+                                ${flowCategories.map(c => `<option value="${c}">${c}</option>`).join('')}
+                            </select>
+                            <input type="text" id="title-input-${sId}" class="form-input" list="song-suggestions" placeholder="Type Song Title...">
+                            <div style="display:flex; gap:8px;">
+                                <button class="btn btn-view" style="flex:1;" onclick="addSongLocally('${sName.replace(/'/g, "\\'")}', '${sId}')">INSERT INTO LIST</button>
+                                <button class="btn btn-danger" onclick="cancelAdd('${sId}')">CANCEL</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="song-list-container">${listHtml || '<div style="padding:20px; color:var(--sub-text); text-align:center;">Empty Setlist</div>'}</div>
+                `;
+                container.appendChild(block);
+            });
+
+            window.scrollTo(0, scrollPos);
+        }
+
+        function cancelAdd(sId) {
+            const form = document.getElementById(`add-form-${sId}`);
+            const input = document.getElementById(`title-input-${sId}`);
+            if (form) form.style.display = 'none';
+            if (input) input.value = "";
+        }
+
+        function getSuggestionsList() {
+            const titles = Object.keys(libraryCache);
+            return titles.map(title => `<option value="${title.replace(/'/g, "&apos;")}">`).join('');
+        }
 
         function toggleEditMode(sName) {
-    editingService = (editingService === sName) ? null : sName;
-    renderArchive();
-}
+            editingService = (editingService === sName) ? null : sName;
+            renderArchive();
+        }
 
         async function removeSongLocally(sName, cat, title) {
-    if(!confirm(`Remove "${title}" from this setlist?`)) return;
-    
-    showToast("Removing song...");
-    try {
-        const payload = {
-            action: "deleteSingleSong", // Matches your App Script action
-            serviceName: sName,
-            category: cat,
-            songTitle: title // Matches your App Script 'data.songTitle'
-        };
+            if(!confirm(`Remove "${title}" from this setlist?`)) return;
+            
+            showToast("Removing song...");
+            try {
+                const payload = { action: "deleteSingleSong", serviceName: sName, category: cat, songTitle: title };
+                await fetch(ARCHIVE_URL, { method: "POST", body: JSON.stringify(payload) });
 
-        await fetch(ARCHIVE_URL, {
-            method: "POST",
-            body: JSON.stringify(payload)
-        });
-
-        // Update local cache and refresh view
-        archiveCache = archiveCache.filter(s => !(s.serviceName === sName && s.category === cat && s.title === title));
-        renderArchive();
-        hideToast();
-    } catch (e) {
-        alert("Removal failed.");
-        hideToast();
-    }
-}
+                archiveCache = archiveCache.filter(s => !(s.serviceName === sName && s.category === cat && s.title === title));
+                renderArchive();
+            } catch (e) {
+                alert("Removal failed.");
+            } finally { hideToast(); }
+        }
 
         async function deleteEntireSetlist(sName) {
-    if(!confirm(`Delete the entire setlist for ${sName}?`)) return;
-    
-    showToast("Deleting setlist...");
-    try {
-        const payload = {
-            action: "deleteSetlist",
-            serviceName: sName
-        };
-
-        await fetch(ARCHIVE_URL, {
-            method: "POST",
-            body: JSON.stringify(payload)
-        });
-
-        archiveCache = archiveCache.filter(s => s.serviceName !== sName);
-        editingService = null;
-        renderArchive();
-        hideToast();
-    } catch (e) {
-        alert("Delete failed.");
-        hideToast();
-    }
-}
-
-        async function saveChanges(sName) {
-            showToast("Updating Archive...");
-            const updatedSet = archiveCache.filter(s => s.serviceName === sName);
+            if(!confirm(`Delete the entire setlist for ${sName}?`)) return;
             
+            showToast("Deleting setlist...");
             try {
-                await fetch(ARCHIVE_URL, {
-                    method: "POST",
-                    body: new URLSearchParams({ 
-                        action: "updateSetlist", 
-                        serviceName: sName,
-                        data: JSON.stringify(updatedSet)
-                    })
-                });
+                const payload = { action: "deleteSetlist", serviceName: sName };
+                await fetch(ARCHIVE_URL, { method: "POST", body: JSON.stringify(payload) });
+
+                archiveCache = archiveCache.filter(s => s.serviceName !== sName);
                 editingService = null;
                 renderArchive();
-                hideToast();
-            } catch (e) { alert("Save failed"); hideToast(); }
+            } catch (e) {
+                alert("Delete failed.");
+            } finally { hideToast(); }
         }
 
         async function moveSong(sName, cat, index, direction) {
-    // 1. Find all songs in this specific category for this service
-    let serviceSongs = archiveCache.filter(s => s.serviceName === sName && s.category === cat);
-    
-    // 2. Check if movement is possible
-    let newIndex = index + direction;
-    if (newIndex < 0 || newIndex >= serviceSongs.length) return;
+            let serviceSongs = archiveCache.filter(s => s.serviceName === sName && s.category === cat);
+            let newIndex = index + direction;
+            if (newIndex < 0 || newIndex >= serviceSongs.length) return;
 
-    showToast("Reordering...");
+            showToast("Reordering...");
+            const temp = serviceSongs[index];
+            serviceSongs[index] = serviceSongs[newIndex];
+            serviceSongs[newIndex] = temp;
 
-    // 3. Swap in local cache
-    const temp = serviceSongs[index];
-    serviceSongs[index] = serviceSongs[newIndex];
-    serviceSongs[newIndex] = temp;
+            try {
+                archiveCache = archiveCache.filter(s => !(s.serviceName === sName && s.category === cat));
+                archiveCache.push(...serviceSongs);
 
-    try {
-        // 4. Update the Master Cache
-        // Remove old versions of this category's songs from main cache
-        archiveCache = archiveCache.filter(s => !(s.serviceName === sName && s.category === cat));
-        // Add the reordered ones back in
-        archiveCache.push(...serviceSongs);
-
-        // 5. Sync with App Script
-        // We delete the specific songs and re-add them to ensure order in the sheet
-        for (let s of serviceSongs) {
-             await fetch(ARCHIVE_URL, {
-                method: "POST",
-                body: JSON.stringify({
-                    action: "deleteSingleSong",
-                    serviceName: sName,
-                    category: cat,
-                    songTitle: s.title
-                })
-            });
-        }
-        
-        for (let s of serviceSongs) {
-             await fetch(ARCHIVE_URL, {
-                method: "POST",
-                body: JSON.stringify({
-                    action: "saveSetlist",
-                    serviceName: sName,
-                    category: cat,
-                    songTitle: s.title
-                })
-            });
-        }
-
-        renderArchive();
-        hideToast();
-    } catch (e) {
-        alert("Move failed.");
-        hideToast();
-    }
-}
-
-        // --- PDF & Preview Logic (Unchanged) ---
-   async function exportToPDF(sName) {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
-    let yPos = 20;
-
-    const setlist = archiveCache.filter(s => s.serviceName === sName);
-    
-    doc.setFontSize(22);
-    doc.setTextColor(40);
-    doc.text(`Setlist: ${sName}`, 20, yPos);
-    yPos += 15;
-
-    flowCategories.forEach(cat => {
-        const catSongs = setlist.filter(s => s.category === cat);
-        
-        if (catSongs.length > 0) {
-            doc.setFontSize(16);
-            doc.setTextColor(100);
-            doc.text(`--- ${cat} ---`, 20, yPos);
-            yPos += 10;
-
-            catSongs.forEach(song => {
-                doc.setFontSize(14);
-                doc.setTextColor(0);
-                doc.setFont("helvetica", "bold");
-                doc.text(`• ${song.title}`, 25, yPos);
-                yPos += 10;
-
-                const searchTitle = song.title.trim().toLowerCase();
-                const actualKey = Object.keys(libraryCache).find(k => k.trim().toLowerCase() === searchTitle);
-                const songData = actualKey ? libraryCache[actualKey] : null;
-
-                if (songData) {
-                    const content = typeof songData === 'string' ? songData : (songData.content || songData.chords || "");
-                    const lines = content.split('\n');
-                    
-                    doc.setFont("courier", "normal"); // Monospace is essential for alignment
-                    doc.setFontSize(10);
-
-                    lines.forEach(line => {
-                        let xOffset = 30;
-                        // Split line into parts while keeping the [chords]
-                        const parts = line.split(/(\[.*?\])/g);
-
-                        parts.forEach(part => {
-                            if (part.startsWith('[') && part.endsWith(']')) {
-                                // Render Chord slightly higher than the baseline
-                                doc.setFont("courier", "bold");
-                                doc.setTextColor(0, 102, 204); // Blue chords
-                                doc.text(part.replace(/[\[\]]/g, ''), xOffset, yPos - 4); 
-                            } else {
-                                // Render Lyrics on the baseline
-                                doc.setFont("courier", "normal");
-                                doc.setTextColor(60);
-                                doc.text(part, xOffset, yPos);
-                                // Move the cursor forward by the width of the text
-                                xOffset += doc.getTextWidth(part);
-                            }
-                        });
-
-                        yPos += 10; // Extra spacing for the chord layer
-                        
-                        if (yPos > 275) {
-                            doc.addPage();
-                            yPos = 20;
-                        }
+                for (let s of serviceSongs) {
+                     await fetch(ARCHIVE_URL, {
+                        method: "POST",
+                        body: JSON.stringify({ action: "deleteSingleSong", serviceName: sName, category: cat, songTitle: s.title })
                     });
-                    yPos += 6; 
-                } else {
-                    doc.setFont("helvetica", "italic");
-                    doc.setFontSize(10);
-                    doc.setTextColor(150);
-                    doc.text("(No chords found in library)", 30, yPos);
-                    yPos += 10;
                 }
-            });
+                for (let s of serviceSongs) {
+                     await fetch(ARCHIVE_URL, {
+                        method: "POST",
+                        body: JSON.stringify({ action: "saveSetlist", serviceName: sName, category: cat, songTitle: s.title })
+                     });
+                }
+                renderArchive();
+            } catch (e) {
+                alert("Move failed.");
+            } finally { hideToast(); }
         }
-    });
 
-    doc.save(`${sName}_Chord_Sheet.pdf`);
-}
-
-function openPreviewAll(sName) {
-    const songs = archiveCache.filter(i => i.serviceName === sName);
-    let html = `<h2 style="color:var(--accent); text-align:center; margin-bottom: 20px;">${sName}</h2>`;
-    
-    flowCategories.forEach(cat => {
-        const catSongs = songs.filter(s => s.category === cat);
-        
-        if (catSongs.length > 0) {
-            html += `<div style="margin-top:25px; border-bottom: 2px solid var(--accent); padding-bottom:5px; color:var(--accent); font-weight:bold;">${cat}</div>`;
+        async function exportToPDF(sName) {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            let yPos = 20;
+            const setlist = archiveCache.filter(s => s.serviceName === sName);
             
-            catSongs.forEach(s => {
-                // Improved Lookup logic
-                const searchTitle = s.title.trim().toLowerCase();
-                const actualKey = Object.keys(libraryCache).find(k => k.trim().toLowerCase() === searchTitle);
-                const content = actualKey ? libraryCache[actualKey] : null;
+            doc.setFontSize(22); doc.setTextColor(40); doc.text(`Setlist: ${sName}`, 20, yPos); yPos += 15;
 
-                html += `
-                    <div style="margin-bottom:40px; padding: 15px; background: rgba(15, 23, 42, 0.4); border-radius: 8px;">
-                        <h3 style="margin-top:0; color:#fff;">${s.title}</h3>
-                        ${content ? parseChords(content) : "<i style='color:gray;'>[Lyrics/Chords not found in library]</i>"}
-                    </div>`;
-            });
-        }
-    });
-    
-    document.getElementById('contentContainer').innerHTML = html;
-    document.getElementById('viewerModal').style.display = 'flex';
-}
+            flowCategories.forEach(cat => {
+                const catSongs = setlist.filter(s => s.category === cat);
+                if (catSongs.length > 0) {
+                    doc.setFontSize(16); doc.setTextColor(100); doc.text(`--- ${cat} ---`, 20, yPos); yPos += 10;
 
-function parseChords(content) {
-    if (!content) return "";
+                    catSongs.forEach(song => {
+                        doc.setFontSize(14); doc.setTextColor(0); doc.setFont("helvetica", "bold");
+                        doc.text(`• ${song.title}`, 25, yPos); yPos += 10;
 
-    const lines = content.split('\n');
-    let formattedHtml = "";
+                        const searchTitle = song.title.trim().toLowerCase();
+                        const actualKey = Object.keys(libraryCache).find(k => k.trim().toLowerCase() === searchTitle);
+                        const songData = actualKey ? libraryCache[actualKey] : null;
 
-    lines.forEach(line => {
-        let chordLine = "";
-        let lyricLine = "";
-        let i = 0;
-        let hasChords = false;
+                        if (songData) {
+                            const content = typeof songData === 'string' ? songData : (songData.content || songData.chords || "");
+                            const lines = content.split('\n');
+                            doc.setFont("courier", "normal"); doc.setFontSize(10);
 
-        // 1. COMPACT SECTION HEADERS
-        if (line.trim().length > 0 && (line.trim().includes(':') || (line.trim().split(' ').length <= 2 && !line.includes('[')))) {
-            formattedHtml += `
-                <div style="margin-top: 12px; margin-bottom: 6px; border-bottom: 1px solid #334155; padding-bottom: 2px;">
-                    <span style="color: #f6ad55; font-weight: bold; font-family: sans-serif; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">${line.trim()}</span>
-                </div>`;
-            return;
-        }
-
-        while (i < line.length) {
-            if (line[i] === '[') {
-                hasChords = true;
-                let chord = "";
-                i++; 
-                while (i < line.length && line[i] !== ']') {
-                    chord += line[i];
-                    i++;
+                            lines.forEach(line => {
+                                let xOffset = 30;
+                                const parts = line.split(/(\[.*?\])/g);
+                                parts.forEach(part => {
+                                    if (part.startsWith('[') && part.endsWith(']')) {
+                                        doc.setFont("courier", "bold"); doc.setTextColor(0, 102, 204); 
+                                        doc.text(part.replace(/[\[\]]/g, ''), xOffset, yPos - 4); 
+                                    } else {
+                                        doc.setFont("courier", "normal"); doc.setTextColor(60);
+                                        doc.text(part, xOffset, yPos); xOffset += doc.getTextWidth(part);
+                                    }
+                                });
+                                yPos += 10; if (yPos > 275) { doc.addPage(); yPos = 20; }
+                            });
+                            yPos += 6; 
+                        } else { yPos += 10; }
+                    });
                 }
-                i++; 
-                chordLine += `<b style="color: #f6ad55;">${chord}</b>`;
-            } else {
-                lyricLine += line[i];
-                chordLine += "&nbsp;"; 
-                i++;
-            }
+            });
+            doc.save(`${sName}_Chord_Sheet.pdf`);
         }
 
-        // 2. ULTRA-COMPRESSED CHORD/LYRIC PAIRS
-        if (hasChords || lyricLine.trim().length > 0) {
-            formattedHtml += `
-                <div style="font-family: 'Courier New', Courier, monospace; white-space: pre; line-height: 1.0; margin-bottom: 8px;">
-                    ${hasChords ? `<div style="color: #f6ad55; font-weight: bold; font-size: 13px; height: 1.1em;">${chordLine}</div>` : ''}
-                    <div style="color: #f8fafc; font-size: 13px; font-weight: 500; margin-top: -1px;">${lyricLine}</div>
-                </div>`;
+        function openPreviewAll(sName) {
+            const songs = archiveCache.filter(i => i.serviceName === sName);
+            let html = `<h2 style="color:var(--accent); text-align:center; margin-bottom: 20px;">${sName}</h2>`;
+            
+            flowCategories.forEach(cat => {
+                const catSongs = songs.filter(s => s.category === cat);
+                if (catSongs.length > 0) {
+                    html += `<div style="margin-top:25px; border-bottom: 2px solid var(--accent); padding-bottom:5px; color:var(--accent); font-weight:bold; text-transform:uppercase; font-size:13px;">${cat}</div>`;
+                    catSongs.forEach(s => {
+                        const searchTitle = s.title.trim().toLowerCase();
+                        const actualKey = Object.keys(libraryCache).find(k => k.trim().toLowerCase() === searchTitle);
+                        const content = actualKey ? libraryCache[actualKey] : null;
+
+                        html += `
+                            <div style="margin-bottom:30px; padding: 16px; background: rgba(15, 23, 42, 0.4); border-radius: 10px; border:1px solid var(--border);">
+                                <h3 style="margin-top:0; color:#fff; font-size:16px;">${s.title}</h3>
+                                ${content ? parseChords(content) : "<i style='color:gray;'>[Lyrics/Chords not found in library]</i>"}
+                            </div>`;
+                    });
+                }
+            });
+            document.getElementById('contentContainer').innerHTML = html;
+            document.getElementById('viewerModal').style.display = 'flex';
         }
-    });
 
-    return `<div style="background: #1e293b; padding: 15px; border-radius: 4px; overflow-x: auto;">${formattedHtml}</div>`;
-}
+        function parseChords(content) {
+            if (!content) return "";
+            const lines = content.split('\n'); let formattedHtml = "";
+            lines.forEach(line => {
+                let chordLine = ""; let lyricLine = ""; let i = 0; let hasChords = false;
+                if (line.trim().length > 0 && (line.trim().includes(':') || (line.trim().split(' ').length <= 2 && !line.includes('[')))) {
+                    formattedHtml += `<div style="margin-top:14px; margin-bottom:6px; border-bottom:1px solid var(--border);"><span style="color:#f6ad55; font-weight:bold; font-size:11px; text-transform:uppercase;">${line.trim()}</span></div>`;
+                    return;
+                }
+                while (i < line.length) {
+                    if (line[i] === '[') {
+                        hasChords = true; let chord = ""; i++; 
+                        while (i < line.length && line[i] !== ']') { chord += line[i]; i++; }
+                        i++; chordLine += `<b style="color: #f6ad55;">${chord}</b>`;
+                    } else { lyricLine += line[i]; chordLine += "&nbsp;"; i++; }
+                }
+                if (hasChords || lyricLine.trim().length > 0) {
+                    formattedHtml += `<div style="font-family:'Courier New', monospace; white-space:pre; line-height:1.2; margin-bottom:10px;">
+                        ${hasChords ? `<div style="color:#f6ad55; font-weight:bold; font-size:14px; height:1.2em;">${chordLine}</div>` : ''}
+                        <div style="color:#f8fafc; font-size:14px;">${lyricLine}</div>
+                    </div>`;
+                }
+            });
+            return `<div style="background:#1e293b; padding:16px; border-radius:8px; overflow-x:auto;">${formattedHtml}</div>`;
+        }
 
-
-        function showToast(m) { const t=document.createElement('div'); t.id="toast"; t.className="loading-toast"; t.innerText=m; document.body.appendChild(t); }
+        function showToast(m) { const t=document.createElement('div'); t.id="toast"; t.className="loading-toast"; t.innerHTML=`<i class="fa-solid fa-spinner fa-spin"></i> ${m}`; document.body.appendChild(t); }
         function hideToast() { const t=document.getElementById("toast"); if(t) t.remove(); }
         function closeModal() { document.getElementById('viewerModal').style.display = 'none'; }
         window.onload = init;
 
-        // Function to show/hide the "Add Song" form for a specific service
-function showAddForm(sName) {
-    const form = document.getElementById(`add-form-${sName.replace(/\s+/g, '-')}`);
-    form.style.display = form.style.display === 'none' ? 'block' : 'none';
-}
-
-// Function to add a song to the local cache
-async function addSongLocally(sName, sId) {
-    const catElement = document.getElementById(`cat-select-${sId}`);
-    const titleElement = document.getElementById(`title-input-${sId}`);
-
-    if (!titleElement || !catElement) return;
-
-    const cat = catElement.value;
-    const title = titleElement.value.trim();
-
-    if (!title) return alert("Please enter a song title");
-
-    showToast("Adding song...");
-
-    try {
-        const payload = {
-            action: "saveSetlist",
-            serviceName: sName,
-            category: cat,
-            songTitle: title
-        };
-
-        const resp = await fetch(ARCHIVE_URL, {
-            method: "POST",
-            body: JSON.stringify(payload)
-        });
-        
-        const result = await resp.json();
-
-        if (result.result === "success" || result.result === "exists") {
-            // Update local cache so we don't need a refresh
-            // This adds the new song to the top of the list locally
-            archiveCache.push({ 
-                serviceName: sName, 
-                category: cat, 
-                title: title 
-            });
-
-            // Clear the input field immediately
-            titleElement.value = "";
-
-            // Redraw the archive immediately
-            renderArchive();
-            hideToast();
-        } else {
-            alert("Error: " + result.message);
-            hideToast();
+        function showAddForm(sId) {
+            const form = document.getElementById(`add-form-${sId}`);
+            if (form) form.style.display = form.style.display === 'none' ? 'block' : 'none';
         }
-    } catch (e) {
-        console.error("Save error:", e);
-        alert("Failed to save to cloud, but added locally.");
-        hideToast();
-    }
-}
 
-// Optional: Helper to clear the search input
-function clearInput(id) {
-    document.getElementById(id).value = "";
-}
+        async function addSongLocally(sName, sId) {
+            const catElement = document.getElementById(`cat-select-${sId}`);
+            const titleElement = document.getElementById(`title-input-${sId}`);
+            if (!titleElement || !catElement) return;
+
+            const cat = catElement.value; const title = titleElement.value.trim();
+            if (!title) return alert("Please enter a song title");
+
+            showToast("Adding song...");
+            try {
+                const payload = { action: "saveSetlist", serviceName: sName, category: cat, songTitle: title };
+                const resp = await fetch(ARCHIVE_URL, { method: "POST", body: JSON.stringify(payload) });
+                const result = await resp.json();
+
+                if (result.result === "success" || result.result === "exists") {
+                    archiveCache.push({ serviceName: sName, category: cat, title: title });
+                    titleElement.value = "";
+                    renderArchive();
+                } else { alert("Error: " + result.message); }
+            } catch (e) {
+                archiveCache.push({ serviceName: sName, category: cat, title: title });
+                renderArchive();
+            } finally { hideToast(); }
+        }
     </script>
 </body>
 </html>

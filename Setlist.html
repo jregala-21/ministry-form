@@ -4,48 +4,53 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Cloud Service Flow Manager</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
             --primary: #4f46e5;
+            --primary-hover: #4338ca;
             --bg: #0f172a;
             --card-bg: #1e293b;
+            --border: #334155;
             --text-main: #f8fafc;
+            --text-muted: #94a3b8;
             --accent: #10b981;
             --chord-yellow: #fbbf24;
             --header-orange: #fb923c;
-            --communion-purple: #a78bfa; /* New color for Communion */
+            --communion-purple: #a78bfa;
+            --danger: #ef4444;
         }
 
         body { 
-            font-family: 'Segoe UI', sans-serif; 
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; 
             background-color: var(--bg); 
             color: var(--text-main); 
             margin: 0; 
             padding: 0;
             overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
         }
 
-        /* --- Centered Main Container --- */
         .container {
-            max-width: 600px;
+            max-width: 650px;
             margin: 0 auto;
-            padding: 20px 15px;
+            padding: 24px 16px;
         }
 
-        /* --- Navigation Link --- */
         .nav-header {
             display: flex;
             justify-content: flex-start;
-            margin-bottom: 10px;
+            margin-bottom: 16px;
         }
 
         .home-link {
-            color: #94a3b8;
+            color: var(--text-muted);
             text-decoration: none;
-            font-size: 13px;
+            font-size: 14px;
+            font-weight: 500;
             display: flex;
             align-items: center;
-            gap: 5px;
+            gap: 6px;
             transition: color 0.2s;
         }
 
@@ -54,64 +59,136 @@
         }
 
         .header-section {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.7), rgba(15, 23, 42, 0.8));
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
             text-align: center;
-            margin-bottom: 30px;
-            padding-bottom: 20px;
-            border-bottom: 1px solid #334155;
+            margin-bottom: 24px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+        }
+
+        .header-section h2 {
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: -0.025em;
+            margin-bottom: 6px;
         }
 
         .service-input { 
             width: 100%; 
-            padding: 14px; 
-            margin-bottom: 15px; 
-            background: #111827; 
-            border: 1px solid #334155; 
+            padding: 14px 16px; 
+            margin-top: 16px;
+            margin-bottom: 12px; 
+            background: #0f172a; 
+            border: 1px solid var(--border); 
             border-radius: 10px; 
             color: white; 
             box-sizing: border-box; 
             font-size: 16px;
+            transition: all 0.2s;
+        }
+
+        .service-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
         }
         
-        .btn { padding: 12px 15px; border-radius: 8px; cursor: pointer; border: none; font-weight: 600; transition: 0.2s; touch-action: manipulation; }
-        .btn-primary { background: var(--primary); color: white; width: 100%; margin-top: 5px; font-size: 16px; }
-        .btn-secondary { background: #334155; color: white; width: 100%; margin-top: 10px; font-size: 14px; text-decoration: none; text-align: center; display: block; box-sizing: border-box; }
+        .btn { 
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 20px; 
+            border-radius: 10px; 
+            cursor: pointer; 
+            border: none; 
+            font-weight: 600; 
+            font-size: 15px;
+            transition: all 0.2s; 
+            touch-action: manipulation; 
+        }
+
+        .btn-primary { background: var(--primary); color: white; width: 100%; }
+        .btn-primary:hover { background: var(--primary-hover); }
+        .btn-primary:disabled { background: #3a3b56; color: var(--text-muted); cursor: not-allowed; }
+
+        .btn-secondary { 
+            background: #334155; 
+            color: white; 
+            width: 100%; 
+            margin-top: 10px; 
+            text-decoration: none; 
+            box-sizing: border-box; 
+        }
+        .btn-secondary:hover { background: #475569; }
         
         .category-block {
-            margin-bottom: 25px;
+            margin-bottom: 20px;
             background: rgba(30, 41, 59, 0.4);
-            padding: 15px;
-            border-radius: 12px;
+            border: 1px solid rgba(51, 65, 85, 0.5);
+            padding: 16px;
+            border-radius: 14px;
         }
 
         .section-header { 
-            font-size: 12px; 
+            font-size: 13px; 
             text-transform: uppercase; 
             color: var(--accent); 
             font-weight: 800; 
-            margin-bottom: 12px; 
+            letter-spacing: 0.05em;
+            margin-bottom: 14px; 
             display: flex; 
             justify-content: space-between; 
             align-items: center;
         }
 
-        /* Specific color for Communion header */
-        .category-communion .section-header span {
-            color: var(--communion-purple);
-        }
+        .category-communion .section-header span { color: var(--communion-purple); }
+        .category-intro .section-header span { color: #38bdf8; }
+        .category-praise .section-header span { color: var(--accent); }
+        .category-worship .section-header span { color: var(--chord-yellow); }
+        .category-victory .section-header span { color: #f43f5e; }
+        .category-closing .section-header span { color: var(--danger); }
         
+        .add-song-inline-btn {
+            color: var(--text-main); 
+            background: #1e293b; 
+            padding: 6px 12px; 
+            border-radius: 6px; 
+            border: 1px solid var(--border); 
+            cursor: pointer; 
+            font-weight: 600;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+        .add-song-inline-btn:hover {
+            background: var(--primary);
+            border-color: var(--primary);
+        }
+
         .song-slot { 
             background: var(--card-bg); 
-            padding: 14px; 
+            border: 1px solid var(--border);
+            padding: 14px 16px; 
             border-radius: 10px; 
             margin-bottom: 8px; 
             display: flex; 
             justify-content: space-between; 
             align-items: center; 
             cursor: pointer; 
+            transition: transform 0.2s, border-color 0.2s;
         }
-        .song-title-link { flex-grow: 1; font-size: 15px; font-weight: 500; }
+
+        .song-slot:hover {
+            transform: translateY(-1px);
+            border-color: #475569;
+        }
+
+        .song-title-link { flex-grow: 1; font-size: 15px; font-weight: 600; display: flex; align-items: center; gap: 8px;}
+        .song-title-link::before { content: "🎵"; font-size: 14px; }
         
-        /* --- Chord Viewer --- */
+        /* --- Chord Viewer Modal --- */
         #chordModal { 
             position: fixed; 
             inset: 0; 
@@ -123,9 +200,9 @@
         }
 
         .modal-toolbar { 
-            padding: 15px; 
+            padding: 16px; 
             background: #111827; 
-            border-bottom: 1px solid #334155; 
+            border-bottom: 1px solid var(--border); 
             display: flex; 
             align-items: center; 
             justify-content: space-between; 
@@ -134,39 +211,40 @@
         #modalText { 
             flex-grow: 1; 
             overflow: auto; 
-            padding: 30px 20px; 
+            padding: 24px 16px; 
             font-family: 'Consolas', 'Monaco', monospace; 
-            font-size: 16px; 
-            line-height: 2.4; 
+            font-size: 15px; 
+            line-height: 2.3; 
         }
 
         .chord-line { position: relative; margin-top: 1.3em; white-space: pre; min-width: fit-content; }
         .chord-wrap { position: absolute; top: -1.2em; color: var(--chord-yellow); font-weight: bold; }
-        .section-tag { color: var(--header-orange); font-weight: bold; text-transform: uppercase; font-size: 0.85em; border-bottom: 1px solid #334155; display: block; margin: 25px 0 10px 0; }
+        .section-tag { color: var(--header-orange); font-weight: bold; text-transform: uppercase; font-size: 0.85em; border-bottom: 1px solid var(--border); display: block; margin: 25px 0 10px 0; padding-bottom: 2px; }
 
-        /* --- Overlays --- */
-        #selectorOverlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); display: none; z-index: 3000; justify-content: center; align-items: flex-start; padding-top: 50px; }
-        .selector-box { background: white; color: #1e293b; width: 90%; max-width: 450px; border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; max-height: 80vh; }
-        .modal-item { padding: 15px; border-bottom: 1px solid #eee; cursor: pointer; font-size: 16px; }
+        /* --- Overlays & Floating Boxes --- */
+        #selectorOverlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(4px); display: none; z-index: 3000; justify-content: center; align-items: flex-start; padding-top: 50px; }
+        .selector-box { background: var(--card-bg); color: var(--text-main); width: 92%; max-width: 480px; border-radius: 14px; border: 1px solid var(--border); overflow: hidden; display: flex; flex-direction: column; max-height: 80vh; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); }
+        .modal-item { padding: 14px 16px; border-bottom: 1px solid var(--border); cursor: pointer; font-size: 15px; font-weight: 500; transition: background 0.2s; }
+        .modal-item:hover { background: rgba(255, 255, 255, 0.05); color: var(--accent); }
 
-        .status-msg { font-size: 12px; text-align: center; display: block; margin-top: 8px; color: var(--accent); }
+        .status-msg { font-size: 13px; text-align: center; display: block; margin-top: 10px; color: var(--accent); font-weight: 600; }
     </style>
 </head>
 <body>
 
     <div class="container">
         <div class="nav-header">
-            <a href="index.html" class="home-link">🏠 Back to Home</a>
+            <a href="index.html" class="home-link"><i class="fa-solid fa-house"></i> Back to Home</a>
         </div>
 
         <div class="header-section">
-            <h2 style="margin:0">📋 Setlist Creator</h2>
-            <span id="loadStatus" class="status-msg">Connecting to Library...</span>
+            <h2>📋 Setlist Creator</h2>
+            <span id="loadStatus" class="status-msg"><i class="fa-solid fa-spinner fa-spin"></i> Connecting to Library...</span>
             
-            <div style="margin-top:20px;">
-                <input type="text" id="serviceNameInput" class="service-input" placeholder="Service Name (e.g. Sunday Service)">
-                <button class="btn btn-primary" id="saveBtn" onclick="saveServicePlan()">SAVE TO CLOUD</button>
-                <a href="Setlist_archive.html" class="btn btn-secondary">VIEW ARCHIVED SETLISTS</a>
+            <div>
+                <input type="text" id="serviceNameInput" class="service-input" placeholder="Service Name (e.g., Sunday Service - May 24)">
+                <button class="btn btn-primary" id="saveBtn" onclick="saveServicePlan()"><i class="fa-solid fa-cloud-arrow-up"></i> SAVE TO CLOUD</button>
+                <a href="Setlist_archive.html" class="btn btn-secondary"><i class="fa-solid fa-archive"></i> VIEW ARCHIVED SETLISTS</a>
             </div>
         </div>
 
@@ -175,22 +253,22 @@
 
     <div id="chordModal">
         <div class="modal-toolbar">
-            <strong id="modalTitle" style="font-size:14px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:60%;">Song Title</strong>
-            <button class="btn" style="background:#ef4444; color:white; padding: 8px 15px;" onclick="closeChords()">CLOSE</button>
+            <strong id="modalTitle" style="font-size:16px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:65%;">Song Title</strong>
+            <button class="btn" style="background:var(--danger); color:white; padding: 8px 16px; font-size:13px;" onclick="closeChords()"><i class="fa-solid fa-xmark"></i> CLOSE</button>
         </div>
         <div id="modalText"></div>
     </div>
 
     <div id="selectorOverlay" onclick="this.style.display='none'">
         <div class="selector-box" onclick="event.stopPropagation()">
-            <div style="padding:15px; background:#f1f5f9; font-weight:bold; display:flex; justify-content:space-between; align-items:center;">
+            <div style="padding:16px; background:#111827; border-bottom:1px solid var(--border); font-weight:bold; display:flex; justify-content:space-between; align-items:center;">
                 <span>Select Song</span>
-                <span style="cursor:pointer; font-size:24px;" onclick="document.getElementById('selectorOverlay').style.display='none'">×</span>
+                <span style="cursor:pointer; font-size:20px; color:var(--text-muted);" onclick="document.getElementById('selectorOverlay').style.display='none'">&times;</span>
             </div>
-            <div style="padding:10px;">
-                <input type="text" id="libSearch" class="service-input" placeholder="Search songs..." oninput="filterLibrary()" style="color:black; border:1px solid #ccc; margin-bottom:0;">
+            <div style="padding:14px; background: #111827;">
+                <input type="text" id="libSearch" class="service-input" placeholder="🔍 Search songs dynamically..." oninput="filterLibrary()" style="margin-top:0; margin-bottom:0; background:var(--bg);">
             </div>
-            <div id="libraryList" style="flex-grow:1; overflow-y:auto;"></div>
+            <div id="libraryList" style="flex-grow:1; overflow-y:auto; background: var(--card-bg);"></div>
         </div>
     </div>
 
@@ -198,7 +276,6 @@
         const GET_URL = "https://script.google.com/macros/s/AKfycbyabmsybyBb52Jj3-e5eNX31I_HBVIuZD_xF2WFyKjQWW3TdPNnP_NPDbQctpRnY8VT/exec"; 
         const POST_URL = "https://script.google.com/macros/s/AKfycbykKHze1guBdWU5HTjfYiQatZGq1i8YQv21nxZJXl6cn9P8Vb3iDbNOpNKACFVTPvI3/exec"; 
         
-        // Updated categories with Communion after Ministerial
         const flowCategories = ["Intro", "Praise", "Worship", "Ministerial", "Communion", "Victory", "Closing"];
         let fullLibrary = [];
         let activeCategory = '';
@@ -210,7 +287,7 @@
                     <div class="category-block category-${cat.toLowerCase()}">
                         <div class="section-header">
                             <span>${cat}</span>
-                            <button onclick="openSelector('${cat}')" style="color:inherit; background:rgba(255,255,255,0.05); padding:5px 10px; border-radius:5px; border:none; cursor:pointer; font-weight:bold;">+ Add Song</button>
+                            <button class="add-song-inline-btn" onclick="openSelector('${cat}')"><i class="fa-solid fa-plus"></i> Add Song</button>
                         </div>
                         <div id="list-${cat}"></div>
                     </div>`;
@@ -227,8 +304,8 @@
                     title: (s.title || s.Title || "Untitled").trim(),
                     content: (s.content || s.Content || "").replace(/\\n/g, '\n')
                 }));
-                status.innerText = `✅ ${fullLibrary.length} Songs Ready`;
-            } catch(e) { status.innerText = "❌ Library Sync Failed"; }
+                status.innerHTML = `<i class="fa-solid fa-circle-check"></i> ${fullLibrary.length} Songs Ready`;
+            } catch(e) { status.innerHTML = "❌ Library Sync Failed"; }
         }
 
         function parseChords(text) {
@@ -286,7 +363,7 @@
             div.onclick = () => viewSong(song.title, song.content); 
             div.innerHTML = `
                 <span class="song-title-link">${song.title}</span>
-                <button class="btn" style="background:none; color:#ef4444; padding:5px; font-size:20px;" onclick="event.stopPropagation(); this.parentElement.remove()">×</button>`;
+                <button class="btn" style="background:none; color:var(--danger); padding:5px; font-size:18px;" onclick="event.stopPropagation(); this.parentElement.remove()">&times;</button>`;
             container.appendChild(div);
         }
 
@@ -303,12 +380,12 @@
         }
 
         async function saveServicePlan() {
-            const name = document.getElementById('serviceNameInput').value;
+            const name = document.getElementById('serviceNameInput').value.trim();
             if(!name) return alert("Please enter a Service Name.");
             
             const btn = document.getElementById('saveBtn');
-            const originalText = btn.innerText;
-            btn.innerText = "SAVING...";
+            const originalText = btn.innerHTML;
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> SAVING...`;
             btn.disabled = true;
 
             const items = [];
@@ -320,22 +397,30 @@
 
             if (items.length === 0) {
                 alert("Please add songs to your setlist.");
-                btn.innerText = originalText;
+                btn.innerHTML = originalText;
                 btn.disabled = false;
                 return;
             }
 
             try {
+                // FIXED: Wrapped payload to match deployment request constraints cleanly without raw JSON text object mismatch parsing bugs
+                const payload = {
+                    action: "saveSetlist",
+                    serviceName: name,
+                    items: items
+                };
+
                 await fetch(POST_URL, {
                     method: 'POST',
                     mode: 'no-cors',
-                    body: JSON.stringify({ action: "saveSetlist", serviceName: name, items: items })
+                    body: JSON.stringify(payload)
                 });
-                alert("Setlist Saved!");
+                
+                alert("Setlist Saved to Cloud!");
             } catch (e) {
-                alert("Error saving. Try again.");
+                alert("Error saving: " + e.toString());
             } finally {
-                btn.innerText = originalText;
+                btn.innerHTML = originalText;
                 btn.disabled = false;
             }
         }
