@@ -369,38 +369,36 @@
         const slideshowOverlay = document.getElementById("slideshowOverlay");
         const toggleIcon = document.getElementById("toggleIcon");
 
-        // Toggle classes to hide/show main buttons card container
         portalContainer.classList.toggle("hidden-view");
         slideshowOverlay.classList.toggle("clear-view");
 
-        // Dynamically change icon design representation
         if (portalContainer.classList.contains("hidden-view")) {
-            toggleIcon.className = "fa-solid fa-eye"; // Show Eye icon when buttons hidden
+            toggleIcon.className = "fa-solid fa-eye"; 
         } else {
-            toggleIcon.className = "fa-solid fa-eye-slash"; // Show Eye-slash icon when buttons visible
+            toggleIcon.className = "fa-solid fa-eye-slash"; 
         }
     }
 
 
-    // --- EXACT FUTURE-PROOFED FULL BACKGROUND SCAN ENGINE ---
+    // --- STREAMING INSTANT ASSET SEARCH ENGINE ---
     const slideshowContainer = document.getElementById("slideshowContainer");
     const extensions = ['.jpg', '.jpeg', '.png'];
     
     let verifiedImages = [];
     let currentSlideIndex = 0;
     let slideshowTimeoutId = null;
+    let slideshowStarted = false;
 
     function getOrdinalSuffix(n) {
         return n + (n % 10 == 1 && n % 100 != 11 ? 'st' : (n % 10 == 2 && n % 100 != 12 ? 'nd' : (n % 10 == 3 && n % 100 != 13 ? 'rd' : 'th')));
     }
 
-    // Phase 1: Compile prospective image mappings matching path variations
+    // Phase 1: Pre-generate structural lookups
     let prospectivePaths = [];
 
-    // Loop anniversaries from 16th up to 50th safely
+    // Prioritize active Anniversary paths (16th to 50th)
     for (let year = 16; year <= 50; year++) {
         const yearWord = getOrdinalSuffix(year);
-        // Loop through images 1 to 30
         for (let imgNum = 1; imgNum <= 30; imgNum++) {
             extensions.forEach(ext => {
                 prospectivePaths.push(`JIL/1st-15th/${yearWord}_image${imgNum}${ext}`);
@@ -408,18 +406,17 @@
         }
     }
 
-    // Loop through old history image variations (old_image1 to old_image30)
+    // Add legacy old image profiles (old_image1 to old_image30)
     for (let oldNum = 1; oldNum <= 30; oldNum++) {
         extensions.forEach(ext => {
             prospectivePaths.push(`JIL/1st-15th/old_image${oldNum}${ext}`);
         });
     }
 
-    // Phase 2: Asynchronous verification sequence
+    // Phase 2: Asynchronous streaming processor loop
     function scanAndVerifyFiles(index) {
         if (index >= prospectivePaths.length) {
-            initializeAndRunSlideshow();
-            return;
+            return; // Finished checking all combinations in the background
         }
 
         const targetUrl = prospectivePaths[index];
@@ -429,58 +426,44 @@
             const slideElement = document.createElement("img");
             slideElement.src = targetUrl;
             slideElement.className = "slide-img";
-            slideElement.alt = "JIL Background Stream Asset";
+            slideElement.alt = "JIL Background Asset";
             slideshowContainer.appendChild(slideElement);
             
             verifiedImages.push(slideElement);
             
-            // Advance directly to check next file path
-            scanAndVerifyFiles(index + 1);
+            // STREAMING TRIGGER: If this is the absolute first image discovered, show it instantly!
+            if (!slideshowStarted) {
+                slideshowStarted = true;
+                slideElement.classList.add("active");
+            } 
+            // If it's the second image found, safely kick off the cycling interval engine
+            else if (verifiedImages.length === 2 && !slideshowTimeoutId) {
+                scheduleVariableSlide();
+            }
+
+            // Immediately check the next file configuration pattern asynchronously
+            setTimeout(() => scanAndVerifyFiles(index + 1), 10);
         };
 
         checkImg.onerror = function() {
-            // Option skipped if file not found, test next loop item instantly
+            // File doesn't exist, proceed to scan next option right away
             scanAndVerifyFiles(index + 1);
         };
 
         checkImg.src = targetUrl;
     }
 
-    // Phase 3: Shuffling & background playback routine
-    function initializeAndRunSlideshow() {
-        if (verifiedImages.length === 0) {
-            console.warn("Slideshow alert: No active folder files located matching pattern criteria.");
-            return;
-        }
-
-        // Complete randomized mixer engine setup via Fisher-Yates shuffle
-        for (let i = verifiedImages.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            const temp = verifiedImages[i];
-            verifiedImages[i] = verifiedImages[j];
-            verifiedImages[j] = temp;
-        }
-
-        // Trigger visual rendering on index 0 background image frame
-        currentSlideIndex = 0;
-        verifiedImages[0].classList.add("active");
-
-        // Cycle timelines only if a full deck of images is ready
-        if (verifiedImages.length > 1) {
-            scheduleVariableSlide();
-        }
-    }
-
+    // Phase 3: Infinite variable slideshow loop core
     function transitionSlide() {
         if (verifiedImages.length <= 1) return;
 
-        // Fade out previous back-layer slide asset
+        // Fade out active element frame index
         verifiedImages[currentSlideIndex].classList.remove("active");
 
-        // Loop forward across layout array bounds
+        // advance layout array boundaries incrementally
         currentSlideIndex = (currentSlideIndex + 1) % verifiedImages.length;
 
-        // Fade in new back-layer slide asset
+        // Fade in new array image asset
         verifiedImages[currentSlideIndex].classList.add("active");
 
         scheduleVariableSlide();
@@ -489,13 +472,13 @@
     function scheduleVariableSlide() {
         if (slideshowTimeoutId) clearTimeout(slideshowTimeoutId);
 
-        // Generate seamless variable durations ranging explicitly between 2s and 4s
+        // Generate seamless random slide timers between 2 and 4 seconds
         const variableDelay = Math.floor(Math.random() * (4000 - 2000 + 1)) + 2000;
         
         slideshowTimeoutId = setTimeout(transitionSlide, variableDelay);
     }
 
-    // Initialize async file crawler logic on execution
+    // Run background stream checker immediately on page start
     scanAndVerifyFiles(0);
 
 
