@@ -325,15 +325,20 @@
         photoViewer.style.display = 'block';
         albumTitle.innerText = name;
         
-        zipLink.href = `${name}.zip`; 
         photoList.innerHTML = '';
 
-        if(albumData[name].length === 0) {
+        // All assets (images and ZIP files) now live inside: JIL/1st-15th/
+        const basePath = `JIL/1st-15th`;
+        
+        // Updates the file download path for the collection .zip bundle
+        zipLink.href = `${basePath}/${name}.zip`; 
+
+        if (albumData[name].length === 0) {
             photoList.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 40px 0;">No images found.</p>';
         } else {
             albumData[name].forEach(fileName => {
                 const img = document.createElement('img');
-                const path = `${name}/${fileName}`;
+                const path = `${basePath}/${fileName}`;
                 
                 img.src = path;
                 img.alt = fileName;
