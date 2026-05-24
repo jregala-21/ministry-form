@@ -18,6 +18,7 @@
             --success: #059669;
             --danger: #ef4444;
             --danger-hover: #dc2626;
+            --warning: #f59e0b;
         }
 
         body {
@@ -126,16 +127,47 @@
             border-color: var(--accent); 
         }
 
-        input[type="file"] {
+        input[type="file"], input[type="datetime-local"] {
             width: 100%;
-            padding: 10px;
+            padding: 12px;
             background: #0f172a;
-            color: var(--text-muted);
+            color: var(--text-main);
             border: 1px solid var(--border);
             border-radius: 8px;
             box-sizing: border-box;
             font-size: 14px;
+            outline: none;
             transition: border-color 0.2s;
+        }
+        input[type="file"] {
+            color: var(--text-muted);
+        }
+        input[type="datetime-local"]:focus {
+            border-color: var(--warning);
+        }
+
+        .schedule-panel {
+            background: rgba(30, 41, 59, 0.4);
+            border: 1px dashed var(--border);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        .schedule-toggle-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            user-select: none;
+        }
+        .schedule-fields {
+            margin-top: 12px;
+            display: none;
+            animation: fadeIn 0.2s ease;
+        }
+        .schedule-fields.visible {
+            display: block;
         }
 
         .scroller-box {
@@ -191,13 +223,12 @@
             text-align: left;
         }
 
-        .directory-table input[type="checkbox"] {
+        .directory-table input[type="checkbox"], .schedule-toggle-container input[type="checkbox"] {
             width: 16px;
             height: 16px;
             accent-color: var(--accent);
             cursor: pointer;
             margin: 0;
-            display: block;
         }
 
         .global-select-bar {
@@ -234,6 +265,12 @@
         .send-btn:hover {
             background: var(--accent-hover);
         }
+        .send-btn.scheduled-mode {
+            background: var(--warning);
+        }
+        .send-btn.scheduled-mode:hover {
+            background: #d97706;
+        }
         .send-btn:disabled {
             background: #1e293b;
             color: var(--text-muted);
@@ -244,6 +281,11 @@
             margin-top: 15px;
             font-weight: 500;
             font-size: 14px;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-4px); }
+            to { opacity: 1; transform: translateY(0); }
         }
     </style>
 </head>
@@ -281,12 +323,25 @@
         </div>
     </div>
 
-    <button id="sendBtn" class="send-btn" onclick="sendAnnouncement()">Send Announcement</button>
+    <div class="schedule-panel">
+        <div class="schedule-toggle-container" onclick="toggleScheduleView()">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <input type="checkbox" id="isScheduled" onclick="event.stopPropagation(); handleScheduleCheckbox(this)">
+                <label for="isScheduled" style="cursor:pointer; font-weight: 600; font-size: 14px;">📅 Schedule this announcement</label>
+            </div>
+            <span id="angleIndicator" style="color: var(--text-muted); font-size: 12px;">▶</span>
+        </div>
+        <div id="scheduleFields" class="schedule-fields">
+            <label class="section-label" style="color: var(--warning); margin-top: 10px;">Dispatch Date & Time:</label>
+            <input type="datetime-local" id="scheduledTimestamp">
+        </div>
+    </div>
+
+    <button id="sendBtn" class="send-btn" onclick="processAnnouncementDispatch()">Send Announcement</button>
     <p id="status"></p>
 </div>
 
 <script>
-    // --- AUTHENTICATION & SECURITY CONTROLLER ---
     if (sessionStorage.getItem("bypassPassword") === "true") {
         sessionStorage.setItem("isAllowed", "true");
         sessionStorage.removeItem("bypassPassword");
@@ -305,6 +360,42 @@
     function handleLogout() {
         sessionStorage.removeItem("isAllowed");
         window.location.href = "login.html";
+    }
+
+    function toggleScheduleView() {
+        const checkbox = document.getElementById("isScheduled");
+        checkbox.checked = !checkbox.checked;
+        handleScheduleCheckbox(checkbox);
+    }
+
+    // UPDATED FUNCTION: Automatically sets default values to today's date and exact current time
+    function handleScheduleCheckbox(cb) {
+        const fields = document.getElementById("scheduleFields");
+        const angle = document.getElementById("angleIndicator");
+        const sendBtn = document.getElementById("sendBtn");
+
+        if (cb.checked) {
+            fields.classList.add("visible");
+            angle.innerText = "▼";
+            sendBtn.innerText = "📅 Queue Scheduled Announcement";
+            sendBtn.classList.add("scheduled-mode");
+            
+            // Generate exact current local date and time values
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            
+            // Format format: YYYY-MM-DDTHH:MM
+            document.getElementById("scheduledTimestamp").value = `${year}-${month}-${day}T${hours}:${minutes}`;
+        } else {
+            fields.classList.remove("visible");
+            angle.innerText = "▶";
+            sendBtn.innerText = "Send Announcement";
+            sendBtn.classList.remove("scheduled-mode");
+        }
     }
 
     async function loadEmailsFromSheet() {
@@ -327,21 +418,12 @@
             return;
         }
 
-        const groups = {
-            "JAM": [],
-            "VIA": [],
-            "MAN": [],
-            "DANCE": [],
-            "OTHERS": []
-        };
+        const groups = { "JAM": [], "VIA": [], "MAN": [], "DANCE": [], "OTHERS": [] };
 
         emailList.forEach((item, index) => {
             const min = (item.ministry || "").toUpperCase().trim();
-            if (groups[min]) {
-                groups[min].push({ item, index });
-            } else {
-                groups[min] = [{ item, index }];
-            }
+            if (groups[min]) { groups[min].push({ item, index }); } 
+            else { groups[min] = [{ item, index }]; }
         });
 
         Object.keys(groups).forEach(category => {
@@ -375,9 +457,7 @@
 
     function toggleSelectAll(master) {
         const checkboxes = document.querySelectorAll(".emailCheck");
-        checkboxes.forEach(cb => {
-            cb.checked = master.checked;
-        });
+        checkboxes.forEach(cb => { cb.checked = master.checked; });
     }
 
     function getBase64(file) {
@@ -389,7 +469,78 @@
         });
     }
 
-    async function sendAnnouncement() {
+    function processAnnouncementDispatch() {
+        const isScheduled = document.getElementById("isScheduled").checked;
+        if (isScheduled) {
+            executeScheduleCommit();
+        } else {
+            sendAnnouncementInstant();
+        }
+    }
+
+    async function executeScheduleCommit() {
+        const caption = document.getElementById("caption").value;
+        const fileInput = document.getElementById("fileInput");
+        const targetTime = document.getElementById("scheduledTimestamp").value; // This looks like "2026-05-25T03:05"
+        const status = document.getElementById("status");
+        const sendBtn = document.getElementById("sendBtn");
+
+        const selected = Array.from(document.querySelectorAll(".emailCheck:checked")).map(cb => cb.value);
+
+        if (selected.length === 0) return alert("Please select at least one recipient.");
+        if (!caption) return alert("Please enter a caption.");
+        if (!targetTime) return alert("Please select a valid date and time.");
+
+        sendBtn.disabled = true;
+        status.style.color = "var(--warning)";
+        status.innerText = "⏳ Saving schedule to Google Sheets...";
+
+        let attachments = [];
+        if (fileInput.files.length > 0) {
+            for (let file of fileInput.files) {
+                const base64Data = await getBase64(file);
+                attachments.push({
+                    fileName: file.name,
+                    fileType: file.type,
+                    fileContent: base64Data.split(",")[1]
+                });
+            }
+        } else if (autoLoadedPdf) {
+            attachments.push(autoLoadedPdf);
+        }
+
+        const schedulePayload = {
+            action: "registerSchedule",
+            recipients: selected, 
+            message: caption,
+            scheduledTime: targetTime, // FIX: Sends your raw local time string exactly as you see it on screen
+            attachments: attachments
+        };
+
+        try {
+            const response = await fetch(SEND_EMAILS_URL, {
+                method: "POST",
+                body: JSON.stringify(schedulePayload)
+            });
+            
+            const responseText = await response.text();
+            
+            if (responseText.includes("SUCCESS_SCHEDULED")) {
+                status.innerText = "📅 Success! Announcement schedule locked and saved to cloud.";
+                status.style.color = "var(--success)";
+                resetFormState();
+            } else {
+                throw new Error(responseText);
+            }
+        } catch (error) {
+            console.error(error);
+            status.innerText = "❌ Connection failed: " + error.message;
+            status.style.color = "var(--danger)";
+            sendBtn.disabled = false;
+        }
+    }
+
+    async function sendAnnouncementInstant() {
         const caption = document.getElementById("caption").value;
         const fileInput = document.getElementById("fileInput");
         const status = document.getElementById("status");
@@ -397,14 +548,8 @@
 
         const selected = Array.from(document.querySelectorAll(".emailCheck:checked")).map(cb => cb.value);
 
-        if (selected.length === 0) {
-            alert("Please select at least one recipient.");
-            return;
-        }
-        if (!caption) {
-            alert("Please enter a caption.");
-            return;
-        }
+        if (selected.length === 0) return alert("Please select at least one recipient.");
+        if (!caption) return alert("Please enter a caption.");
 
         sendBtn.disabled = true;
         status.style.color = "var(--text-muted)";
@@ -436,12 +581,12 @@
             };
 
             try {
-                await fetch(SEND_EMAILS_URL, {
+                const response = await fetch(SEND_EMAILS_URL, {
                     method: "POST",
-                    mode: "no-cors", 
                     body: JSON.stringify(payload)
                 });
-                successCount++;
+                const resText = await response.text();
+                if(resText === "SUCCESS") successCount++;
             } catch (error) {
                 console.error(`Error sending announcement`, error);
             }
@@ -449,8 +594,12 @@
 
         status.innerText = `✅ Finished! Successfully sent to ${successCount} members.`;
         status.style.color = "var(--success)";
+        resetFormState();
+    }
 
+    function resetFormState() {
         document.getElementById("caption").value = "";
+        const fileInput = document.getElementById("fileInput");
         fileInput.value = "";
         autoLoadedPdf = null;
         const note = document.getElementById("pdfStagedNote");
@@ -459,7 +608,14 @@
 
         document.querySelectorAll(".emailCheck").forEach(cb => cb.checked = false);
         document.getElementById("selectAllBox").checked = false;
-        sendBtn.disabled = false;
+        
+        const scheduleCheckbox = document.getElementById("isScheduled");
+        if(scheduleCheckbox.checked) {
+            scheduleCheckbox.checked = false;
+            handleScheduleCheckbox(scheduleCheckbox);
+        }
+        
+        document.getElementById("sendBtn").disabled = false;
     }
 
     window.addEventListener('DOMContentLoaded', () => {
@@ -474,7 +630,6 @@
         if (savedPdf) {
             autoLoadedPdf = JSON.parse(savedPdf);
             localStorage.removeItem("autoLineupPdf");
-
             const fileInput = document.getElementById("fileInput");
             fileInput.style.borderColor = "var(--success)";
             
@@ -501,6 +656,5 @@
 
     loadEmailsFromSheet();
 </script>
-
 </body>
 </html>
