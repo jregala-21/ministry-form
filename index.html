@@ -380,7 +380,7 @@
     }
 
 
-    // --- STREAMING INSTANT ASSET SEARCH ENGINE ---
+    // --- RANDOMIZED STREAMING IMAGE SCANNER ENGINE ---
     const slideshowContainer = document.getElementById("slideshowContainer");
     const extensions = ['.jpg', '.jpeg', '.png'];
     
@@ -393,10 +393,10 @@
         return n + (n % 10 == 1 && n % 100 != 11 ? 'st' : (n % 10 == 2 && n % 100 != 12 ? 'nd' : (n % 10 == 3 && n % 100 != 13 ? 'rd' : 'th')));
     }
 
-    // Phase 1: Pre-generate structural lookups
+    // Phase 1: Compile all target image path combinations
     let prospectivePaths = [];
 
-    // Prioritize active Anniversary paths (16th to 50th)
+    // Compile Anniversary paths (16th to 50th)
     for (let year = 16; year <= 50; year++) {
         const yearWord = getOrdinalSuffix(year);
         for (let imgNum = 1; imgNum <= 30; imgNum++) {
@@ -406,17 +406,26 @@
         }
     }
 
-    // Add legacy old image profiles (old_image1 to old_image30)
+    // Compile old historic legacy profiles (old_image1 to old_image30)
     for (let oldNum = 1; oldNum <= 30; oldNum++) {
         extensions.forEach(ext => {
             prospectivePaths.push(`JIL/1st-15th/old_image${oldNum}${ext}`);
         });
     }
 
-    // Phase 2: Asynchronous streaming processor loop
+    // CRITICAL: Randomize the scan path array before starting to search!
+    // This makes sure the browser discovers images in a completely mixed up order.
+    for (let i = prospectivePaths.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        const temp = prospectivePaths[i];
+        prospectivePaths[i] = prospectivePaths[j];
+        prospectivePaths[j] = temp;
+    }
+
+    // Phase 2: Asynchronous streaming loop
     function scanAndVerifyFiles(index) {
         if (index >= prospectivePaths.length) {
-            return; // Finished checking all combinations in the background
+            return; // Search complete
         }
 
         const targetUrl = prospectivePaths[index];
@@ -429,38 +438,40 @@
             slideElement.alt = "JIL Background Asset";
             slideshowContainer.appendChild(slideElement);
             
+            // Push discovered images directly into our live playlist array
             verifiedImages.push(slideElement);
             
-            // STREAMING TRIGGER: If this is the absolute first image discovered, show it instantly!
+            // STREAMING RANDOMIZER: Show the absolute first image discovered instantly
             if (!slideshowStarted) {
                 slideshowStarted = true;
                 slideElement.classList.add("active");
+                currentSlideIndex = 0;
             } 
-            // If it's the second image found, safely kick off the cycling interval engine
+            // Kick off the running slideshow as soon as a second image is discovered
             else if (verifiedImages.length === 2 && !slideshowTimeoutId) {
                 scheduleVariableSlide();
             }
 
-            // Immediately check the next file configuration pattern asynchronously
+            // Continue checking next path item down the randomized configuration chain
             setTimeout(() => scanAndVerifyFiles(index + 1), 10);
         };
 
         checkImg.onerror = function() {
-            // File doesn't exist, proceed to scan next option right away
+            // Check next random configuration option
             scanAndVerifyFiles(index + 1);
         };
 
         checkImg.src = targetUrl;
     }
 
-    // Phase 3: Infinite variable slideshow loop core
+    // Phase 3: Infinite variable slide transitions
     function transitionSlide() {
         if (verifiedImages.length <= 1) return;
 
         // Fade out active element frame index
         verifiedImages[currentSlideIndex].classList.remove("active");
 
-        // advance layout array boundaries incrementally
+        // advance to next index item. If it reaches the end, it wraps around.
         currentSlideIndex = (currentSlideIndex + 1) % verifiedImages.length;
 
         // Fade in new array image asset
@@ -472,13 +483,13 @@
     function scheduleVariableSlide() {
         if (slideshowTimeoutId) clearTimeout(slideshowTimeoutId);
 
-        // Generate seamless random slide timers between 2 and 4 seconds
+        // Dynamic delay range explicitly chosen between 2 and 4 seconds
         const variableDelay = Math.floor(Math.random() * (4000 - 2000 + 1)) + 2000;
         
         slideshowTimeoutId = setTimeout(transitionSlide, variableDelay);
     }
 
-    // Run background stream checker immediately on page start
+    // Start background random stream checker immediately on page start
     scanAndVerifyFiles(0);
 
 
