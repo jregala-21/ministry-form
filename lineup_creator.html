@@ -59,7 +59,6 @@
         input:focus, textarea:focus { outline: none; border-color: var(--primary); background: #f9f9ff; }
         .highlight-input { border: 2px solid var(--primary); background: #f0f4ff; font-weight: bold; }
 
-        /* Custom Suggestion Box (Google-style) */
         .suggestion-box {
             position: absolute;
             top: 65px; left: 0; right: 0;
@@ -100,57 +99,56 @@
 
     <div class="main-grid">
         <div class="input-group">
-            <label>📅 Service Date</label>
+            <label>Service Date</label>
             <input type="text" id="serviceDate" class="highlight-input" placeholder="Oct 27, 2024">
         </div>
         <div class="input-group">
-            <label>🎤 Worship Leader</label>
+            <label>Worship Leader</label>
             <input type="text" id="leaderName" class="highlight-input" placeholder="Name...">
         </div>
 
         <div class="input-group full-width">
-            <label>📖 Theme Verse</label>
+            <label>Theme Verse</label>
             <textarea id="verse" placeholder="Reference and text..." oninput="autoGrow(this)"></textarea>
         </div>
 
-        <!-- Song Category Sections -->
         <div class="input-group full-width">
-            <label>🎵 Intro Song</label>
+            <label>Intro Song</label>
             <textarea id="intro" placeholder="Song Titles..." oninput="handleSongInput(this)"></textarea>
             <div id="intro-suggestions" class="suggestion-box"></div>
             <textarea id="intro_link" class="link-input" placeholder="Song Links..." oninput="autoGrow(this)"></textarea>
         </div>
 
         <div class="input-group">
-            <label>🙌 Praise Songs</label>
+            <label>Praise Songs</label>
             <textarea id="praise" placeholder="Titles..." oninput="handleSongInput(this)"></textarea>
             <div id="praise-suggestions" class="suggestion-box"></div>
             <textarea id="praise_link" class="link-input" placeholder="Links..." oninput="autoGrow(this)"></textarea>
         </div>
 
         <div class="input-group">
-            <label>🙏 Worship Songs</label>
+            <label>Worship Songs</label>
             <textarea id="worship" placeholder="Titles..." oninput="handleSongInput(this)"></textarea>
             <div id="worship-suggestions" class="suggestion-box"></div>
             <textarea id="worship_link" class="link-input" placeholder="Links..." oninput="autoGrow(this)"></textarea>
         </div>
 
         <div class="input-group">
-            <label>🎤 Ministerial / Communion</label>
+            <label>Ministerial / Communion</label>
             <textarea id="ministerial" placeholder="Titles..." oninput="handleSongInput(this)"></textarea>
             <div id="ministerial-suggestions" class="suggestion-box"></div>
             <textarea id="ministerial_link" class="link-input" placeholder="Links..." oninput="autoGrow(this)"></textarea>
         </div>
 
         <div class="input-group">
-            <label>🏆 Victory Song</label>
+            <label>Victory Song</label>
             <textarea id="victory" placeholder="Titles..." oninput="handleSongInput(this)"></textarea>
             <div id="victory-suggestions" class="suggestion-box"></div>
             <textarea id="victory_link" class="link-input" placeholder="Links..." oninput="autoGrow(this)"></textarea>
         </div>
 
         <div class="input-group full-width">
-            <label>🚪 Closing Songs</label>
+            <label>Closing Songs</label>
             <textarea id="closing" placeholder="Titles..." oninput="handleSongInput(this)"></textarea>
             <div id="closing-suggestions" class="suggestion-box"></div>
             <textarea id="closing_link" class="link-input" placeholder="Links..." oninput="autoGrow(this)"></textarea>
@@ -161,13 +159,13 @@
         <button class="btn-clear" onclick="clearForm()">🗑️ Clear</button>
         <button class="btn-copy" onclick="copyLineup()">📋 Copy</button>
         <button class="btn-pdf" onclick="downloadPDF()">📥 PDF</button>
-        <button class="btn-save" onclick="saveLineup()" id="saveBtn">☁️ Save to Cloud</button>
+        <button class="btn-save" onclick="saveLineup()" id="saveBtn">☁️ Save to Cloud / Send to Email</button>
     </div>
 
     <a href="index.html" class="back-link">← Back to Main Menu</a>
 </div>
 
-<script>
+<script {is_ignored="true"}>
     const { jsPDF } = window.jspdf;
     
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyNwfpSFDHB5Gs9Vs8h1UKOznsnDdxU_UREmDGQWDgPo3F9Ryl99mo6pg3nXfNVoKxw/exec";
@@ -187,14 +185,12 @@
         }
     }
 
-    // Logic for Autocomplete while typing
     function handleSongInput(element) {
         autoGrow(element);
         const boxId = element.id + '-suggestions';
         const box = document.getElementById(boxId);
         const fullText = element.value;
         
-        // Find text after the last comma
         const parts = fullText.split(',');
         const currentQuery = parts[parts.length - 1].trim().toLowerCase();
 
@@ -226,7 +222,6 @@
         }
     }
 
-    // Close suggestions on outside click
     document.addEventListener('click', (e) => {
         if (!e.target.closest('.input-group')) {
             document.querySelectorAll('.suggestion-box').forEach(b => b.style.display = 'none');
@@ -241,6 +236,32 @@
     function splitComma(str) {
         if (!str) return [];
         return str.split(',').map(item => item.trim()).filter(item => item !== "");
+    }
+
+    function generateSafeCaptionText(data) {
+        let text = `*=== SERVICE LINEUP ===*\n[Date]: ${data.date}\n[Leader]: ${data.leader}\n----------------------------------\n\n`;
+        if (data.verse) text += `*Theme Verse:*\n${data.verse}\n\n`;
+        
+        const appendHelper = (label, obj) => {
+            if (!obj.title) return "";
+            let res = `*${label}:*\n`;
+            const titles = splitComma(obj.title); 
+            const links = splitComma(obj.link);
+            
+            titles.forEach((t, i) => { 
+                res += `- ${t}\n`; 
+                if (links[i]) res += `  Link: ${links[i]}\n`; 
+            });
+            return res + `\n`;
+        };
+
+        text += appendHelper("Intro Song", data.intro);
+        text += appendHelper("Praise Songs", data.praise);
+        text += appendHelper("Worship Songs", data.worship);
+        text += appendHelper("Ministerial", data.ministerial);
+        text += appendHelper("Victory Song", data.victory);
+        text += appendHelper("Closing Songs", data.closing);
+        return text.trim();
     }
 
     function getFormValues() {
@@ -265,12 +286,62 @@
         btn.innerText = "SAVING..."; btn.disabled = true;
         try {
             await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "saveLineup", ...data }) });
-            alert("Lineup saved! ✅");
-        } catch (e) { alert("Save failed."); } 
-        finally { btn.innerText = "☁️ Save to Cloud"; btn.disabled = false; }
+            
+            const text = generateSafeCaptionText(data);
+
+            const doc = new jsPDF();
+            doc.setFont("helvetica", "bold"); doc.setFontSize(22); doc.setTextColor(79, 70, 229);
+            doc.text("SERVICE LINEUP", 20, 25);
+            doc.setFontSize(10); doc.setTextColor(100);
+            doc.text(`Date: ${data.date}`, 190, 20, { align: "right" });
+            doc.text(`Leader: ${data.leader}`, 190, 27, { align: "right" });
+            doc.line(20, 32, 190, 32);
+            let y = 45;
+            const renderItems = (label, obj) => {
+                if (!obj.title) return;
+                const titles = splitComma(obj.title);
+                const links = splitComma(obj.link);
+                doc.setFontSize(10); doc.setTextColor(150); doc.text(label.toUpperCase(), 20, y);
+                y += 7; 
+                titles.forEach((t, i) => {
+                    doc.setFontSize(11); doc.setTextColor(0); doc.text(`• ${t}`, 25, y);
+                    if (links[i]) { y += 5; doc.setFontSize(8); doc.setTextColor(79, 70, 229); doc.text(`   Link: ${links[i]}`, 25, y); y += 2; }
+                    y += 7;
+                });
+                y += 5;
+            };
+            if(data.verse) {
+                doc.setFontSize(10); doc.setTextColor(150); doc.text("THEME VERSE", 20, y);
+                y += 7; doc.setFontSize(10); doc.setTextColor(0);
+                const splitVerse = doc.splitTextToSize(data.verse, 170);
+                doc.text(splitVerse, 20, y); y += (splitVerse.length * 7) + 10;
+            }
+            renderItems("Intro", data.intro); renderItems("Praise", data.praise); renderItems("Worship", data.worship);
+            renderItems("Ministerial", data.ministerial); renderItems("Victory", data.victory); renderItems("Closing", data.closing);
+            
+            const pdfBase64 = doc.output('datauristring').split(',')[1];
+
+            // Setup cache transfer objects
+            localStorage.setItem("autoLineupCaption", text);
+            localStorage.setItem("autoLineupPdf", JSON.stringify({
+                fileName: `Lineup_${data.date.replace(/[^a-zA-Z0-9]/g, "_")}.pdf`,
+                fileType: "application/pdf",
+                fileContent: pdfBase64
+            }));
+
+            // Bypasses login.html checking mechanism when loading announcement layout
+            sessionStorage.setItem("bypassPassword", "true");
+
+            alert("Lineup saved! Redirecting to Announcements... ✅");
+            window.location.href = "announcement.html";
+        } catch (e) { 
+            console.error(e);
+            alert("Save failed."); 
+        } finally { 
+            btn.innerText = "☁️ Save to Cloud"; btn.disabled = false; 
+        }
     }
 
-    // PDF and Copy functions remain exactly the same as your original logic
     function downloadPDF() {
         const data = getFormValues();
         if (!data.date || !data.leader) return alert("Please provide Service Date and Leader.");
@@ -308,21 +379,7 @@
 
     function copyLineup() {
         const data = getFormValues();
-        let text = `✨ *SERVICE LINEUP* ✨\n📅 Date: ${data.date}\n🎤 Leader: ${data.leader}\n────────────────────\n\n`;
-        if (data.verse) text += `📖 *Theme Verse:*\n${data.verse}\n\n`;
-        const appendHelper = (label, obj) => {
-            if (!obj.title) return "";
-            let res = `${label}\n`;
-            const titles = splitComma(obj.title); const links = splitComma(obj.link);
-            titles.forEach((t, i) => { res += `- ${t}\n`; if (links[i]) res += `  🔗 ${links[i]}\n`; res += `\n`; });
-            return res;
-        };
-        text += appendHelper("🎵 *Intro Song:*", data.intro);
-        text += appendHelper("🙌 *Praise Songs:*", data.praise);
-        text += appendHelper("🙏 *Worship Songs:*", data.worship);
-        text += appendHelper("🎤 *Ministerial:*", data.ministerial);
-        text += appendHelper("🏆 *Victory Song:*", data.victory);
-        text += appendHelper("🚪 *Closing Songs:*", data.closing);
+        const text = generateSafeCaptionText(data);
         navigator.clipboard.writeText(text).then(() => alert("Copied! ✅"));
     }
 
