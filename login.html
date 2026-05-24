@@ -3,97 +3,200 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Restricted Access</title>
+    <title>Restricted Access | Security Gateway</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        :root {
+            --bg: #0b0f19;
+            --card-bg: #141b2d;
+            --border: #242f47;
+            --text-main: #f1f5f9;
+            --text-muted: #94a3b8;
+            --accent: #6366f1;
+            --accent-hover: #4f46e5;
+            --danger: #f43f5e;
+        }
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #4f46e5, #6d28d9);
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            min-height: 100vh;
             margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+            -webkit-font-smoothing: antialiased;
         }
 
         .login-card {
-            background: white;
-            padding: 40px;
-            border-radius: 16px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+            background: var(--card-bg);
+            padding: 40px 32px;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            box-shadow: 0 20px 40px -15px rgba(0,0,0,0.7);
             text-align: center;
-            width: 320px;
+            width: 100%;
+            max-width: 360px;
+            animation: fadeIn 0.4s ease-out;
         }
 
-        h3 { color: #333; margin-bottom: 20px; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .lock-icon-wrapper {
+            width: 64px;
+            height: 64px;
+            background: rgba(99, 102, 241, 0.1);
+            color: var(--accent);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin: 0 auto 24px auto;
+            border: 1px solid rgba(99, 102, 241, 0.2);
+        }
+
+        h3 { 
+            color: #ffffff; 
+            margin: 0 0 8px 0; 
+            font-size: 22px; 
+            font-weight: 700;
+            letter-spacing: -0.025em;
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 14px;
+            margin-bottom: 28px;
+        }
+
+        .input-group {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .input-group i {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 16px;
+            transition: color 0.2s;
+        }
 
         input {
             width: 100%;
-            padding: 12px;
-            margin-bottom: 15px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
+            padding: 14px 16px 14px 44px;
+            background: #0f172a;
+            color: #ffffff;
+            border: 1px solid var(--border);
+            border-radius: 10px;
             box-sizing: border-box;
-            font-size: 16px;
+            font-size: 15px;
             outline: none;
-            transition: 0.2s;
+            transition: all 0.2s ease;
         }
 
-        input:focus { border-color: #4f46e5; box-shadow: 0 0 5px rgba(79, 70, 229, 0.3); }
+        input:focus { 
+            border-color: var(--accent); 
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+        }
+        
+        input:focus + i {
+            color: var(--accent);
+        }
 
         button {
             width: 100%;
-            padding: 12px;
-            background: #4f46e5;
-            color: white;
+            padding: 14px;
+            background: var(--accent);
+            color: #ffffff;
             border: none;
-            border-radius: 8px;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 600;
             cursor: pointer;
-            font-weight: bold;
-            font-size: 16px;
-            transition: 0.2s;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
         }
 
-        button:hover { background: #4338ca; }
+        button:hover {
+            background: var(--accent-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(99, 102, 241, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
 
         #error-msg {
-            color: #ef4444;
-            font-size: 14px;
-            margin-top: 15px;
+            color: var(--danger);
+            background: rgba(244, 63, 94, 0.1);
+            border: 1px solid rgba(244, 63, 94, 0.2);
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 20px;
             display: none;
+            font-size: 14px;
             font-weight: 500;
+            animation: shake 0.3s ease-in-out;
         }
 
-        /* Styling for the Back Button */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-4px); }
+            75% { transform: translateX(4px); }
+        }
+
         .back-btn {
-            display: inline-block;
-            margin-top: 20px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 28px;
             text-decoration: none;
-            color: #666;
+            color: var(--text-muted);
             font-size: 14px;
             font-weight: 500;
-            transition: 0.2s;
+            transition: color 0.2s;
         }
 
         .back-btn:hover {
-            color: #4f46e5;
+            color: var(--text-main);
         }
     </style>
 </head>
 <body>
 
 <div class="login-card">
-    <h3>🔒 Admin Access</h3>
-    <input type="password" id="passInput" placeholder="Enter Password">
-    <button onclick="checkPassword()">Unlock Library</button>
-    <p id="error-msg">❌ Incorrect password!</p>
+    <div class="lock-icon-wrapper">
+        <i class="fa-solid fa-shield-halved"></i>
+    </div>
+    <h3>Admin Access</h3>
+    <div class="subtitle">Please enter your password to continue</div>
     
-    <a href="index.html" class="back-btn">← Back to Homepage</a>
+    <div class="input-group">
+        <input type="password" id="passInput" placeholder="Enter Access Password">
+        <i class="fa-solid fa-lock"></i>
+    </div>
+    
+    <button onclick="checkPassword()">Unlock Control Panel</button>
+    <p id=\"error-msg\"><i class="fa-solid fa-triangle-exclamation"></i> Incorrect password! Please try again.</p>
+    
+    <a href="index.html" class="back-btn"><i class="fa-solid fa-arrow-left"></i> Back to Homepage</a>
 </div>
 
 <script>
     function checkPassword() {
         const pass = document.getElementById('passInput').value;
-        const MASTER_PASS = "JILTAGUIG123"; // <--- Your Password
+        const MASTER_PASS = "JILTAGUIG123";
 
         if (pass === MASTER_PASS) {
             sessionStorage.setItem("isAllowed", "true");
@@ -105,9 +208,10 @@
         }
     }
 
-    // Press Enter to submit
-    document.getElementById("passInput").addEventListener("keyup", function(event) {
-        if (event.key === "Enter") checkPassword();
+    document.getElementById('passInput').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            checkPassword();
+        }
     });
 </script>
 
