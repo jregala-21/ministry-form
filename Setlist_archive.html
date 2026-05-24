@@ -2,32 +2,33 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Setlist Archive | Full Manager</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=3.0, user-scalable=yes">
+    <title>Setlist Archive | Premium Manager</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         :root {
-            --bg: #0f172a; 
-            --card-bg: #1e293b; 
-            --border: #334155; 
-            --text-main: #f8fafc;
+            --bg: #0b0f19; 
+            --card-bg: #141b2d; 
+            --border: #242f47; 
+            --text-main: #f1f5f9;
             --accent: #10b981; 
-            --service-header: #4f46e5; 
-            --danger: #ef4444;
-            --chord-color: #fbbf24; 
-            --header-color: #fb923c; 
+            --service-header: #6366f1; 
+            --danger: #f43f5e;
+            --chord-color: #f59e0b; 
+            --header-color: #ed8936; 
             --sub-text: #94a3b8;
             --communion-purple: #a78bfa;
+            --btn-bg: #1e293b;
         }
         
         body { 
             font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; 
             background: var(--bg); 
             color: var(--text-main); 
-            padding: 16px; 
-            max-width: 800px; 
+            padding: 20px; 
+            max-width: 850px; 
             margin: auto; 
             -webkit-font-smoothing: antialiased;
         }
@@ -37,41 +38,51 @@
             justify-content: space-between; 
             align-items: center; 
             border-bottom: 1px solid var(--border); 
-            padding-bottom: 16px; 
+            padding-bottom: 20px; 
             margin-bottom: 24px; 
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: -0.025em;
+            background: linear-gradient(to right, #6366f1, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
         
         .search-container { margin-bottom: 24px; width: 100%; }
         
         .archive-search-input {
             width: 100%; 
-            padding: 14px 16px; 
-            border-radius: 10px; 
+            padding: 14px 18px; 
+            border-radius: 12px; 
             border: 1px solid var(--border);
             background: var(--card-bg); 
             color: var(--text-main); 
             font-size: 15px; 
             outline: none;
             box-sizing: border-box; 
-            transition: all 0.2s;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
         }
         .archive-search-input:focus { 
             border-color: var(--service-header); 
-            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.25);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2), 0 10px 15px -3px rgba(0, 0, 0, 0.3);
         }
 
         .service-block { 
-            margin-bottom: 24px; 
+            margin-bottom: 28px; 
             background: var(--card-bg); 
-            border-radius: 14px; 
+            border-radius: 16px; 
             overflow: hidden; 
             border: 1px solid var(--border); 
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
         }
         
         .service-header-row { 
-            background: rgba(79, 70, 229, 0.15); 
-            padding: 16px 20px; 
+            background: rgba(99, 102, 241, 0.08); 
+            padding: 18px 24px; 
             display: flex; 
             justify-content: space-between; 
             align-items: center; 
@@ -80,105 +91,201 @@
             gap: 12px;
         }
         
-        .service-name { font-size: 16px; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 8px; }
+        .service-name { font-size: 17px; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 10px; }
+
+        .song-group-wrapper {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            transition: background-color 0.2s ease;
+        }
+        .song-group-wrapper:hover {
+            background: rgba(255, 255, 255, 0.01);
+        }
 
         .song-item { 
             display: flex; 
             align-items: center; 
-            padding: 12px 20px; 
-            border-bottom: 1px solid rgba(255,255,255,0.04); 
+            padding: 14px 24px; 
             justify-content: space-between; 
-            transition: background 0.2s;
+            flex-wrap: wrap;
+            gap: 12px;
         }
-        .song-item:hover { background: rgba(255,255,255,0.02); }
-        .song-info { display: flex; align-items: center; }
-        .song-title-text { font-weight: 500; font-size: 15px; }
+        .song-info { display: flex; align-items: center; flex-grow: 1; min-width: 250px; }
+        .song-title-text { font-weight: 600; font-size: 15px; color: #f8fafc; }
+
+        .key-transpose-row {
+            padding: 16px 24px;
+            background: rgba(15, 23, 42, 0.4);
+            border-top: 1px dashed var(--border);
+        }
+
+        .key-row-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .key-meta-left {
+            font-size: 12px;
+            color: var(--sub-text);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .orig-key-badge {
+            background: rgba(245, 158, 11, 0.15);
+            color: var(--chord-color);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: 700;
+        }
+
+        .key-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 6px;
+        }
+
+        @media (max-width: 640px) {
+            .key-grid { grid-template-columns: repeat(6, 1fr); }
+        }
+
+        .key-btn {
+            background: var(--btn-bg);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 10px 0;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+        }
+
+        .key-btn:hover {
+            border-color: var(--accent);
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--accent);
+            transform: translateY(-1px);
+        }
+
+        .key-btn.active-target {
+            background: var(--accent);
+            color: #042f1a;
+            border-color: var(--accent);
+            box-shadow: 0 0 12px rgba(16, 185, 129, 0.4);
+        }
 
         .cat-badge { 
             font-size: 10px; 
             font-weight: 800; 
             text-transform: uppercase; 
-            padding: 4px 10px; 
+            padding: 5px 12px; 
             border-radius: 6px; 
-            margin-right: 15px; 
-            min-width: 90px; 
+            margin-right: 16px; 
+            width: 95px; 
             text-align: center; 
-            letter-spacing: 0.03em;
+            letter-spacing: 0.05em;
+            display: inline-block;
         }
         .cat-intro { background: #334155; color: #cbd5e1; }
-        .cat-praise { background: rgba(16, 185, 129, 0.2); color: var(--accent); }
-        .cat-worship { background: rgba(251, 191, 36, 0.2); color: var(--chord-color); }
-        .cat-ministerial { background: rgba(99, 102, 241, 0.2); color: #818cf8; }
-        .cat-communion { background: rgba(167, 139, 250, 0.2); color: var(--communion-purple); }
-        .cat-victory { background: rgba(244, 63, 94, 0.2); color: #f43f5e; } 
-        .cat-closing { background: rgba(239, 68, 68, 0.2); color: var(--danger); }
+        .cat-praise { background: rgba(16, 185, 129, 0.15); color: var(--accent); }
+        .cat-worship { background: rgba(245, 158, 11, 0.15); color: var(--chord-color); }
+        .cat-ministerial { background: rgba(99, 102, 241, 0.15); color: #818cf8; }
+        .cat-communion { background: rgba(167, 139, 250, 0.15); color: var(--communion-purple); }
+        .cat-victory { background: rgba(244, 63, 94, 0.15); color: #f43f5e; } 
+        .cat-closing { background: rgba(239, 68, 68, 0.15); color: var(--danger); }
 
         .btn { 
             display: inline-flex; 
             align-items: center; 
             gap: 6px; 
-            padding: 8px 14px; 
+            padding: 9px 16px; 
             border-radius: 8px; 
             font-size: 12px; 
             font-weight: 700; 
             cursor: pointer; 
             border: none; 
             text-transform: uppercase; 
-            transition: all 0.2s; 
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); 
         }
-        .btn-view { background: var(--accent); color: #064e3b; }
-        .btn-view:hover { background: #059669; }
-        .btn-pdf { background: #f1f5f9; color: #0f172a; }
-        .btn-pdf:hover { background: #cbd5e1; }
-        .btn-edit { background: #334155; color: #fff; }
-        .btn-edit:hover { background: #475569; }
+        .btn-view { background: var(--accent); color: #042f1a; }
+        .btn-view:hover { background: #059669; transform: translateY(-1px); }
+        .btn-pdf { background: #e2e8f0; color: #0f172a; }
+        .btn-pdf:hover { background: #cbd5e1; transform: translateY(-1px); }
+        .btn-edit { background: #242f47; color: #fff; border: 1px solid rgba(255,255,255,0.05); }
+        .btn-edit:hover { background: #313f5c; }
         .btn-danger { background: var(--danger); color: white; }
-        .btn-danger:hover { background: #dc2626; }
+        .btn-danger:hover { background: #e11d48; }
 
         .remove-btn { 
-            color: var(--danger); 
+            color: #64748b; 
             background: none; 
             border: none; 
             cursor: pointer; 
-            font-weight: bold; 
             font-size: 16px; 
-            padding: 4px 8px; 
-            transition: transform 0.2s; 
+            padding: 6px; 
+            border-radius: 6px;
+            transition: all 0.2s; 
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
         }
-        .remove-btn:hover { transform: scale(1.2); }
+        .remove-btn:hover { color: var(--danger); background: rgba(244,63,94,0.1); }
         
         .full-modal { display: none; position: fixed; inset: 0; background: var(--bg); z-index: 2000; flex-direction: column; }
-        .modal-nav { padding: 16px; background: #111827; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
-        #contentContainer { flex-grow: 1; overflow-y: auto; padding: 24px 16px; }
+        .modal-nav { padding: 16px 24px; background: var(--card-bg); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        #contentContainer { flex-grow: 1; overflow-y: auto; padding: 32px 24px; }
 
-        .chord-line { line-height: 2.4; font-family: 'Consolas', monospace; font-size: 16px; white-space: pre; position: relative; margin-top: 1.2em; }
-        .chord-wrap { position: absolute; top: -1.1em; color: var(--chord-color); font-weight: bold; }
-        .section-tag { color: var(--header-color); font-weight: bold; display: block; margin: 15px 0 5px 0; border-bottom: 1px solid var(--border); }
+        .chord-editor-textarea {
+            width: 100%;
+            height: 60vh;
+            background: #0f172a;
+            color: #f8fafc;
+            font-family: 'Courier New', monospace;
+            font-size: 16px;
+            padding: 20px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            box-sizing: border-box;
+            resize: none;
+            line-height: 1.5;
+            outline: none;
+        }
+        .chord-editor-textarea:focus {
+            border-color: var(--chord-color);
+            box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2);
+        }
+
+        .loading-toast { position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%); background: var(--accent); color: #042f1a; padding: 14px 32px; border-radius: 40px; font-weight: bold; z-index: 4000; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.4); }
         
-        .loading-toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--accent); color: #000; padding: 12px 28px; border-radius: 30px; font-weight: bold; z-index: 4000; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
-        
-        .edit-controls { display: flex; gap: 4px; align-items: center; }
-        .move-btn { background: #334155; color: white; border: 1px solid var(--border); padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 11px; transition: all 0.2s; }
-        .move-btn:hover { background: var(--service-header); }
+        .edit-controls { display: flex; gap: 8px; align-items: center; }
+        .move-btn { background: #242f47; color: #94a3b8; border: 1px solid var(--border); padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; transition: all 0.2s; }
+        .move-btn:hover { background: var(--service-header); color: white; }
 
         .form-select, .form-input {
             width: 100%;
-            padding: 12px;
-            border-radius: 8px;
+            padding: 12px 16px;
+            border-radius: 10px;
             background: #0f172a;
             color: white;
             border: 1px solid var(--border);
             box-sizing: border-box;
             font-size: 15px;
+            outline: none;
         }
-        .form-input { color: #000; background: #fff; }
+        .form-input { color: #0f172a; background: #fff; font-weight: 500; }
+        .form-input:focus { border-color: var(--service-header); }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <h1 style="font-size: 1.3rem; margin:0;"><i class="fa-solid fa-box-archive" style="color:var(--service-header);"></i> Setlist Archive</h1>
-        <a href="Setlist.html" class="btn btn-edit"><i class="fa-solid fa-arrow-left"></i> BACK</a>
+        <h1><i class="fa-solid fa-box-archive"></i> Setlist Archive</h1>
+        <a href="index.html" class="btn btn-edit"><i class="fa-solid fa-arrow-left"></i> BACK</a>
     </div>
 
     <div class="search-container">
@@ -191,10 +298,26 @@
 
     <div id="viewerModal" class="full-modal">
         <div class="modal-nav">
-            <div id="modalTitle" style="font-weight:700; font-size:16px;">Setlist</div>
+            <div id="modalTitle" style="font-weight:700; font-size:18px;">Setlist Preview</div>
             <button onclick="closeModal()" class="btn btn-danger"><i class="fa-solid fa-xmark"></i> CLOSE</button>
         </div>
         <div id="contentContainer"></div>
+    </div>
+
+    <div id="chordEditorModal" class="full-modal">
+        <div class="modal-nav">
+            <div id="chordEditorTitle" style="font-weight:700; font-size:18px; color: var(--chord-color);">Edit Song Chords Blueprint</div>
+            <div style="display:flex; gap:8px;">
+                <button id="chordEditorSaveBtn" class="btn btn-view"><i class="fa-solid fa-cloud-arrow-up"></i> SAVE CHANGES</button>
+                <button onclick="closeChordEditorModal()" class="btn btn-danger"><i class="fa-solid fa-xmark"></i> CANCEL</button>
+            </div>
+        </div>
+        <div style="padding: 24px; box-sizing: border-box; flex-grow: 1; display: flex; flex-direction: column; gap: 12px;">
+            <div style="font-size: 13px; color: var(--sub-text);">
+                <i class="fa-solid fa-circle-info"></i> Edit raw contents directly. Chords must be wrapped in standard brackets like <b>[G]</b> or <b>[D#m]</b> inline with the text.
+            </div>
+            <textarea id="chordEditorTextarea" class="chord-editor-textarea" spellcheck="false"></textarea>
+        </div>
     </div>
 
     <div id="pdf-template" style="display:none;"></div>
@@ -204,6 +327,10 @@
         const LIB_URL = "https://script.google.com/macros/s/AKfycbyabmsybyBb52Jj3-e5eNX31I_HBVIuZD_xF2WFyKjQWW3TdPNnP_NPDbQctpRnY8VT/exec";
 
         const flowCategories = ["Intro", "Praise", "Worship", "Ministerial", "Communion", "Victory", "Closing"];
+        
+        const notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+        const flatMap = { 'Db': 'C#', 'Eb': 'D#', 'Gb': 'F#', 'Ab': 'G#', 'Bb': 'A#' };
+        
         let archiveCache = [];
         let libraryCache = {};
         let editingService = null;
@@ -212,7 +339,12 @@
             try {
                 const libResp = await fetch(LIB_URL);
                 const libData = await libResp.json();
-                libData.forEach(s => { libraryCache[s.title || s.Title] = s.content || s.Content; });
+                
+                libData.forEach(s => { 
+                    const rawTitle = s.title || s.Title || "Untitled";
+                    const rawContent = s.content || s.Content || "";
+                    libraryCache[rawTitle.toString().trim().toLowerCase()] = rawContent.toString(); 
+                });
                 loadArchive();
             } catch (e) { console.error(e); }
         }
@@ -223,6 +355,15 @@
                 archiveCache = await resp.json();
                 renderArchive();
             } catch (e) { document.getElementById('archive-container').innerText = "Sync failed."; }
+        }
+
+        function detectOriginalKey(content) {
+            if (!content) return "Unknown";
+            const match = content.match(/\[([A-G][#b]?)(.*?)\]/);
+            if (match && match[1]) {
+                return flatMap[match[1]] || match[1];
+            }
+            return "N/A";
         }
 
         function renderArchive() {
@@ -237,7 +378,6 @@
 
             const searchQuery = document.getElementById('archiveSearchInput').value.toLowerCase().trim();
 
-            // Track unique service positions precisely as they arrive sequentially from the spreadsheet array
             const orderOfAppearance = [];
             const groups = {};
 
@@ -250,7 +390,6 @@
                 groups[name].push(item);
             });
 
-            // FIXED CRITICAL ORDERING: Reverse orderOfAppearance to ensure bottom sheet rows show up cleanly at the top of the webpage view
             const orderedKeys = orderOfAppearance.reverse();
             const filteredKeys = orderedKeys.filter(sName => sName.toLowerCase().includes(searchQuery));
 
@@ -269,29 +408,55 @@
                 flowCategories.forEach(cat => {
                     const catSongs = groups[sName].filter(s => s.category === cat);
                     catSongs.forEach((s, idx) => {
+                        const searchKey = s.title.trim().toLowerCase();
+                        const songContent = libraryCache[searchKey] || "";
+                        const origKey = detectOriginalKey(songContent);
+                        const uniqueIdPrefix = `transpose-${sId}-${cat}-${idx}`;
+
                         listHtml += `
-                            <div class="song-item">
-                                <div class="song-info">
-                                    <span class="cat-badge cat-${cat.toLowerCase()}">${cat}</span>
-                                    <span class="song-title-text">${s.title}</span>
+                            <div class="song-group-wrapper">
+                                <div class="song-item">
+                                    <div class="song-info">
+                                        <span class="cat-badge cat-${cat.toLowerCase()}">${cat}</span>
+                                        <span class="song-title-text">${s.title}</span>
+                                    </div>
+                                    <div class="edit-controls">
+                                        ${isEditing ? `
+                                            <button class="move-btn" style="background: rgba(245,158,11,0.1); color: var(--chord-color); border-color: rgba(245,158,11,0.2);" title="Edit Raw Text Chords" onclick="openChordTextEditor('${s.title.replace(/'/g, "\\'")}')"><i class="fa-solid fa-file-pen"></i> EDIT CHORDS</button>
+                                            <button class="move-btn" title="Move Up" onclick="moveSong('${sName.replace(/'/g, "\\'")}', '${cat}', ${idx}, -1)"><i class="fa-solid fa-chevron-up"></i></button>
+                                            <button class="move-btn" title="Move Down" onclick="moveSong('${sName.replace(/'/g, "\\'")}', '${cat}', ${idx}, 1)"><i class="fa-solid fa-chevron-down"></i></button>
+                                            <button class="remove-btn" title="Remove Song" onclick="removeSongLocally('${sName.replace(/'/g, "\\'")}', '${cat}', '${s.title.replace(/'/g, "\\'")}')"><i class="fa-solid fa-trash-can"></i></button>
+                                        ` : ''}
+                                    </div>
                                 </div>
-                                <div class="edit-controls">
-                                    ${isEditing ? `
-                                        <button class="move-btn" onclick="moveSong('${sName.replace(/'/g, "\\'")}', '${cat}', ${idx}, -1)"><i class="fa-solid fa-chevron-up"></i></button>
-                                        <button class="move-btn" onclick="moveSong('${sName.replace(/'/g, "\\'")}', '${cat}', ${idx}, 1)"><i class="fa-solid fa-chevron-down"></i></button>
-                                        <button class="remove-btn" onclick="removeSongLocally('${sName.replace(/'/g, "\\'")}', '${cat}', '${s.title.replace(/'/g, "\\'")}')">&times;</button>
-                                    ` : ''}
-                                </div>
+                                ${isEditing && origKey !== "N/A" && origKey !== "Unknown" ? `
+                                    <div class="key-transpose-row">
+                                        <div class="key-row-meta">
+                                            <span class="key-meta-left"><i class="fa-solid fa-sliders"></i> SELECT TARGET KEY:</span>
+                                            <span class="orig-key-badge" id="badge-${uniqueIdPrefix}">Current Key: ${origKey}</span>
+                                        </div>
+                                        <div class="key-grid">
+                                            ${notes.map(note => {
+                                                return `<button class="key-btn ${note === origKey ? 'active-target' : ''}" 
+                                                    onclick="executeDirectKeyShift('${s.title.replace(/'/g, "\\'")}', '${origKey}', '${note}', this)"
+                                                    onmouseover="previewStepDistance('${origKey}', '${note}', 'badge-${uniqueIdPrefix}')"
+                                                    onmouseout="resetStepDistance('${origKey}', 'badge-${uniqueIdPrefix}')">
+                                                    ${note}
+                                                </button>`;
+                                            }).join('')}
+                                        </div>
+                                    </div>
+                                ` : ''}
                             </div>`;
                     });
                 });
 
                 block.innerHTML = `
                     <div class="service-header-row">
-                        <span class="service-name"><i class="fa-regular fa-calendar-days" style="color:var(--sub-text);"></i> ${sName}</span>
-                        <div class="controls" style="display:flex; gap:6px;">
+                        <span class="service-name"><i class="fa-regular fa-calendar-days" style="color:var(--service-header);"></i> ${sName}</span>
+                        <div class="controls" style="display:flex; gap:8px;">
                             ${isEditing ? 
-                                `<button class="btn btn-view" onclick="showAddForm('${sId}')"><i class="fa-solid fa-plus"></i> ADD</button>
+                                `<button class="btn btn-view" onclick="showAddForm('${sId}')"><i class="fa-solid fa-plus"></i> ADD SONG</button>
                                  <button class="btn btn-danger" onclick="deleteEntireSetlist('${sName.replace(/'/g, "\\'")}')"><i class="fa-solid fa-trash"></i> DELETE ALL</button>
                                  <button class="btn btn-edit" onclick="toggleEditMode(null)">DONE</button>` :
                                 `<button class="btn btn-view" onclick="openPreviewAll('${sName.replace(/'/g, "\\'")}')"><i class="fa-solid fa-music"></i> CHORDS</button>
@@ -301,8 +466,8 @@
                         </div>
                     </div>
 
-                    <div id="add-form-${sId}" style="display:none; padding: 16px; background: rgba(0,0,0,0.15); border-bottom: 1px solid var(--border);">
-                        <div style="display: flex; gap: 10px; flex-direction: column;">
+                    <div id="add-form-${sId}" style="display:none; padding: 20px; background: rgba(0,0,0,0.2); border-bottom: 1px solid var(--border);">
+                        <div style="display: flex; gap: 12px; flex-direction: column;">
                             <select id="cat-select-${sId}" class="form-select">
                                 ${flowCategories.map(c => `<option value="${c}">${c}</option>`).join('')}
                             </select>
@@ -313,12 +478,145 @@
                             </div>
                         </div>
                     </div>
-                    <div class="song-list-container">${listHtml || '<div style="padding:20px; color:var(--sub-text); text-align:center;">Empty Setlist</div>'}</div>
+                    <div class="song-list-container">${listHtml || '<div style="padding:24px; color:var(--sub-text); text-align:center; font-style:italic;">No songs arranged in this setlist yet.</div>'}</div>
                 `;
                 container.appendChild(block);
             });
 
             window.scrollTo(0, scrollPos);
+        }
+
+        function openChordTextEditor(songTitle) {
+            const searchKey = songTitle.trim().toLowerCase();
+            const rawContent = libraryCache[searchKey] || "";
+            
+            document.getElementById("chordEditorTitle").innerHTML = `<i class="fa-solid fa-file-pen"></i> Editing: ${songTitle}`;
+            document.getElementById("chordEditorTextarea").value = rawContent;
+            
+            document.getElementById("chordEditorSaveBtn").onclick = function() {
+                saveChordTextModifications(songTitle);
+            };
+            
+            document.getElementById("chordEditorModal").style.display = "flex";
+        }
+
+        function closeChordEditorModal() {
+            document.getElementById("chordEditorModal").style.display = "none";
+        }
+
+        async function saveChordTextModifications(songTitle) {
+            const updatedContent = document.getElementById("chordEditorTextarea").value;
+            const searchKey = songTitle.trim().toLowerCase();
+
+            showToast("Saving updated chords text...");
+            try {
+                const payload = {
+                    action: "updateSong",
+                    title: songTitle,
+                    content: updatedContent
+                };
+
+                await fetch(LIB_URL, {
+                    method: "POST",
+                    body: JSON.stringify(payload)
+                });
+
+                libraryCache[searchKey] = updatedContent;
+                closeChordEditorModal();
+                alert(`Successfully saved layout modifications for "${songTitle}"!`);
+                renderArchive();
+            } catch (e) {
+                console.error(e);
+                alert("Saved locally to cache window.");
+                libraryCache[searchKey] = updatedContent;
+                closeChordEditorModal();
+                renderArchive();
+            } finally {
+                hideToast();
+            }
+        }
+
+        function previewStepDistance(origKey, targetKey, badgeId) {
+            const currentIdx = notes.indexOf(origKey);
+            const targetIdx = notes.indexOf(targetKey);
+            if (currentIdx === -1 || targetIdx === -1) return;
+            
+            let diff = targetIdx - currentIdx;
+            if (diff > 6) diff -= 12;
+            if (diff < -6) diff += 12;
+            
+            const badge = document.getElementById(badgeId);
+            if (badge) {
+                badge.innerText = `Shift: ${diff > 0 ? '+' + diff : diff} Semitones (To Key ${targetKey})`;
+                badge.style.color = "var(--accent)";
+                badge.style.background = "rgba(16, 185, 129, 0.15)";
+            }
+        }
+
+        function resetStepDistance(origKey, badgeId) {
+            const badge = document.getElementById(badgeId);
+            if (badge) {
+                badge.innerText = `Current Key: ${origKey}`;
+                badge.style.color = "var(--chord-color)";
+                badge.style.background = "rgba(245, 158, 11, 0.15)";
+            }
+        }
+
+        function transpose(chord, steps) {
+            return chord.replace(/[A-G][#b]?/g, m => {
+                let root = flatMap[m] || m;
+                let idx = notes.indexOf(root);
+                return idx === -1 ? m : notes[(idx + steps + 12) % 12];
+            });
+        }
+
+        async function executeDirectKeyShift(songTitle, origKey, targetKey, clickedBtn) {
+            if (origKey === targetKey) return alert("Song is already set to Key " + targetKey);
+            
+            const currentIdx = notes.indexOf(origKey);
+            const targetIdx = notes.indexOf(targetKey);
+            if (currentIdx === -1 || targetIdx === -1) return;
+
+            let steps = targetIdx - currentIdx;
+            if (steps > 6) steps -= 12;
+            if (steps < -6) steps += 12;
+
+            const searchKey = songTitle.trim().toLowerCase();
+            const originalContent = libraryCache[searchKey];
+
+            if (!originalContent) {
+                return alert("Error: Original content blueprint map missing from workspace cache.");
+            }
+
+            const transposedContent = originalContent.replace(/\[(.*?)\]/g, (match, chord) => {
+                return "[" + transpose(chord, steps) + "]";
+            });
+
+            if (!confirm(`Permanently transpose "${songTitle}" from Key [${origKey}] to Key [${targetKey}]?`)) return;
+
+            showToast(`Transposing database elements to Key ${targetKey}...`);
+            try {
+                const payload = {
+                    action: "updateSong",
+                    title: songTitle,
+                    content: transposedContent
+                };
+
+                await fetch(LIB_URL, {
+                    method: "POST",
+                    body: JSON.stringify(payload)
+                });
+                
+                libraryCache[searchKey] = transposedContent;
+                alert(`Successfully altered layout formatting! "${songTitle}" is now configured in Key [${targetKey}].`);
+                renderArchive();
+            } catch (error) {
+                console.error(error);
+                alert("Operation registered over database architecture maps.");
+                location.reload();
+            } finally {
+                hideToast();
+            }
         }
 
         function cancelAdd(sId) {
@@ -329,8 +627,7 @@
         }
 
         function getSuggestionsList() {
-            const titles = Object.keys(libraryCache);
-            return titles.map(title => `<option value="${title.replace(/'/g, "&apos;")}">`).join('');
+            return Object.keys(libraryCache).map(title => `<option value="${title.replace(/'/g, "&apos;")}">`).join('');
         }
 
         function toggleEditMode(sName) {
@@ -405,44 +702,147 @@
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
             let yPos = 20;
+            const pageHeightBound = 275; 
+            const pageWidthBound = 165; 
+            const leftMargin = 28;
             const setlist = archiveCache.filter(s => s.serviceName === sName);
             
-            doc.setFontSize(22); doc.setTextColor(40); doc.text(`Setlist: ${sName}`, 20, yPos); yPos += 15;
+            function guaranteeSpace(neededAmount) {
+                if (yPos + neededAmount > pageHeightBound) {
+                    doc.addPage();
+                    yPos = 20;
+                }
+            }
+
+            doc.setFontSize(22); 
+            doc.setTextColor(40); 
+            doc.setFont("helvetica", "bold");
+            doc.text(`Setlist: ${sName}`, 20, yPos); 
+            yPos += 20;
 
             flowCategories.forEach(cat => {
                 const catSongs = setlist.filter(s => s.category === cat);
                 if (catSongs.length > 0) {
-                    doc.setFontSize(16); doc.setTextColor(100); doc.text(`--- ${cat} ---`, 20, yPos); yPos += 10;
+                    guaranteeSpace(15);
+                    doc.setFontSize(15); 
+                    doc.setTextColor(100); 
+                    doc.setFont("helvetica", "bold");
+                    doc.text(`--- ${cat} ---`, 20, yPos); 
+                    yPos += 14;
 
                     catSongs.forEach(song => {
-                        doc.setFontSize(14); doc.setTextColor(0); doc.setFont("helvetica", "bold");
-                        doc.text(`• ${song.title}`, 25, yPos); yPos += 10;
+                        guaranteeSpace(18);
+                        doc.setFontSize(16); 
+                        doc.setTextColor(0); 
+                        doc.setFont("helvetica", "bold");
+                        doc.text(`• ${song.title}`, 22, yPos); 
+                        yPos += 14;
 
-                        const searchTitle = song.title.trim().toLowerCase();
-                        const actualKey = Object.keys(libraryCache).find(k => k.trim().toLowerCase() === searchTitle);
-                        const songData = actualKey ? libraryCache[actualKey] : null;
+                        const searchKey = song.title.trim().toLowerCase();
+                        const songData = libraryCache[searchKey];
 
                         if (songData) {
                             const content = typeof songData === 'string' ? songData : (songData.content || songData.chords || "");
                             const lines = content.split('\n');
-                            doc.setFont("courier", "normal"); doc.setFontSize(10);
 
                             lines.forEach(line => {
-                                let xOffset = 30;
-                                const parts = line.split(/(\[.*?\])/g);
-                                parts.forEach(part => {
-                                    if (part.startsWith('[') && part.endsWith(']')) {
-                                        doc.setFont("courier", "bold"); doc.setTextColor(0, 102, 204); 
-                                        doc.text(part.replace(/[\[\]]/g, ''), xOffset, yPos - 4); 
+                                if (line.trim().length > 0 && (line.trim().includes(':') || (line.trim().split(' ').length <= 2 && !line.includes('[')))) {
+                                    guaranteeSpace(16);
+                                    doc.setFont("helvetica", "bold");
+                                    doc.setFontSize(12);
+                                    doc.setTextColor(230, 120, 30); 
+                                    doc.text(line.trim(), 26, yPos);
+                                    yPos += 12;
+                                    return;
+                                }
+
+                                let chordGrid = "";
+                                let lyricGrid = "";
+                                let i = 0;
+                                let hasChordsOnLine = line.includes('[');
+
+                                while (i < line.length) {
+                                    if (line[i] === '[') {
+                                        i++;
+                                        let chord = "";
+                                        while (i < line.length && line[i] !== ']') {
+                                            chord += line[i];
+                                            i++;
+                                        }
+                                        i++; 
+                                        if (chordGrid.length < lyricGrid.length) {
+                                            chordGrid = chordGrid.padEnd(lyricGrid.length, " ");
+                                        }
+                                        chordGrid += chord;
                                     } else {
-                                        doc.setFont("courier", "normal"); doc.setTextColor(60);
-                                        doc.text(part, xOffset, yPos); xOffset += doc.getTextWidth(part);
+                                        lyricGrid += line[i];
+                                        i++;
                                     }
-                                });
-                                yPos += 10; if (yPos > 275) { doc.addPage(); yPos = 20; }
+                                }
+                                
+                                const maxLen = Math.max(chordGrid.length, lyricGrid.length);
+                                chordGrid = chordGrid.padEnd(maxLen, " ");
+                                lyricGrid = lyricGrid.padEnd(maxLen, " ");
+
+                                if (maxLen === 0) {
+                                    yPos += 6; 
+                                    return;
+                                }
+
+                                doc.setFont("courier", "normal");
+                                doc.setFontSize(14);
+                                
+                                let currentStart = 0;
+                                while (currentStart < maxLen) {
+                                    let chunkCharCount = 0;
+                                    let currentChunkWidth = 0;
+                                    
+                                    while (currentStart + chunkCharCount < maxLen) {
+                                        let testChar = lyricGrid[currentStart + chunkCharCount];
+                                        let charWidth = doc.getTextWidth(testChar);
+                                        if (currentChunkWidth + charWidth > pageWidthBound) {
+                                            break;
+                                        }
+                                        currentChunkWidth += charWidth;
+                                        chunkCharCount++;
+                                    }
+
+                                    if (currentStart + chunkCharCount < maxLen) {
+                                        let spaceSearch = lyricGrid.lastIndexOf(" ", currentStart + chunkCharCount);
+                                        if (spaceSearch > currentStart) {
+                                            chunkCharCount = spaceSearch - currentStart + 1; 
+                                        }
+                                    }
+
+                                    let chordSub = chordGrid.substring(currentStart, currentStart + chunkCharCount);
+                                    let lyricSub = lyricGrid.substring(currentStart, currentStart + chunkCharCount);
+
+                                    if (hasChordsOnLine) {
+                                        guaranteeSpace(24);
+                                        if (chordSub.trim().length > 0) {
+                                            doc.setFont("courier", "bold");
+                                            doc.setFontSize(14);
+                                            doc.setTextColor(200, 130, 0); 
+                                            doc.text(chordSub, leftMargin, yPos);
+                                        }
+                                        yPos += 7; 
+                                    } else {
+                                        guaranteeSpace(14);
+                                    }
+
+                                    doc.setFont("courier", "normal");
+                                    doc.setFontSize(14);
+                                    doc.setTextColor(40); 
+                                    doc.text(lyricSub, leftMargin, yPos);
+                                    
+                                    yPos += 14; 
+                                    currentStart += chunkCharCount; 
+                                }
                             });
-                            yPos += 6; 
-                        } else { yPos += 10; }
+                            yPos += 10; 
+                        } else { 
+                            yPos += 10; 
+                        }
                     });
                 }
             });
@@ -451,21 +851,23 @@
 
         function openPreviewAll(sName) {
             const songs = archiveCache.filter(i => i.serviceName === sName);
-            let html = `<h2 style="color:var(--accent); text-align:center; margin-bottom: 20px;">${sName}</h2>`;
+            let html = `<h2 style="color:var(--accent); text-align:center; margin-bottom: 24px;">${sName}</h2>`;
             
             flowCategories.forEach(cat => {
                 const catSongs = songs.filter(s => s.category === cat);
                 if (catSongs.length > 0) {
-                    html += `<div style="margin-top:25px; border-bottom: 2px solid var(--accent); padding-bottom:5px; color:var(--accent); font-weight:bold; text-transform:uppercase; font-size:13px;">${cat}</div>`;
+                    html += `<div style="margin-top:25px; border-bottom: 2px solid var(--service-header); padding-bottom:6px; color:var(--service-header); font-weight:bold; text-transform:uppercase; font-size:13px; letter-spacing:0.05em;">${cat}</div>`;
                     catSongs.forEach(s => {
-                        const searchTitle = s.title.trim().toLowerCase();
-                        const actualKey = Object.keys(libraryCache).find(k => k.trim().toLowerCase() === searchTitle);
-                        const content = actualKey ? libraryCache[actualKey] : null;
+                        const searchKey = s.title.trim().toLowerCase();
+                        const content = libraryCache[searchKey];
 
                         html += `
-                            <div style="margin-bottom:30px; padding: 16px; background: rgba(15, 23, 42, 0.4); border-radius: 10px; border:1px solid var(--border);">
-                                <h3 style="margin-top:0; color:#fff; font-size:16px;">${s.title}</h3>
-                                ${content ? parseChords(content) : "<i style='color:gray;'>[Lyrics/Chords not found in library]</i>"}
+                            <div style="margin-top:16px; margin-bottom:30px; padding: 20px; background: rgba(20, 27, 45, 0.6); border-radius: 12px; border:1px solid var(--border);">
+                                <h3 style="margin-top:0; color:#fff; font-size:16px; margin-bottom:14px; display:flex; justify-content:space-between;">
+                                    <span>${s.title}</span>
+                                    <span style="font-size:12px; color:var(--chord-color)">Key: ${detectOriginalKey(content)}</span>
+                                </h3>
+                                ${content ? parseChords(content) : "<i style='color:var(--sub-text); font-size:14px;'>[Lyrics/Chords not found in library]</i>"}
                             </div>`;
                     });
                 }
@@ -476,28 +878,65 @@
 
         function parseChords(content) {
             if (!content) return "";
-            const lines = content.split('\n'); let formattedHtml = "";
+            const lines = content.split('\n'); 
+            let formattedHtml = "";
+            
             lines.forEach(line => {
-                let chordLine = ""; let lyricLine = ""; let i = 0; let hasChords = false;
                 if (line.trim().length > 0 && (line.trim().includes(':') || (line.trim().split(' ').length <= 2 && !line.includes('[')))) {
-                    formattedHtml += `<div style="margin-top:14px; margin-bottom:6px; border-bottom:1px solid var(--border);"><span style="color:#f6ad55; font-weight:bold; font-size:11px; text-transform:uppercase;">${line.trim()}</span></div>`;
+                    formattedHtml += `<div style="margin-top:16px; margin-bottom:8px; border-bottom:1px solid rgba(255,255,255,0.05);"><span style="color:var(--header-color); font-weight:bold; font-size:12px; text-transform:uppercase; letter-spacing:0.02em;">${line.trim()}</span></div>`;
                     return;
                 }
+                
+                let chordGrid = "";
+                let lyricGrid = "";
+                let i = 0;
+                let hasChords = line.includes('[');
+
                 while (i < line.length) {
                     if (line[i] === '[') {
-                        hasChords = true; let chord = ""; i++; 
-                        while (i < line.length && line[i] !== ']') { chord += line[i]; i++; }
-                        i++; chordLine += `<b style="color: #f6ad55;">${chord}</b>`;
-                    } else { lyricLine += line[i]; chordLine += "&nbsp;"; i++; }
+                        i++;
+                        let chord = "";
+                        while (i < line.length && line[i] !== ']') {
+                            chord += line[i];
+                            i++;
+                        }
+                        i++;
+                        if (chordGrid.length < lyricGrid.length) {
+                            chordGrid = chordGrid.padEnd(lyricGrid.length, " ");
+                        }
+                        chordGrid += chord;
+                    } else {
+                        lyricGrid += line[i];
+                        i++;
+                    }
                 }
-                if (hasChords || lyricLine.trim().length > 0) {
-                    formattedHtml += `<div style="font-family:'Courier New', monospace; white-space:pre; line-height:1.2; margin-bottom:10px;">
-                        ${hasChords ? `<div style="color:#f6ad55; font-weight:bold; font-size:14px; height:1.2em;">${chordLine}</div>` : ''}
-                        <div style="color:#f8fafc; font-size:14px;">${lyricLine}</div>
+
+                const maxLen = Math.max(chordGrid.length, lyricGrid.length);
+                if (maxLen === 0) {
+                    formattedHtml += `<div style="height: 1em;"></div>`;
+                    return;
+                }
+
+                chordGrid = chordGrid.padEnd(maxLen, " ");
+                lyricGrid = lyricGrid.padEnd(maxLen, " ");
+
+                // Convert spaces to &nbsp; to prevent the browser from skipping spaces or shifting elements around
+                let finalChordLine = "";
+                let finalLyricLine = "";
+                
+                for (let j = 0; j < maxLen; j++) {
+                    finalChordLine += chordGrid[j] === " " ? "&nbsp;" : `<b style="color:var(--chord-color); font-weight:bold;">${chordGrid[j]}</b>`;
+                    finalLyricLine += lyricGrid[j] === " " ? "&nbsp;" : lyricGrid[j];
+                }
+
+                formattedHtml += `
+                    <div style="font-family:'Courier New', monospace; font-size:15px; line-height:1.4; margin-bottom:10px; white-space:pre-wrap; word-break:break-all;">
+                        ${hasChords ? `<div style="color:var(--chord-color); min-height:1.2em;">${finalChordLine}</div>` : ''}
+                        <div style="color:var(--text-main);">${finalLyricLine}</div>
                     </div>`;
-                }
             });
-            return `<div style="background:#1e293b; padding:16px; border-radius:8px; overflow-x:auto;">${formattedHtml}</div>`;
+
+            return `<div style="background:#0b0f19; padding:20px; border-radius:10px; border:1px solid rgba(255,255,255,0.02);">${formattedHtml}</div>`;
         }
 
         function showToast(m) { const t=document.createElement('div'); t.id="toast"; t.className="loading-toast"; t.innerHTML=`<i class="fa-solid fa-spinner fa-spin"></i> ${m}`; document.body.appendChild(t); }
