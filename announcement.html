@@ -109,17 +109,17 @@
 
         textarea {
             width: 100%;
-            height: 120px;
+            height: 180px;
             padding: 12px;
             background: #0f172a;
             color: #ffffff;
             border: 1px solid var(--border);
             border-radius: 8px;
             box-sizing: border-box;
-            font-size: 15px;
+            font-size: 14px;
             resize: vertical;
             outline: none;
-            font-family: inherit;
+            font-family: monospace, inherit;
             transition: border-color 0.2s;
         }
         textarea:focus { 
@@ -135,6 +135,7 @@
             border-radius: 8px;
             box-sizing: border-box;
             font-size: 14px;
+            transition: border-color 0.2s;
         }
 
         .scroller-box {
@@ -169,7 +170,7 @@
         }
 
         .directory-table td {
-            padding: 6px 4px;
+            padding: 8px 4px;
             font-size: 14px;
             color: #ffffff;
             vertical-align: middle;
@@ -188,13 +189,6 @@
         .col-name {
             font-weight: 500;
             text-align: left;
-            padding-right: 10px;
-        }
-
-        .col-email {
-            color: var(--text-muted);
-            text-align: left;
-            font-size: 13px;
         }
 
         .directory-table input[type="checkbox"] {
@@ -283,7 +277,7 @@
         </div>
 
         <div id="emailContainer" class="scroller-box">
-            <span style="color: var(--text-muted); font-size:14px;">Loading emails...</span>
+            <span style="color: var(--text-muted); font-size:14px;">Loading members...</span>
         </div>
     </div>
 
@@ -292,15 +286,21 @@
 </div>
 
 <script>
-    // --- SECURITY ACCESS CONTROL CHECK ---
-    if (sessionStorage.getItem("isAllowed") !== "true") {
-        window.location.href = "login.html";
+    // --- AUTHENTICATION & SECURITY CONTROLLER ---
+    if (sessionStorage.getItem("bypassPassword") === "true") {
+        sessionStorage.setItem("isAllowed", "true");
+        sessionStorage.removeItem("bypassPassword");
+    } else {
+        if (sessionStorage.getItem("isAllowed") !== "true") {
+            window.location.href = "login.html";
+        }
     }
 
     const GET_EMAILS_URL = "https://script.google.com/macros/s/AKfycbz7xG5gki0Jr8TidIbKKpT8YM52XDxTK_6JN2XcX7xESn8ABgdp98E_Q9WS2D8geKfB/exec"; 
     const SEND_EMAILS_URL = "https://script.google.com/macros/s/AKfycbxCmeDGNmRD0Z_FJm6LM897IC-oN0DGuh_R-kLz-49pseLEAL4ftx8tzwtvtBaGNT1dEA/exec";
 
     let emailList = [];
+    let autoLoadedPdf = null;
 
     function handleLogout() {
         sessionStorage.removeItem("isAllowed");
@@ -314,7 +314,7 @@
             renderEmailList();
         } catch (error) {
             console.error("Error fetching emails:", error);
-            document.getElementById("emailContainer").innerText = "❌ Failed to load emails.";
+            document.getElementById("emailContainer").innerText = "❌ Failed to load members.";
         }
     }
 
@@ -323,7 +323,7 @@
         container.innerHTML = "";
 
         if (emailList.length === 0) {
-            container.innerText = "No emails found.";
+            container.innerText = "No members found.";
             return;
         }
 
@@ -361,10 +361,9 @@
                 tableRowsHtml += `
                     <tr>
                         <td class="col-check">
-                            <input type="checkbox" class="emailCheck" value="${item.email}" data-index="${index}" onchange="handleCheckboxChange(this)">
+                            <input type="checkbox" class="emailCheck" value="${item.email}" data-index="${index}">
                         </td>
                         <td class="col-name">${item.name}</td>
-                        <td class="col-email">(${item.email})</td>
                     </tr>
                 `;
             });
@@ -372,9 +371,6 @@
             table.innerHTML = tableRowsHtml;
             container.appendChild(table);
         });
-    }
-
-    function handleCheckboxChange(checkbox) {
     }
 
     function toggleSelectAll(master) {
@@ -424,12 +420,14 @@
                     fileContent: base64Data.split(",")[1]
                 });
             }
+        } else if (autoLoadedPdf) {
+            attachments.push(autoLoadedPdf);
         }
 
         let successCount = 0;
         for (let i = 0; i < selected.length; i++) {
             const currentEmail = selected[i];
-            status.innerText = `⏳ Sending to ${i + 1} of ${selected.length}...`;
+            status.innerText = `⏳ Sending to recipient ${i + 1} of ${selected.length}...`;
 
             const payload = {
                 recipient: currentEmail,
@@ -445,7 +443,7 @@
                 });
                 successCount++;
             } catch (error) {
-                console.error(`Error sending to ${currentEmail}`, error);
+                console.error(`Error sending announcement`, error);
             }
         }
 
@@ -454,10 +452,52 @@
 
         document.getElementById("caption").value = "";
         fileInput.value = "";
+        autoLoadedPdf = null;
+        const note = document.getElementById("pdfStagedNote");
+        if (note) note.remove();
+        fileInput.style.borderColor = "var(--border)";
+
         document.querySelectorAll(".emailCheck").forEach(cb => cb.checked = false);
         document.getElementById("selectAllBox").checked = false;
         sendBtn.disabled = false;
     }
+
+    window.addEventListener('DOMContentLoaded', () => {
+        const savedCaption = localStorage.getItem("autoLineupCaption");
+        const savedPdf = localStorage.getItem("autoLineupPdf");
+
+        if (savedCaption) {
+            document.getElementById("caption").value = savedCaption;
+            localStorage.removeItem("autoLineupCaption"); 
+        }
+
+        if (savedPdf) {
+            autoLoadedPdf = JSON.parse(savedPdf);
+            localStorage.removeItem("autoLineupPdf");
+
+            const fileInput = document.getElementById("fileInput");
+            fileInput.style.borderColor = "var(--success)";
+            
+            const note = document.createElement("div");
+            note.style.color = "var(--success)";
+            note.style.fontSize = "13px";
+            note.style.marginTop = "6px";
+            note.style.fontWeight = "600";
+            note.style.textAlign = "left";
+            note.id = "pdfStagedNote";
+            note.innerText = `📎 Auto-attached: ${autoLoadedPdf.fileName}`;
+            fileInput.parentNode.appendChild(note);
+        }
+    });
+
+    document.getElementById("fileInput").addEventListener("change", function() {
+        if (this.files.length > 0) {
+            autoLoadedPdf = null;
+            const note = document.getElementById("pdfStagedNote");
+            if (note) note.remove();
+            this.style.borderColor = "var(--border)";
+        }
+    });
 
     loadEmailsFromSheet();
 </script>
