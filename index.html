@@ -274,12 +274,12 @@
         }
 
         .footer { margin-top: 35px; font-size: 12px; color: var(--text-muted); letter-spacing: 0.02em; }
-        .arrow { font-size: 11px; transition: transform 0.25s ease; display: inline-block; }
+        .arrow { font-size: 11px; transition: transform 0.25s ease; display: inline-block; width: 12px; text-align: center; }
         .rotate { transform: rotate(180deg); }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(6px); }
-            to { opacity: 1; transform: translateY(0); }
+        @media (max-width: 480px) {
+            .container { padding: 25px 20px; }
+            h2 { font-size: 22px; }
         }
     </style>
 </head>
@@ -333,6 +333,13 @@
         <div id="jamMenu" class="submenu">
             <button class="menu-btn sub-btn" onclick="location.href='chords-chart.html'">🎼 Chords Chart</button>
             <button class="menu-btn sub-btn" onclick="location.href='Setlist.html'">🎼 Setlist</button>
+        </div>
+
+        <button class="menu-btn btn-man" onclick="toggleMenu('manMenu', 'manArrow')">
+            🎛️ MAN <span id="manArrow" class="arrow">▼</span>
+        </button>
+        <div id="manMenu" class="submenu">
+            <button class="menu-btn sub-btn" onclick="location.href='raw_file.html'">📁 Upload RAW files</button>
         </div>
 
         <hr style="border: 0; border-top: 1px solid var(--border); margin: 20px 0;">
