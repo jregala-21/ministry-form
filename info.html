@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Ministry Directory Management</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-main: #0f172a;
+            --bg-card: #1e293b;
+            --bg-hover: #334155;
+            --border-color: #475569;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --accent-blue: #38bdf8;
+            --accent-green: #4ade80;
+            --accent-red: #f87171;
+            
+            --color-via: #4f46e5;
+            --color-jam: #10b981;
+            --color-man: #f59e0b;
+            --color-dance: #ec4899;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0; padding: 20px; background-color: var(--bg-main);
+            color: var(--text-primary); box-sizing: border-box; min-height: 100vh;
+        }
+
+        .gate-wrapper {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg-main); z-index: 9999; display: flex;
+            align-items: center; justify-content: center;
+        }
+        .gate-card {
+            background: var(--bg-card); padding: 35px; border-radius: 16px;
+            border: 1px solid var(--border-color); width: 90%; max-width: 380px;
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5);
+        }
+
+        .dashboard-container { max-width: 1200px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; display: none; }
+        
+        .header-panel {
+            background: var(--bg-card); padding: 20px; border-radius: 12px;
+            border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;
+        }
+        h2 { margin: 0; font-size: 22px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+
+        .btn {
+            padding: 10px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px;
+            display: inline-flex; align-items: center; gap: 8px; transition: all 0.2s ease; border: none;
+        }
+        .btn-primary { background: var(--accent-blue); color: var(--bg-main); }
+        .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+        .btn-secondary { background: var(--bg-hover); color: var(--text-primary); border: 1px solid var(--border-color); text-decoration: none; }
+        .btn-secondary:hover { background: #475569; }
+
+        .filter-bar { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 5px; }
+        .filter-tab {
+            padding: 8px 16px; border-radius: 20px; background: var(--bg-card); border: 1px solid var(--border-color);
+            color: var(--text-secondary); cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.2s;
+            white-space: nowrap;
+        }
+        .filter-tab.active, .filter-tab:hover { background: var(--bg-hover); color: var(--text-primary); border-color: var(--text-primary); }
+
+        .table-panel {
+            background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border-color); overflow: hidden;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3);
+        }
+        .responsive-table { width: 100%; border-collapse: collapse; text-align: left; font-size: 14px; }
+        .responsive-table th { background: rgba(15, 23, 42, 0.4); padding: 14px; color: var(--text-secondary); font-weight: 600; border-bottom: 2px solid var(--border-color); }
+        .responsive-table td { padding: 14px; border-bottom: 1px solid var(--border-color); vertical-align: middle; }
+        .responsive-table tr:hover { background: rgba(51, 65, 85, 0.2); }
+
+        .tag { padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; color: #fff; text-transform: uppercase; display: inline-block; }
+        .tag-via { background: var(--color-via); }
+        .tag-jam { background: var(--color-jam); }
+        .tag-man { background: var(--color-man); }
+        .tag-dance { background: var(--color-dance); }
+
+        .actions-cell { display: flex; gap: 8px; }
+        .action-icon-btn { background: transparent; border: none; color: var(--text-secondary); cursor: pointer; font-size: 15px; padding: 6px; border-radius: 4px; transition: all 0.2s; }
+        .action-icon-btn.edit:hover { color: var(--accent-blue); background: rgba(56, 189, 248, 0.1); }
+        .action-icon-btn.delete:hover { color: var(--accent-red); background: rgba(248, 113, 113, 0.1); }
+
+        .modal-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.8); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(4px);
+        }
+        .modal-card {
+            background: var(--bg-card); padding: 25px; border-radius: 16px; border: 1px solid var(--border-color);
+            width: 90%; max-width: 450px; position: relative; animation: popIn 0.2s ease;
+        }
+        @keyframes popIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        
+        .close-modal { position: absolute; top: 15px; right: 20px; font-size: 22px; cursor: pointer; color: var(--text-secondary); }
+        .close-modal:hover { color: var(--accent-red); }
+
+        .form-group { margin-bottom: 16px; display: flex; flex-direction: column; gap: 6px; }
+        .form-group label { font-size: 13px; color: var(--text-secondary); font-weight: 500; }
+        .form-control {
+            background: var(--bg-main); border: 1px solid var(--border-color); border-radius: 8px;
+            padding: 10px 12px; color: var(--text-primary); font-size: 14px; transition: border 0.2s; box-sizing: border-box; width: 100%;
+        }
+        .form-control:focus { outline: none; border-color: var(--accent-blue); }
+
+        .forgot-link {
+            display: block; text-align: center; font-size: 13px; color: var(--text-secondary);
+            margin-top: 15px; text-decoration: none; cursor: pointer; font-weight: 500; transition: color 0.2s;
+        }
+        .forgot-link:hover { color: var(--accent-blue); text-decoration: underline; }
+
+        #loadingOverlay { display: none; flex-direction: column; gap: 10px; justify-content: center; align-items: center; background: rgba(15, 23, 42, 0.9); }
+        .spinner { border: 4px solid rgba(255,255,255,0.1); width: 36px; height: 36px; border-radius: 50%; border-left-color: var(--accent-blue); animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        @media(max-width: 768px) {
+            .responsive-table th:nth-child(3), .responsive-table td:nth-child(3),
+            .responsive-table th:nth-child(4), .responsive-table td:nth-child(4) { display: none; }
+            .header-panel { flex-direction: column; gap: 12px; align-items: flex-start; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="securityGate" class="gate-wrapper">
+        <div class="gate-card">
+            <div style="text-align: center; margin-bottom: 20px;">
+                <i id="gateIcon" class="fa-solid fa-cloud-lock" style="font-size: 42px; color: var(--accent-blue); margin-bottom: 10px;"></i>
+                <h3 id="gateTitle" style="margin: 0; font-size: 18px;">Ministry Portal Sign-In</h3>
+                <p id="gateSubtitle" style="color: var(--text-secondary); font-size: 13px; margin: 5px 0 0 0;">Verifying connection database status...</p>
+            </div>
+            
+            <form onsubmit="handleAuthAction(event)">
+                <div class="form-group">
+                    <label for="gateUserField">Authorized Email Address</label>
+                    <input type="email" id="gateUserField" class="form-control" placeholder="name@gmail.com" required onblur="checkDatabaseAccessStatus()">
+                </div>
+                
+                <div class="form-group" style="margin-bottom: 20px;">
+                    <label id="passwordLabel" for="gateKeyField">Password</label>
+                    <input type="password" id="gateKeyField" class="form-control" placeholder="••••••••••••" required disabled>
+                </div>
+
+                <button type="submit" id="gateSubmitBtn" class="btn btn-primary" style="width: 100%; justify-content: center;" disabled>Awaiting Email</button>
+            </form>
+            <a id="forgotPasswordLink" class="forgot-link" style="display:none;" onclick="triggerForgotPassword()">Forgot Password?</a>
+            <div id="gateMessageText" style="font-size: 13px; margin-top: 15px; font-weight: 600; text-align: center; display: none;"></div>
+        </div>
+    </div>
+
+    <div id="appContainer" class="dashboard-container">
+        <div class="header-panel">
+            <h2><i class="fa-solid fa-users-gear" style="color:var(--accent-blue);"></i> JIL Taguig Ministry Register</h2>
+            <div style="display: flex; gap: 10px;">
+                <a href="index.html" class="btn btn-secondary"><i class="fa-solid fa-house"></i> Home</a>
+                <button class="btn btn-primary" onclick="openFormModal()"><i class="fa-solid fa-user-plus"></i> Add New Member</button>
+            </div>
+        </div>
+
+        <div class="filter-bar">
+            <div class="filter-tab active" onclick="filterCategory('ALL', this)">All Ministries</div>
+            <div class="filter-tab" onclick="filterCategory('VIA', this)">VIA</div>
+            <div class="filter-tab" onclick="filterCategory('JAM', this)">JAM</div>
+            <div class="filter-tab" onclick="filterCategory('DANCE', this)">DANCE</div>
+            <div class="filter-tab" onclick="filterCategory('MAN', this)">MAN</div>
+        </div>
+
+        <div class="table-panel">
+            <table class="responsive-table">
+                <thead>
+                    <tr>
+                        <th>Member Name</th>
+                        <th>Ministry</th>
+                        <th>Birthdate</th>
+                        <th>Contact #</th>
+                        <th>Email Add:</th>
+                        <th style="width: 80px; text-align: center;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="directoryTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="formModal" class="modal-overlay">
+        <div class="modal-card">
+            <span class="close-modal" onclick="closeFormModal()">&times;</span>
+            <h3 id="modalTitle" style="margin-top: 0; font-size: 18px; margin-bottom: 20px;">Profile Configuration</h3>
+            
+            <form id="memberForm" onsubmit="handleFormSubmission(event)">
+                <input type="hidden" id="memberRowIndex">
+                
+                <div class="form-group">
+                    <label for="memberName">Member Name (Last Name, First Name)</label>
+                    <input type="text" id="memberName" class="form-control" placeholder="e.g. Perez, Charlene Mae" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="memberMinistry">Ministry Deployment</label>
+                    <select id="memberMinistry" class="form-control" required>
+                        <option value="">-- Choose Gateway --</option>
+                        <option value="VIA">VIA</option>
+                        <option value="JAM">JAM</option>
+                        <option value="DANCE">DANCE</option>
+                        <option value="MAN">MAN</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="memberBirthdate">Birthdate</label>
+                    <input type="text" id="memberBirthdate" class="form-control" placeholder="e.g. December 1, 1993">
+                </div>
+
+                <div class="form-group">
+                    <label for="memberContact">Contact #</label>
+                    <input type="text" id="memberContact" class="form-control" placeholder="e.g. 9178658071">
+                </div>
+
+                <div class="form-group">
+                    <label for="memberEmail">Email Add:</label>
+                    <input type="email" id="memberEmail" class="form-control" placeholder="e.g. cm.perez1209@yahoo.com">
+                </div>
+
+                <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 25px;">
+                    <button type="button" class="btn btn-secondary" onclick="closeFormModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Member</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="loadingOverlay" class="modal-overlay">
+        <div class="spinner"></div>
+        <div style="font-size: 14px; font-weight: 500; color: var(--text-secondary);">Connecting Database Matrix...</div>
+    </div>
+
+<script>
+    // ⚠️ CRITICAL: PASTE YOUR GOOGLE APPS SCRIPT WEB APP URL HERE
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyljQxCrixLfsmGOdkyfuNWQukq0aMJ4vPiEYA-kxSQBu4-D-vlFCRntjDQqNvTAjj-/exec";
+
+    let localDirectoryCache = [];
+    let activeFilter = 'ALL';
+    let isRegisterMode = false;
+    let cachedServerHash = "";
+
+    async function sha256(string) {
+        const utf8 = new TextEncoder().encode(string);
+        const hashBuffer = await crypto.subtle.digest('SHA-256', utf8);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        return hashArray.map(bytes => bytes.toString(16).padStart(2, '0')).join('');
+    }
+
+    // Queries the cloud spreadsheet database live to discover registration rules for this email
+    function checkDatabaseAccessStatus() {
+        const emailInput = document.getElementById('gateUserField').value.trim().toLowerCase();
+        const msgText = document.getElementById('gateMessageText');
+        const forgotLink = document.getElementById('forgotPasswordLink');
+        
+        if (!emailInput) return;
+        
+        msgText.style.color = "var(--text-secondary)";
+        msgText.innerText = "Checking access authorization...";
+        msgText.style.display = 'block';
+        forgotLink.style.display = 'none';
+
+        fetch(`${WEB_APP_URL}?action=login&email=${encodeURIComponent(emailInput)}`)
+            .then(res => res.json())
+            .then(status => {
+                if (!status.authorized) {
+                    msgText.style.color = "var(--accent-red)";
+                    msgText.innerText = "Access denied: This email address is not inside the register.";
+                    toggleInputFields(false);
+                    return;
+                }
+                
+                toggleInputFields(true);
+                cachedServerHash = status.savedHash;
+
+                const gateIcon = document.getElementById('gateIcon');
+                const gateTitle = document.getElementById('gateTitle');
+                const gateSubtitle = document.getElementById('gateSubtitle');
+                const passwordLabel = document.getElementById('passwordLabel');
+                const gateSubmitBtn = document.getElementById('gateSubmitBtn');
+
+                if (!status.isRegistered) {
+                    // Scenario A: Email list matches but no password registered, or password reset requested
+                    gateIcon.className = "fa-solid fa-user-plus";
+                    gateIcon.style.color = "var(--accent-green)";
+                    gateTitle.innerText = status.needsReset ? "Reset Your Password" : "Register Database Key";
+                    gateSubtitle.innerText = "Create a secure system entry key passcode.";
+                    passwordLabel.innerText = "New Passcode Selection";
+                    gateSubmitBtn.innerText = "Save to Cloud Database";
+                    isRegisterMode = true;
+                } else {
+                    // Scenario B: Has a valid password already in Google Sheet
+                    gateIcon.className = "fa-solid fa-shield-halved";
+                    gateIcon.style.color = "var(--accent-blue)";
+                    gateTitle.innerText = "System Authorization";
+                    gateSubtitle.innerText = "Input your password credentials.";
+                    passwordLabel.innerText = "Password";
+                    gateSubmitBtn.innerText = "Sign In";
+                    isRegisterMode = false;
+                    forgotLink.style.display = 'block';
+                }
+                msgText.style.display = 'none';
+            })
+            .catch(err => {
+                msgText.style.color = "var(--accent-red)";
+                msgText.innerText = "Communication failure connecting to database gateway.";
+            });
+    }
+
+    function toggleInputFields(enable) {
+        document.getElementById('gateKeyField').disabled = !enable;
+        document.getElementById('gateSubmitBtn').disabled = !enable;
+        document.getElementById('gateSubmitBtn').innerText = enable ? "Proceed" : "Awaiting Email";
+    }
+
+    async function handleAuthAction(e) {
+        e.preventDefault();
+        const emailInput = document.getElementById('gateUserField').value.trim().toLowerCase();
+        const passwordInput = document.getElementById('gateKeyField').value;
+        const msgText = document.getElementById('gateMessageText');
+
+        if (isRegisterMode) {
+            if (passwordInput.length < 6) {
+                msgText.style.color = "var(--accent-red)";
+                msgText.innerText = "Password length must register at 6 characters minimum.";
+                msgText.style.display = 'block';
+                return;
+            }
+            
+            showLoader("Uploading registration key to Google Cloud...");
+            const hashedPwd = await sha256(passwordInput);
+            
+            fetch(WEB_APP_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'text/plain' },
+                body: JSON.stringify({ action: 'register', email: emailInput, passwordHash: hashedPwd })
+            }).then(() => {
+                hideLoader();
+                enterDashboard();
+            });
+        } else {
+            const inputHash = await sha256(passwordInput);
+            if (inputHash === cachedServerHash) {
+                enterDashboard();
+            } else {
+                msgText.style.color = "var(--accent-red)";
+                msgText.innerText = "Incorrect security passcode token. Verify inputs.";
+                msgText.style.display = 'block';
+                document.getElementById('gateKeyField').value = '';
+                document.getElementById('gateKeyField').focus();
+            }
+        }
+    }
+
+    function triggerForgotPassword() {
+        const emailInput = document.getElementById('gateUserField').value.trim().toLowerCase();
+        if (!confirm(`Send a password reset notification query for "${emailInput}"?`)) return;
+
+        showLoader("Flagging reset authorization inside Google Sheets...");
+        
+        fetch(WEB_APP_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'text/plain' },
+            body: JSON.stringify({ action: 'forgotPassword', email: emailInput })
+        }).then(() => {
+            hideLoader();
+            alert("Reset flag activated inside your Google Sheet registry! Please refresh the page entirely to pick your new passcode.");
+            location.reload();
+        });
+    }
+
+    function enterDashboard() {
+        document.getElementById('securityGate').style.display = 'none';
+        document.getElementById('appContainer').style.display = 'flex';
+        showLoader("Syncing Database Records...");
+        fetchDataset();
+    }
+
+    function showLoader(text = "Processing...") {
+        const overlay = document.getElementById('loadingOverlay');
+        overlay.querySelector('div:last-child').innerText = text;
+        overlay.style.display = 'flex';
+    }
+    function hideLoader() { document.getElementById('loadingOverlay').style.display = 'none'; }
+
+    function fetchDataset() {
+        fetch(WEB_APP_URL)
+            .then(res => {
+                if (!res.ok) throw new Error("Server communication pipeline dropped.");
+                return res.text();
+            })
+            .then(text => {
+                localDirectoryCache = JSON.parse(text);
+                renderTable();
+                hideLoader();
+            })
+            .catch(err => {
+                console.error("Pipeline failure trace:", err);
+                alert("Data matrix reading pipeline broke down. Verify deploy permissions setup.");
+                hideLoader();
+            });
+    }
+
+    function renderTable() {
+        const tbody = document.getElementById('directoryTableBody');
+        tbody.innerHTML = '';
+        
+        let recordsToDisplay = activeFilter === 'ALL' 
+            ? localDirectoryCache 
+            : localDirectoryCache.filter(item => item.ministry === activeFilter);
+
+        recordsToDisplay.sort((a, b) => {
+            const nameA = (a.name || '').toLowerCase().trim();
+            const nameB = (b.name || '').toLowerCase().trim();
+            return nameA.localeCompare(nameB);
+        });
+
+        if (recordsToDisplay.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 40px; color: var(--text-secondary); font-style: italic;">No profiles found inside this category.</td></tr>`;
+            return;
+        }
+
+        recordsToDisplay.forEach(item => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td style="font-weight: 600; color: #fff;">${item.name}</td>
+                <td><span class="tag tag-${item.ministry ? item.ministry.toLowerCase() : 'via'}">${item.ministry || 'VIA'}</span></td>
+                <td style="color: var(--text-secondary);">
+                    ${
+                        item.birthdate && item.birthdate.includes(' 00:00:00') 
+                        ? item.birthdate.split(' 00:00:00')[0] 
+                        : (item.birthdate || '—')
+                    }
+                </td>
+                <td style="color: var(--text-secondary); font-family: monospace;">${item.contact || '—'}</td>
+                <td style="color: var(--text-secondary);">${item.email || '—'}</td>
+                <td>
+                    <div class="actions-cell">
+                        <button class="action-icon-btn edit" onclick="editMember('${item.rowIndex}')"><i class="fa-solid fa-pen-to-square"></i></button>
+                        <button class="action-icon-btn delete" onclick="deleteMember('${item.rowIndex}', '${item.name}')"><i class="fa-solid fa-trash-can"></i></button>
+                    </div>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function filterCategory(category, element) {
+        activeFilter = category;
+        document.querySelectorAll('.filter-tab').forEach(tab => tab.classList.remove('active'));
+        element.classList.add('active');
+        renderTable();
+    }
+
+    function openFormModal(targetRowIndex = null) {
+        const modal = document.getElementById('formModal');
+        document.getElementById('memberForm').reset();
+        document.getElementById('memberRowIndex').value = '';
+        
+        if (targetRowIndex) {
+            document.getElementById('modalTitle').innerText = "Modify Member Profile";
+            const target = localDirectoryCache.find(x => x.rowIndex.toString() === targetRowIndex.toString());
+            if (target) {
+                document.getElementById('memberRowIndex').value = target.rowIndex;
+                document.getElementById('memberName').value = target.name;
+                document.getElementById('memberMinistry').value = target.ministry;
+                document.getElementById('memberBirthdate').value = target.birthdate;
+                document.getElementById('memberContact').value = target.contact;
+                document.getElementById('memberEmail').value = target.email;
+            }
+        } else {
+            document.getElementById('modalTitle').innerText = "Register New Member Profile";
+        }
+        modal.style.display = 'flex';
+    }
+
+    function closeFormModal() { document.getElementById('formModal').style.display = 'none'; }
+    function editMember(rowIndex) { openFormModal(rowIndex); }
+
+    function handleFormSubmission(e) {
+        e.preventDefault();
+        const payload = {
+            action: 'save',
+            member: {
+                rowIndex: document.getElementById('memberRowIndex').value,
+                name: document.getElementById('memberName').value,
+                ministry: document.getElementById('memberMinistry').value,
+                birthdate: document.getElementById('memberBirthdate').value,
+                contact: document.getElementById('memberContact').value,
+                email: document.getElementById('memberEmail').value
+            }
+        };
+
+        closeFormModal();
+        showLoader("Writing updates to cloud database registry entries...");
+
+        fetch(WEB_APP_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'text/plain' },
+            body: JSON.stringify(payload)
+        }).then(() => {
+            setTimeout(fetchDataset, 2500);
+        }).catch(err => {
+            alert("Network writing error transaction encountered.");
+            hideLoader();
+        });
+    }
+
+    function deleteMember(rowIndex, name) {
+        if (!confirm(`Completely wipe out directory files data for "${name}"?`)) return;
+        
+        showLoader("Running cross-system trace destruction engine...");
+        
+        fetch(WEB_APP_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'text/plain' },
+            body: JSON.stringify({ action: 'delete', rowIndex: rowIndex })
+        }).then(() => {
+            setTimeout(fetchDataset, 2500);
+        }).catch(err => {
+            alert("Network connection drop on request initialization.");
+            hideLoader();
+        });
+    }
+</script>
+</body>
+</html>
