@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Drive Workspace - Fast Stream Edition</title>
+    <style>
+        :root {
+            --bg-main: #0f172a;
+            --bg-card: #1e293b;
+            --bg-hover: #334155;
+            --border-color: #475569;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --accent-blue: #38bdf8;
+            --accent-green: #4ade80;
+            --accent-red: #f87171;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0; padding: 20px; background-color: var(--bg-main);
+            color: var(--text-primary); box-sizing: border-box; height: 100vh;
+            display: flex; flex-direction: column; gap: 20px; overflow: hidden;
+        }
+        
+        /* DRAG UI SPLIT CONTAINER */
+        .main-container { 
+            display: flex; 
+            gap: 0; 
+            flex-grow: 1; 
+            height: calc(100vh - 40px); 
+            position: relative;
+            width: 100%;
+        }
+
+        .panel {
+            background: var(--bg-card); padding: 20px; border-radius: 12px;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3); display: flex; flex-direction: column;
+            border: 1px solid var(--border-color);
+            box-sizing: border-box;
+            height: 100%;
+        }
+        
+        .explorer-panel { 
+            width: 45%; 
+            min-width: 280px; 
+            overflow-y: auto; 
+        }
+        
+        .preview-panel { 
+            width: 55%; 
+            min-width: 0;
+            transition: transform 0.2s ease, opacity 0.2s ease;
+        }
+        
+        /* DRAG DIVIDER SPLITTER BAR */
+        .ui-splitter {
+            width: 16px;
+            cursor: col-resize;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            z-index: 10;
+            flex-shrink: 0;
+            user-select: none;
+        }
+        .ui-splitter::before {
+            content: "";
+            width: 4px;
+            height: 60px;
+            background: var(--border-color);
+            border-radius: 2px;
+            transition: background 0.2s;
+        }
+        .ui-splitter:hover::before, .ui-splitter.dragging::before {
+            background: var(--accent-blue);
+            height: 100%;
+            width: 4px;
+        }
+        
+        /* COLLAPSE/HIDE TOGGLE BUTTON ON THE SPLITTER */
+        .splitter-toggle-btn {
+            position: absolute;
+            background: var(--bg-hover);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 11px;
+            z-index: 12;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.4);
+            transition: all 0.2s;
+        }
+        .splitter-toggle-btn:hover {
+            background: var(--accent-blue);
+            color: var(--bg-main);
+            border-color: var(--accent-blue);
+        }
+
+        /* HIDE STATE STYLES */
+        .main-container.preview-hidden .preview-panel {
+            display: none !important;
+        }
+        .main-container.preview-hidden .explorer-panel {
+            width: 100% !important;
+        }
+        .main-container.preview-hidden .ui-splitter::before {
+            display: none;
+        }
+        .main-container.preview-hidden .ui-splitter {
+            cursor: default;
+            width: 24px;
+            margin-left: -12px;
+        }
+        
+        .header-container {
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 2px solid var(--border-color); padding-bottom: 12px; margin-bottom: 15px;
+        }
+        h2 { margin: 0; font-size: 20px; color: var(--text-primary); font-weight: 600; }
+
+        .action-controls { display: flex; gap: 10px; align-items: center; }
+        .toggle-btn, .home-nav-btn, .refresh-nav-btn, .bulk-delete-btn {
+            background: var(--bg-hover); color: var(--text-primary); border: 1px solid var(--border-color); 
+            padding: 8px 14px; border-radius: 20px; cursor: pointer; font-size: 14px; font-weight: 600;
+            display: flex; align-items: center; gap: 6px; transition: all 0.2s ease;
+        }
+        .toggle-btn:hover { background: var(--accent-blue); border-color: var(--accent-blue); color: var(--bg-main); }
+        .home-nav-btn:hover { background: var(--text-primary); color: var(--bg-main); }
+        .refresh-nav-btn:hover { background: var(--accent-green); border-color: var(--accent-green); color: var(--bg-main); }
+        
+        .bulk-delete-btn { 
+            background: rgba(248, 113, 113, 0.2); 
+            border-color: var(--accent-red); 
+            color: var(--accent-red);
+            display: none;
+        }
+        .bulk-delete-btn:hover { background: var(--accent-red); color: var(--bg-main); }
+
+        /* LIST CONTROL BOX FOR SELECT ALL */
+        .list-utility-bar {
+            display: flex; align-items: center; padding: 6px 14px; margin-bottom: 6px;
+            background: rgba(15, 23, 42, 0.4); border-radius: 6px; border: 1px solid var(--border-color);
+            font-size: 13px; color: var(--text-secondary); gap: 12px;
+        }
+
+        .item-list { list-style: none; padding: 0; margin: 0; }
+        .item {
+            display: flex; align-items: center; padding: 12px 14px;
+            border-bottom: 1px solid var(--border-color); transition: background 0.2s;
+            cursor: pointer; border-radius: 6px; margin-bottom: 4px; gap: 12px;
+        }
+        .item:hover { background-color: var(--bg-hover); }
+        
+        .item-checkbox {
+            width: 16px; height: 16px; cursor: pointer; accent-color: var(--accent-blue); flex-shrink: 0;
+        }
+
+        .item-clickable { flex-grow: 1; display: flex; align-items: center; overflow: hidden; gap: 2px; }
+        .item-name { font-weight: 500; color: var(--text-primary); font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .preview-action { color: var(--accent-blue); font-weight: bold; font-size: 13px; white-space: nowrap; margin-right: 5px; }
+        
+        .delete-btn {
+            background: transparent; color: var(--text-secondary); border: none;
+            padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 14px;
+            transition: all 0.2s ease; display: flex; align-items: center; justify-content: center;
+        }
+        .delete-btn:hover { background: rgba(248, 113, 113, 0.2); color: var(--accent-red); }
+        
+        .icon { margin-right: 4px; font-size: 18px; display: inline-block; width: 24px; text-align: center; flex-shrink: 0; }
+        .folder-icon { color: #f59e0b; }
+        .file-icon { color: #3b82f6; }
+        .back-icon { color: var(--text-secondary); }
+        .empty-msg { color: var(--text-secondary); font-style: italic; text-align: center; padding: 30px; }
+        #explorerStatus { font-weight: bold; color: var(--accent-blue); margin-bottom: 12px; font-size: 14px; }
+
+        .preview-container { flex-grow: 1; border: 2px dashed var(--border-color); border-radius: 8px; background: var(--bg-main); display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; }
+        .preview-container iframe { width: 100%; height: 100%; border: none; background: white; }
+        .preview-container img { max-width: 100%; max-height: 100%; object-fit: contain; }
+        .preview-placeholder { color: var(--text-secondary); font-style: italic; font-size: 14px; text-align: center; padding: 20px; }
+
+        .modal-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.8); z-index: 1000; align-items: center; justify-content: center;
+            backdrop-filter: blur(4px);
+        }
+        .upload-card {
+            background: var(--bg-card); padding: 25px; border-radius: 16px;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); width: 90%; max-width: 400px;
+            position: relative; border: 1px solid var(--border-color); animation: popIn 0.2s ease;
+        }
+        @keyframes popIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        
+        .close-modal { position: absolute; top: 15px; right: 20px; font-size: 24px; cursor: pointer; color: var(--text-secondary); }
+        .close-modal:hover { color: var(--accent-red); }
+
+        .upload-type-selector { display: flex; gap: 10px; margin: 15px 0; }
+        .type-btn {
+            flex: 1; padding: 10px; background-color: var(--bg-main); color: var(--text-secondary);
+            border: 1px solid var(--border-color); border-radius: 8px; cursor: pointer;
+            font-weight: 600; text-align: center; font-size: 13px; transition: all 0.2s;
+        }
+        .type-btn.active { background-color: var(--bg-hover); color: var(--accent-blue); border-color: var(--accent-blue); }
+        
+        input[type="file"] { display: block; margin: 20px 0; width: 100%; color: var(--text-secondary); font-size: 14px; }
+        
+        .execution-block { display: flex; gap: 10px; }
+        .submit-btn { flex: 2; padding: 12px; background-color: var(--accent-blue); color: var(--bg-main); border: none; border-radius: 8px; cursor: pointer; font-size: 15px; font-weight: bold; transition: opacity 0.2s; }
+        .submit-btn:disabled { background-color: var(--border-color); color: var(--text-secondary); cursor: not-allowed; opacity: 0.6; }
+        
+        .cancel-btn { flex: 1; padding: 12px; background-color: transparent; color: var(--accent-red); border: 1px solid var(--accent-red); border-radius: 8px; cursor: pointer; font-size: 15px; font-weight: bold; display: none; transition: all 0.2s; }
+        .cancel-btn:hover { background-color: rgba(248, 113, 113, 0.1); }
+
+        #status { margin-top: 15px; font-weight: 500; font-size: 13px; text-align: center; color: var(--text-primary); line-height: 1.4; }
+        .progress-wrapper { width: 100%; background: var(--bg-main); border-radius: 10px; height: 18px; margin-top: 12px; overflow: hidden; border: 1px solid var(--border-color); display: none; position: relative; }
+        .progress-bar { height: 100%; width: 0%; background: linear-gradient(90deg, #0284c7, var(--accent-blue)); transition: width 0.1s linear; }
+        .progress-text { position: absolute; width: 100%; text-align: center; font-size: 11px; font-weight: bold; color: var(--text-primary); top: 0; left: 0; line-height: 18px; text-shadow: 0 1px 2px rgba(0,0,0,0.8); }
+
+        @media (max-width: 768px) {
+            body { padding: 10px; height: auto; overflow-y: auto; }
+            .main-container { flex-direction: column; height: auto; }
+            .explorer-panel { height: 400px; width: 100% !important; }
+            .preview-panel { height: 500px; width: 100% !important; }
+            .ui-splitter { display: none; }
+            .header-container { flex-direction: column; gap: 10px; align-items: flex-start; }
+            .action-controls { width: 100%; justify-content: space-between; gap: 5px; flex-wrap: wrap; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="workspaceContainer" class="main-container preview-hidden">
+        
+        <div id="explorerPanel" class="panel explorer-panel">
+            <div class="header-container">
+                <h2>Workspace Storage</h2>
+                <div class="action-controls">
+                    <button id="bulkDeleteBtn" class="bulk-delete-btn" onclick="executeBulkDeletion()">🗑️ Delete Selected</button>
+                    <button class="home-nav-btn" onclick="goToHome()">🏠 Home</button>
+                    <button class="refresh-nav-btn" onclick="refreshFolderContents()">🔄 Refresh</button>
+                    <button class="toggle-btn" onclick="openUploadModal()"><span id="eyeIcon">👁️</span> Upload Console</button>
+                </div>
+            </div>
+            
+            <div id="explorerStatus">Connecting to node array...</div>
+            
+            <div id="utilityBar" class="list-utility-bar" style="display:none;">
+                <input type="checkbox" id="selectAllBox" onchange="toggleSelectAllItems(this)">
+                <label for="selectAllBox" style="cursor:pointer; font-weight:600; user-select:none;">Select All Items</label>
+            </div>
+            
+            <ul id="contentList" class="item-list"></ul>
+        </div>
+
+        <div id="uiSplitter" class="ui-splitter">
+            <div id="splitterToggle" class="splitter-toggle-btn" onclick="togglePreviewPanel(event)">▶</div>
+        </div>
+
+        <div id="previewPanel" class="panel preview-panel">
+            <div class="header-container">
+                <h2 id="previewHeader">Inline Monitor Viewer</h2>
+                <button class="delete-btn" onclick="closePreviewPanelDirectly()" style="font-size: 16px; font-weight: bold; padding: 4px 8px;">✕ Hide</button>
+            </div>
+            <div id="previewContainer" class="preview-container">
+                <div class="preview-placeholder">Select any file target to stream its contents inline securely.</div>
+            </div>
+        </div>
+
+    </div>
+
+    <div id="uploadModal" class="modal-overlay" onclick="closeModalOnOverlay(event)">
+        <div class="upload-card">
+            <span class="close-modal" onclick="closeUploadModal()">&times;</span>
+            <h3 style="margin-top: 0; color: var(--text-primary); font-size: 18px;">Chunked Resumable Upload Engine</h3>
+            <p style="font-size: 13px; color: var(--text-secondary); margin-top: -5px;">Uploads files of any size seamlessly:</p>
+            
+            <div class="upload-type-selector">
+                <div id="fileModeBtn" class="type-btn active" onclick="setUploadMode('file')">Single File</div>
+                <div id="folderModeBtn" class="type-btn" onclick="setUploadMode('folder')">Entire Folder</div>
+            </div>
+
+            <div id="inputContainer">
+                <input type="file" id="fileInput">
+            </div>
+
+            <div class="execution-block">
+                <button id="uploadBtn" class="submit-btn" onclick="processUploads()">Execute Upload Stream</button>
+                <button id="cancelBtn" class="cancel-btn" onclick="cancelUploads()">Cancel</button>
+            </div>
+            
+            <div id="status"></div>
+            <div id="progressContainer" class="progress-wrapper">
+                <div id="progressBar" class="progress-bar"></div>
+                <div id="progressText" class="progress-text">0%</div>
+            </div>
+        </div>
+    </div>
+
+<script>
+    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzPC1C62hZ-KMyjFGKl4cx2tKQVWWO1hy0Zid75fNcYPi5ZuzTfNKfsiPMh14KSf3zXew/exec";
+    
+    let currentFolderId = ""; 
+    let folderHistory = []; 
+    
+    let uploadAbortionEngine = null;
+    let isUploadCancelled = false;
+
+    let isDragging = false;
+    let isPanelCollapsed = true;
+    let lastSavedWidthPercent = 55; 
+
+    window.onload = function() { 
+        loadFolderContents(); 
+        initializeSplitterDragEngine();
+    };
+
+    /* RE-INJECTED LIVE DRAG SPLITTER INITIALIZATION GRAPH ENGINE */
+    function initializeSplitterDragEngine() {
+        const container = document.getElementById('workspaceContainer');
+        const splitter = document.getElementById('uiSplitter');
+        const explorer = document.getElementById('explorerPanel');
+        const preview = document.getElementById('previewPanel');
+
+        splitter.addEventListener('mousedown', function(e) {
+            if (isPanelCollapsed || e.target.id === 'splitterToggle') return;
+            isDragging = true;
+            splitter.classList.add('dragging');
+            document.body.style.cursor = 'col-resize';
+            if(preview.querySelector('iframe')) preview.querySelector('iframe').style.pointerEvents = 'none';
+        });
+
+        document.addEventListener('mousemove', function(e) {
+            if (!isDragging) return;
+            
+            const containerWidth = container.offsetWidth;
+            let currentMouseX = e.clientX - container.getBoundingClientRect().left;
+            
+            if (currentMouseX < 280) currentMouseX = 280;
+            if (currentMouseX > containerWidth - 280) currentMouseX = containerWidth - 280;
+            
+            const explorerPercent = (currentMouseX / containerWidth) * 100;
+            const previewPercent = 100 - explorerPercent;
+            
+            explorer.style.width = `${explorerPercent}%`;
+            preview.style.width = `${previewPercent}%`;
+            lastSavedWidthPercent = previewPercent;
+        });
+
+        document.addEventListener('mouseup', function() {
+            if (!isDragging) return;
+            isDragging = false;
+            splitter.classList.remove('dragging');
+            document.body.style.cursor = 'default';
+            if(preview.querySelector('iframe')) preview.querySelector('iframe').style.pointerEvents = 'auto';
+        });
+    }
+
+    function togglePreviewPanel(e) {
+        if(e) e.stopPropagation();
+        const container = document.getElementById('workspaceContainer');
+        const toggleBtn = document.getElementById('splitterToggle');
+        const explorer = document.getElementById('explorerPanel');
+        const preview = document.getElementById('previewPanel');
+
+        if (isPanelCollapsed) {
+            container.classList.remove('preview-hidden');
+            preview.style.width = `${lastSavedWidthPercent}%`;
+            explorer.style.width = `${100 - lastSavedWidthPercent}%`;
+            toggleBtn.innerText = "▶";
+            isPanelCollapsed = false;
+        } else {
+            container.classList.add('preview-hidden');
+            explorer.style.width = "100%";
+            toggleBtn.innerText = "◀";
+            isPanelCollapsed = true;
+            document.getElementById('previewContainer').innerHTML = '<div class="preview-placeholder">Select any file target to stream its contents inline securely.</div>';
+            document.getElementById('previewHeader').innerText = "Inline Monitor Viewer";
+        }
+    }
+
+    function closePreviewPanelDirectly() {
+        if(!isPanelCollapsed) togglePreviewPanel();
+    }
+
+    function openUploadModal() {
+        document.getElementById('uploadModal').style.display = 'flex';
+        document.getElementById('eyeIcon').innerText = "👁️‍Q";
+        resetProgressBar();
+    }
+
+    function closeUploadModal() {
+        if(uploadAbortionEngine) { if(!confirm("Upload stream running. Close console and cancel operations?")) return; cancelUploads(); }
+        document.getElementById('uploadModal').style.display = 'none';
+        document.getElementById('eyeIcon').innerText = "👁️";
+    }
+
+    function closeModalOnOverlay(e) { if (e.target.id === 'uploadModal') closeUploadModal(); }
+
+    function resetProgressBar() {
+        document.getElementById('progressContainer').style.display = 'none';
+        document.getElementById('progressBar').style.width = '0%';
+        document.getElementById('progressText').innerText = '0%';
+        document.getElementById('status').innerHTML = '';
+        document.getElementById('cancelBtn').style.display = 'none';
+        document.getElementById('uploadBtn').disabled = false;
+    }
+
+    function setUploadMode(mode) {
+        const container = document.getElementById('inputContainer');
+        const fileBtn = document.getElementById('fileModeBtn');
+        const folderBtn = document.getElementById('folderModeBtn');
+        resetProgressBar();
+        if (mode === 'file') {
+            fileBtn.classList.add('active'); folderBtn.classList.remove('active');
+            container.innerHTML = '<input type="file" id="fileInput">';
+        } else {
+            folderBtn.classList.add('active'); fileBtn.classList.remove('active');
+            container.innerHTML = '<input type="file" id="fileInput" webkitdirectory directory multiple>';
+        }
+    }
+
+    function goToHome() { 
+        window.location.href = "index.html"; 
+    }
+
+    function refreshFolderContents() {
+        loadFolderContents(currentFolderId);
+    }
+
+    function loadFolderContents(targetId = "") {
+        const explorerStatus = document.getElementById('explorerStatus');
+        const contentList = document.getElementById('contentList');
+        const utilityBar = document.getElementById('utilityBar');
+        const selectAllBox = document.getElementById('selectAllBox');
+        
+        contentList.innerHTML = ""; 
+        explorerStatus.style.display = "block";
+        explorerStatus.innerText = "Syncing directory registry arrays...";
+        utilityBar.style.display = "none";
+        selectAllBox.checked = false;
+        evaluateBulkDeleteButtonVisibility();
+
+        const url = targetId ? `${WEB_APP_URL}?folderId=${targetId}` : WEB_APP_URL;
+
+        fetch(url)
+            .then(response => response.json())
+            .then(res => {
+                explorerStatus.style.display = "none";
+                if (res.status === 'success') {
+                    currentFolderId = res.data.currentFolderId;
+                    const { folders, files, isRoot } = res.data;
+
+                    if (!isRoot) {
+                        const backItem = document.createElement('li');
+                        backItem.className = 'item';
+                        backItem.innerHTML = `<div class="item-clickable"><span class="icon back-icon">⬅️</span><span class="item-name" style="color:var(--text-secondary); font-weight:bold;">.. (Parent Folder Backtrack)</span></div>`;
+                        backItem.onclick = goBack;
+                        contentList.appendChild(backItem);
+                    }
+
+                    if (folders.length === 0 && files.length === 0) {
+                        contentList.innerHTML += `<li class="empty-msg">No active configurations in view.</li>`; return;
+                    }
+
+                    if(folders.length > 0 || files.length > 0) {
+                        utilityBar.style.display = "flex";
+                    }
+
+                    folders.forEach(folder => {
+                        const li = document.createElement('li'); li.className = 'item';
+                        li.innerHTML = `
+                            <input type="checkbox" class="item-checkbox" data-id="${folder.id}" data-type="folder" onclick="event.stopPropagation(); evaluateBulkDeleteButtonVisibility();">
+                            <div class="item-clickable"><span class="icon folder-icon">📁</span><span class="item-name">${folder.name}</span><span style="color:var(--text-secondary); font-size:12px; white-space:nowrap; margin-right:5px;">Open ➔</span></div>
+                            <button class="delete-btn">🗑️</button>
+                        `;
+                        li.querySelector('.item-clickable').onclick = function() { folderHistory.push(currentFolderId); loadFolderContents(folder.id); };
+                        li.querySelector('.delete-btn').onclick = function(e) { e.stopPropagation(); deleteItem(folder.id, 'folder', folder.name); };
+                        contentList.appendChild(li);
+                    });
+
+                    files.forEach(file => {
+                        const li = document.createElement('li'); li.className = 'item';
+                        li.innerHTML = `
+                            <input type="checkbox" class="item-checkbox" data-id="${file.id}" data-type="file" onclick="event.stopPropagation(); evaluateBulkDeleteButtonVisibility();">
+                            <div class="item-clickable"><span class="icon file-icon">📄</span><span class="item-name">${file.name}</span><span class="preview-action">View Inline</span></div>
+                            <button class="delete-btn">🗑️</button>
+                        `;
+                        li.querySelector('.item-clickable').onclick = function() { showInlinePreview(file); };
+                        li.querySelector('.delete-btn').onclick = function(e) { e.stopPropagation(); deleteItem(file.id, 'file', file.name); };
+                        contentList.appendChild(li);
+                    });
+                } else { explorerStatus.innerText = "Parsing pipeline failure: " + res.message; }
+            }).catch(err => { explorerStatus.innerText = "Connection failure."; });
+    }
+
+    function toggleSelectAllItems(masterCheckbox) {
+        const checkboxes = document.querySelectorAll('.item-list .item-checkbox');
+        checkboxes.forEach(cb => cb.checked = masterCheckbox.checked);
+        evaluateBulkDeleteButtonVisibility();
+    }
+
+    function evaluateBulkDeleteButtonVisibility() {
+        const selectedCheckboxes = document.querySelectorAll('.item-list .item-checkbox:checked');
+        const bulkBtn = document.getElementById('bulkDeleteBtn');
+        if (selectedCheckboxes.length > 0) {
+            bulkBtn.style.display = 'flex';
+            bulkBtn.innerText = `🗑️ Delete Selected (${selectedCheckboxes.length})`;
+        } else {
+            bulkBtn.style.display = 'none';
+        }
+    }
+
+    function executeBulkDeletion() {
+        const selectedCheckboxes = document.querySelectorAll('.item-list .item-checkbox:checked');
+        if (selectedCheckboxes.length === 0) return;
+
+        if (!confirm(`Permanently destroy the ${selectedCheckboxes.length} selected item(s)?`)) return;
+
+        const itemsToDelete = [];
+        selectedCheckboxes.forEach(cb => {
+            itemsToDelete.push({
+                id: cb.getAttribute('data-id'),
+                type: cb.getAttribute('data-type')
+            });
+        });
+
+        const explorerStatus = document.getElementById('explorerStatus');
+        explorerStatus.style.display = "block"; 
+        explorerStatus.innerText = `Purging multi-array deployment targets...`;
+
+        fetch(WEB_APP_URL, {
+            method: 'POST',
+            body: JSON.stringify({ action: 'delete', items: itemsToDelete }),
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+        }).then(response => response.json()).then(res => {
+            if (res.status === 'success') { 
+                loadFolderContents(currentFolderId); 
+            } else { 
+                alert("Operation failed: " + res.message); 
+                explorerStatus.style.display = "none"; 
+            }
+        }).catch(err => { 
+            alert("Trace connection failure."); 
+            explorerStatus.style.display = "none"; 
+        });
+    }
+
+    function deleteItem(itemId, itemType, itemName) {
+        if (!confirm(`Permanently delete ${itemType}: "${itemName}"?`)) return;
+        const explorerStatus = document.getElementById('explorerStatus');
+        explorerStatus.style.display = "block"; explorerStatus.innerText = `Destroying ${itemName}...`;
+
+        fetch(WEB_APP_URL, {
+            method: 'POST',
+            body: JSON.stringify({ action: 'delete', id: itemId, type: itemType }),
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+        }).then(response => response.json()).then(res => {
+            if (res.status === 'success') { loadFolderContents(currentFolderId); } 
+            else { alert("Dropped: " + res.message); explorerStatus.style.display = "none"; }
+        }).catch(err => { alert("Trace broken."); explorerStatus.style.display = "none"; });
+    }
+
+    function showInlinePreview(file) {
+        if (isPanelCollapsed) {
+            togglePreviewPanel();
+        }
+
+        const container = document.getElementById('previewContainer');
+        const header = document.getElementById('previewHeader');
+        header.innerText = `Streaming Target: ${file.name}`;
+        
+        let fileId = file.id;
+        let cleanUrl = file.url || "";
+        
+        const isImage = file.name.match(/\.(jpeg|jpg|gif|png|webp|bmp)$/i);
+        
+        if (isImage) {
+            container.innerHTML = `<img src="https://drive.google.com/uc?export=view&id=${fileId}" alt="Loading Image Stream...">`;
+        } else {
+            if (cleanUrl.includes('/view')) {
+                cleanUrl = cleanUrl.replace('/view', '/preview');
+            } else if (cleanUrl.includes('id=')) {
+                const urlParams = new URLSearchParams(cleanUrl.split('?')[1]);
+                fileId = urlParams.get('id') || fileId;
+                cleanUrl = `https://drive.google.com/file/d/${fileId}/preview`;
+            }
+            container.innerHTML = `<iframe src="${cleanUrl}" allow="autoplay"></iframe>`;
+        }
+    }
+
+    function goBack() { if (folderHistory.length > 0) loadFolderContents(folderHistory.pop()); }
+
+    function cancelUploads() {
+        isUploadCancelled = true;
+        if(uploadAbortionEngine) uploadAbortionEngine.abort();
+        document.getElementById('status').innerHTML = "<span style='color:var(--accent-red); font-weight:bold;'>❌ Stream Aborted by User.</span>";
+        document.getElementById('uploadBtn').disabled = false;
+        document.getElementById('cancelBtn').style.display = 'none';
+        uploadAbortionEngine = null;
+        loadFolderContents(currentFolderId);
+    }
+
+    async function processUploads() {
+        const fileInput = document.getElementById('fileInput');
+        const statusDiv = document.getElementById('status');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const cancelBtn = document.getElementById('cancelBtn');
+        const progressContainer = document.getElementById('progressContainer');
+        const progressBar = document.getElementById('progressBar');
+        const progressText = document.getElementById('progressText');
+
+        if (!fileInput || fileInput.files.length === 0) {
+            statusDiv.innerHTML = "<span style='color:var(--accent-red);'>Choose files first.</span>"; return;
+        }
+
+        const files = Array.from(fileInput.files);
+        uploadBtn.disabled = true;
+        cancelBtn.style.display = 'block';
+        progressContainer.style.display = 'block';
+        
+        isUploadCancelled = false;
+        uploadAbortionEngine = new AbortController();
+
+        let uploadDestinationFolderId = currentFolderId;
+        
+        if (files[0] && files[0].webkitRelativePath) {
+            const pathParts = files[0].webkitRelativePath.split('/');
+            if (pathParts.length > 1) {
+                const parentFolderName = pathParts[0];
+                statusDiv.innerHTML = `Building destination directory structure:<br><span style='color:var(--accent-blue); font-weight:bold;'>📁 ${parentFolderName}</span>`;
+                
+                try {
+                    const makeFolderRes = await fetch(WEB_APP_URL, {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            action: 'createFolder',
+                            folderName: parentFolderName,
+                            parentFolderId: currentFolderId
+                        }),
+                        headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+                    });
+                    
+                    const folderCreationResult = await makeFolderRes.json();
+                    if (folderCreationResult.status === 'success' && folderCreationResult.folderId) {
+                        uploadDestinationFolderId = folderCreationResult.folderId;
+                    } else {
+                        throw new Error(folderCreationResult.message || "Failed directory map resolution step.");
+                    }
+                } catch (folderError) {
+                    statusDiv.innerHTML = `<span style='color:var(--accent-red);'>Failed to initialize parent directory wrapper:<br>${folderError.message}</span>`;
+                    uploadBtn.disabled = false; cancelBtn.style.display = 'none';
+                    return;
+                }
+            }
+        }
+
+        for (let i = 0; i < files.length; i++) {
+            if (isUploadCancelled) return;
+            const file = files[i];
+            
+            let detectedMime = file.type;
+            if (!detectedMime && file.name.endsWith('.mp4')) {
+                detectedMime = 'video/mp4';
+            } else if (!detectedMime) {
+                detectedMime = 'application/octet-stream';
+            }
+
+            statusDiv.innerHTML = `Requesting Cloud Upload Token (${i + 1}/${files.length}):<br><span style='color:var(--text-secondary); font-size:11px;'>${file.name}</span>`;
+
+            let uploadUrl;
+            try {
+                const sessionRes = await fetch(WEB_APP_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        action: 'getUploadUrl',
+                        fileName: file.name,
+                        mimeType: detectedMime,
+                        folderId: uploadDestinationFolderId
+                    }),
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' }
+                });
+                
+                const sessionData = await sessionRes.json();
+                if (sessionData.status !== 'success' || !sessionData.uploadUrl) {
+                    throw new Error(sessionData.message || "Failed to retrieve session URL.");
+                }
+                uploadUrl = sessionData.uploadUrl;
+            } catch (err) {
+                statusDiv.innerHTML = `<span style='color:var(--accent-red); font-size:12px;'>Session Token Failure: ${err.message}</span>`;
+                uploadBtn.disabled = false; cancelBtn.style.display = 'none'; 
+                return;
+            }
+
+            const CHUNK_SIZE = 5 * 1024 * 1024; 
+            let start = 0;
+
+            while (start < file.size && !isUploadCancelled) {
+                const end = Math.min(start + CHUNK_SIZE, file.size);
+                const chunkSlice = file.slice(start, end);
+
+                statusDiv.innerHTML = `Streaming blocks (${i + 1}/${files.length}):<br><span style='color:var(--text-secondary); font-size:11px;'>${Math.round((start/file.size)*100)}% of ${file.name}</span>`;
+
+                try {
+                    const chunkResponse = await fetch(uploadUrl, {
+                        method: "PUT",
+                        headers: {
+                            "Content-Range": `bytes ${start}-${end - 1}/${file.size}`
+                        },
+                        body: chunkSlice
+                    });
+
+                    if (chunkResponse.status !== 308 && chunkResponse.status !== 200 && chunkResponse.status !== 201) {
+                        throw new Error(`Google responded with HTTP status code ${chunkResponse.status}`);
+                    }
+
+                    start = end;
+
+                    const currentFileProgress = start / file.size;
+                    const overallPercent = Math.round(((i + currentFileProgress) / files.length) * 100);
+                    progressBar.style.width = `${overallPercent}%`;
+                    progressText.innerText = `${overallPercent}%`;
+
+                } catch (err) {
+                    if (isUploadCancelled) return;
+                    
+                    if (end === file.size && (err.name === 'TypeError' || err.message.includes('fetch'))) {
+                        start = end;
+                        const overallPercent = Math.round(((i + 1) / files.length) * 100);
+                        progressBar.style.width = `${overallPercent}%`;
+                        progressText.innerText = `${overallPercent}%`;
+                        continue;
+                    }
+                    
+                    statusDiv.innerHTML = `<span style='color:var(--accent-red);'>Upload stream interrupted at block interval.<br><span style='font-size:11px; color:var(--text-secondary);'>Reason: ${err.message}</span></span>`;
+                    uploadBtn.disabled = false; cancelBtn.style.display = 'none'; 
+                    return;
+                }
+            }
+        }
+
+        if (!isUploadCancelled) {
+            progressBar.style.width = '100%'; progressText.innerText = '100%';
+            statusDiv.innerHTML = "<span style='color:var(--accent-green); font-weight:bold;'>🎉 Folder Structure Sync Complete!</span>";
+            fileInput.value = ""; uploadBtn.disabled = false; cancelBtn.style.display = 'none';
+            uploadAbortionEngine = null;
+            setTimeout(() => { closeUploadModal(); resetProgressBar(); }, 1500);
+            loadFolderContents(currentFolderId);
+        }
+    }
+</script>
+
+</body>
+</html>
