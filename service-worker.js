@@ -1,7 +1,9 @@
 const CACHE_NAME = 'jil-portal-cache-v1';
 const ASSETS = [
   'index.html',
-  'manifest.json'
+  'manifest.json',
+  'logo.jpg',
+  'logo.jpg'
 ];
 
 // Install the service worker and cache basic files
