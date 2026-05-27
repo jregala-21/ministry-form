@@ -5,6 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>JIL Taguig Portal</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="#0f172a">
+    <meta name="apple-mobile-web-app-title" content="JIL Portal">
+    <link rel="apple-touch-icon" href="icon-192.png">
     <style>
         :root {
             --bg: #0f172a;
@@ -528,6 +533,15 @@
             menu.classList.add("active");
             arrow.classList.add("rotate");
         }
+    }
+
+    // Register the Service Worker for PWA installation
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('service-worker.js')
+                .then(reg => console.log('Service Worker registered successfully.'))
+                .catch(err => console.log('Service Worker registration failed:', err));
+        });
     }
 </script>
 </body>
