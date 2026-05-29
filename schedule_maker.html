@@ -34,61 +34,82 @@
     button { padding: 12px 24px; border-radius: 8px; border: none; font-weight: 800; cursor: pointer; transition: 0.3s; }
     .clear-btn { background: #fee; color: #d33; }
     .dl-btn { background: var(--accent); color: white; }
+    
+    /* PREVIEW LABEL */
+    .preview-header-label { font-weight: 900; font-size: 16px; color: #555; text-transform: uppercase; letter-spacing: 2px; margin-top: 10px; }
 
-    /* CAPTURE AREA */
+    /* CAPTURE AREA - STRICT RESOLUTION LOCK */
     #capture-wrapper { width: 100%; display: flex; justify-content: center; overflow-x: auto; padding-bottom: 50px; }
     #capture-area { 
-        width: 1700px; height: 1080px; min-width: 1700px; min-height: 1080px;
-        padding: 40px 60px; box-sizing: border-box; position: relative; display: flex; flex-direction: column; overflow: hidden;
-        transform: scale(0.45); transform-origin: top center; margin-bottom: -550px; 
+        width: 1700px; height: 1080px; min-width: 1700px; min-height: 1080px; max-height: 1080px;
+        padding: 30px 50px; box-sizing: border-box; position: relative; display: flex; flex-direction: column; overflow: hidden;
+        transform: scale(0.45); transform-origin: top center; margin-bottom: -550px; border: 4px solid #ccc;
     }
     
     .theme-sunday { background-color: var(--sun-bg) !important; color: var(--sun-dark); }
     .theme-midweek { background-color: var(--mid-bg) !important; color: var(--mid-dark); }
 
-    /* Updated to League Spartan Font Style */
-    .header h1 { font-size: 65px; margin: 0; font-family: 'League Spartan', sans-serif; font-weight: 900; text-align: center; text-transform: uppercase; line-height: 1.1; }
-    .header h2 { font-size: 28px; margin: 0 0 10px 0; font-family: 'League Spartan', sans-serif; font-weight: 700; text-align: center; letter-spacing: 5px; text-transform: uppercase; }
+    .header h1 { font-size: 68px; margin: 0; font-family: 'League Spartan', sans-serif; font-weight: 900; text-align: center; text-transform: uppercase; line-height: 1.1; }
+    .header h2 { font-size: 30px; margin: 0 0 5px 0; font-family: 'League Spartan', sans-serif; font-weight: 700; text-align: center; letter-spacing: 5px; text-transform: uppercase; }
 
-    #main-content { flex-grow: 1; display: flex; flex-direction: column; }
+    #main-content { flex-grow: 1; display: flex; flex-direction: column; justify-content: center; overflow: hidden; }
 
     /* SUNDAY GRID */
-    .sunday-grid { display: grid; gap: 6px; flex: 1; margin-top: 10px; }
-    .sun-date-header { background: white; font-size: 24px; font-weight: 900; padding: 8px; text-align: center; border-radius: 10px; color: #333; }
-    .sun-divider { grid-column: 1 / -1; text-align: center; font-size: 22px; font-weight: 900; letter-spacing: 15px; padding: 4px 0; text-transform: uppercase; }
+    .sunday-grid { display: grid; gap: 6px; flex: 1; margin-top: 5px; }
+    .sun-date-header { background: white; font-size: 28px; font-weight: 900; padding: 6px; text-align: center; border-radius: 10px; color: #333; }
+    .sun-divider { grid-column: 1 / -1; text-align: center; font-size: 26px; font-weight: 900; letter-spacing: 15px; padding: 4px 0; text-transform: uppercase; }
     
-    /* Expanded Label Font Size to 16px for higher readability */
-    .sun-row-label { background: var(--sun-dark); color: white; padding: 5px; font-size: 16px; font-weight: 900; display: flex; align-items: center; justify-content: center; text-align: center; border-radius: 6px; }
-    .sun-cell { background: white; border-radius: 6px; display: flex; align-items: center; justify-content: center; min-height: 54px; text-align: center; }
+    .sun-row-label { background: var(--sun-dark); color: white; padding: 5px 15px; font-size: 24px; font-weight: 900; display: flex; align-items: center; justify-content: center; text-align: center; border-radius: 6px; box-sizing: border-box; }
+    .sun-cell { background: white; border-radius: 6px; display: flex; align-items: center; justify-content: center; min-height: 54px; text-align: center; cursor: pointer; transition: 0.2s; }
+    .sun-cell:hover { background: #fbf9ff; box-shadow: inset 0 0 0 2px var(--sun-dark); }
 
     /* MIDWEEK FLEX */
-    .midweek-flex { display: flex; justify-content: center; gap: 20px; width: 100%; flex: 1; align-items: stretch; padding: 15px 0; }
-    .mid-card { background: rgba(255, 255, 255, 0.9); flex: 1; max-width: 380px; padding: 25px 15px; border-radius: 12px; text-align: center; display: flex; flex-direction: column; }
-    .mid-date { font-size: 48px; font-weight: 900; margin-bottom: 15px; color: var(--mid-dark); border-bottom: 5px solid var(--mid-dark); padding-bottom: 10px; }
-    .mid-item { margin-bottom: 5px; flex: 1; display: flex; flex-direction: column; justify-content: center; }
-    .mid-cat { font-size: 14px; font-weight: 900; color: var(--mid-dark); text-transform: uppercase; margin-bottom: 2px; letter-spacing: 1.5px; }
+    .midweek-flex { display: flex; justify-content: center; gap: 20px; width: 100%; flex: 1; align-items: stretch; padding: 10px 0; max-height: 610px; box-sizing: border-box; }
+    .mid-card { background: rgba(255, 255, 255, 0.9); flex: 1; max-width: 380px; padding: 16px 12px; border-radius: 12px; text-align: center; display: flex; flex-direction: column; justify-content: space-between; box-sizing: border-box; cursor: pointer; transition: 0.2s; }
+    .mid-card:hover { background: rgba(255, 255, 255, 1); box-shadow: 0 0 0 3px var(--mid-dark); }
+    .mid-date { font-size: 50px; font-weight: 900; margin-bottom: 12px; color: var(--mid-dark); border-bottom: 5px solid var(--mid-dark); padding-bottom: 6px; }
+    
+    .mid-item { margin-bottom: 8px; flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 6px; }
+    .mid-item:last-child { margin-bottom: 0; }
+    .mid-cat { font-size: 22px; font-weight: 900; color: var(--mid-dark); text-transform: uppercase; letter-spacing: 1.5px; }
 
-    .edit-area { width: 100%; outline: none; font-weight: 800; font-size: 24px; color: #111; line-height: 1.1; }
-    .theme-sunday .edit-area { font-size: 18px; }
+    /* Output text containers */
+    .edit-area { width: 100%; font-weight: 800; font-size: 32px; color: #111; line-height: 1.15; word-wrap: break-word; pointer-events: none; }
+    .theme-sunday .edit-area { font-size: 28px; }
 
-    /* FOOTER FIXED */
-    .footer { margin-top: auto; color: white; padding: 30px 60px; border-radius: 15px; width: 100%; box-sizing: border-box; }
+    /* FOOTER LOCKED POSITIONS */
+    .footer { margin-top: auto; color: white; padding: 20px 50px; border-radius: 15px; width: 100%; box-sizing: border-box; max-height: 250px; }
     .theme-sunday .footer { background: var(--sun-dark); }
     .theme-midweek .footer { background: var(--mid-dark); }
-    .footer-title { text-align: center; font-weight: 900; font-size: 28px; margin-bottom: 15px; border-bottom: 2px solid rgba(255,255,255,0.3); padding-bottom: 10px; text-transform: uppercase; }
+    .footer-title { text-align: center; font-weight: 900; font-size: 30px; margin-bottom: 10px; border-bottom: 2px solid rgba(255,255,255,0.3); padding-bottom: 6px; text-transform: uppercase; }
     .footer-content { display: grid; grid-template-columns: 1.2fr 1fr; gap: 40px; }
-    .footer-col { font-size: 16px; line-height: 1.5; font-weight: 600; }
-    .footer-col ul { margin: 8px 0; padding-left: 20px; }
+    .footer-col { font-size: 18px; line-height: 1.4; font-weight: 600; }
+    .footer-col ul { margin: 5px 0; padding-left: 20px; }
 
     /* STATUS BOXES */
-    .one-service-badge { background: #ff4d4d; color: white; padding: 15px 10px; font-weight: 900; font-size: 18px; border-radius: 8px; width: 85%; text-align: center; }
-    .no-service-box { background-color: var(--mid-dark); color: white; padding: 25px 15px; font-weight: 900; font-size: 22px; border-radius: 4px; width: 100%; }
+    .one-service-badge { background: #ff4d4d; color: white; padding: 15px 10px; font-weight: 900; font-size: 24px; border-radius: 8px; width: 85%; text-align: center; }
+    .no-service-box { background-color: var(--mid-dark); color: white; padding: 25px 15px; font-weight: 900; font-size: 28px; border-radius: 4px; width: 100%; }
 
-    /* SUGGESTIONS */
-    .suggestion-box { position: absolute; background: white; border: 1px solid #ccc; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 1000; border-radius: 8px; text-align: left; }
-    .suggestion-item { padding: 8px 12px; cursor: pointer; font-size: 15px; color: #333; border-bottom: 1px solid #eee; }
-    .suggestion-item:last-child { border: none; }
-    .suggestion-item:hover { background: #f0f0f0; }
+    /* ENTRY MODAL STYLES */
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center; z-index: 2000; opacity: 0; pointer-events: none; transition: 0.2s ease-in-out; }
+    .modal-overlay.active { opacity: 1; pointer-events: auto; }
+    .modal-box { background: white; padding: 30px; border-radius: 16px; width: 500px; max-width: 90%; box-shadow: 0 10px 30px rgba(0,0,0,0.3); display: flex; flex-direction: column; gap: 20px; position: relative; transform: translateY(-20px); transition: 0.2s ease-in-out; }
+    .modal-overlay.active .modal-box { transform: translateY(0); }
+    .modal-header { font-size: 22px; font-weight: 900; color: #333; border-bottom: 2px solid #eee; padding-bottom: 10px; text-transform: uppercase; }
+    .modal-body { display: flex; flex-direction: column; gap: 15px; max-height: 60vh; overflow-y: auto; padding-right: 5px; }
+    .modal-form-group { display: flex; flex-direction: column; gap: 6px; position: relative; }
+    .modal-form-group label { font-size: 12px; font-weight: 800; color: #555; text-transform: uppercase; }
+    .modal-input { padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; font-weight: 700; outline: none; transition: 0.2s; }
+    .modal-input:focus { border-color: var(--accent); }
+    .modal-footer { display: flex; justify-content: flex-end; gap: 12px; border-top: 2px solid #eee; padding-top: 15px; }
+    .modal-btn { padding: 12px 20px; font-weight: 800; font-size: 14px; border-radius: 8px; border: none; cursor: pointer; }
+    .modal-btn-cancel { background: #eee; color: #333; }
+    .modal-btn-save { background: var(--accent); color: white; }
+
+    /* AUTOCOMPLETE SUGGESTIONS CONTAINER FOR MODAL */
+    .modal-suggest-box { position: absolute; top: 100%; left: 0; width: 100%; background: white; border: 1px solid #ccc; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 2500; border-radius: 8px; max-height: 180px; overflow-y: auto; margin-top: 2px; display: none; }
+    .modal-suggest-item { padding: 10px 14px; cursor: pointer; font-size: 15px; color: #333; border-bottom: 1px solid #eee; font-weight: 700; }
+    .modal-suggest-item:hover { background: #f0f0f0; }
 
     @media (max-width: 768px) {
         #controls { flex-direction: column; align-items: stretch; }
@@ -117,6 +138,8 @@
     </div>
 </div>
 
+<div class="preview-header-label">Live Poster Preview Window</div>
+
 <div id="capture-wrapper">
     <div id="capture-area">
         <div class="header">
@@ -127,10 +150,10 @@
         <div class="footer">
             <div class="footer-title">STANDING LEADERS REMINDERS:</div>
             <div class="footer-content">
-                <div id="footer-l" class="footer-col" contenteditable="true" onblur="saveFooter()">
+                <div id="footer-l" class="footer-col">
                     <ul><li>WEAR SMART CASUAL OUTFITS</li><li>NO WEARING OF SLIPPERS</li><li>DRESS AND SKIRT OUTFITS SHOULD NOT BE MORE THAN 1 INCH ABOVE THE KNEES</li><li>MUST JOIN THE CORPORATE PRAYER BEFORE THE SERVICE STARTS</li></ul>
                 </div>
-                <div id="footer-r" class="footer-col" contenteditable="true" onblur="saveFooter()">
+                <div id="footer-r" class="footer-col">
                     <b style="text-decoration: underline;">TITHES AND OFFERING EXHORTATION</b>
                     <ul><li>SHOULD NOT BE MORE THAN 5 MINS. EXHORTATION</li></ul>
                     <b style="text-decoration: underline;">CLOSING PRAYER</b>
@@ -141,93 +164,29 @@
     </div>
 </div>
 
+<!-- ENTRY DATA TERMINAL MODAL OVERLAY -->
+<div class="modal-overlay" id="entryModal">
+    <div class="modal-box">
+        <div class="modal-header" id="modalTitle">Setup Entries</div>
+        <div class="modal-body" id="modalFields">
+            <!-- Dynamically populates inputs -->
+        </div>
+        <div class="modal-footer">
+            <button class="modal-btn modal-btn-cancel" onclick="closeModal()">Cancel</button>
+            <button class="modal-btn modal-btn-save" onclick="saveModalData()">Apply Changes</button>
+        </div>
+    </div>
+</div>
+
 <script>
-    const MASTER_NAMES = ["SIS. MELY REGALA",
-                          "SIS. ANGIE BAUTISTA",
-                          "SIS. MILA MIRANDA",
-                          "SIS. CARMELITA CADUADA",
-                          "SIS. SOL ILAGAN",
-                          "SIS. LETTY LA VALLE",
-                          "SIS. NENA DELGADO",
-                          "SIS. CECILLE REYES",
-                          "SIS. JOSEPHINE FELICIA",
-                          "SIS. IMELDA LORENZO",
-                          "SIS. NATIVIDAD BAUTISTA",
-                          "BRO. PETE AGAPAY",
-                          "BRO. BONG PEROCHE",
-                          "BRO. EDUARDO PRADO",
-                          "BRO. CESAR DELA CRUZ",
-                          "BRO. GILBERT PILARCO",
-                          "BRO. ROMAN SARMIENTO",
-                          "BRO. GILBERT ILAGAN",
-                          "BRO. RICHARD VILLANUEVA",
-                          "BRO. ALEX ANCHETA",
-                          "BRO. JOJO ALIX",
-                          "BRO. TONY GUIB",
-                          "BRO. JULIETO MABONG",
-                          "BRO. RUGIN JUMAMOY",
-                          "BRO. DAVE BANEZ",
-                          "BRO. WILLY JAVIEN",
-                          "BRO. CHARLIE PEREZ",
-                          "BRO. RONNIE BADEO",
-                          "SIS. REVY JAVIEN",
-                          "SIS. BELEN AGAPAY",
-                          "SIS. FIDES PRADO",
-                          "SIS. ELLA PEROCHE",
-                          "SIS. VINA FLORES",
-                          "SIS. ANN SARMIENTO",
-                          "SIS. MARILYN ZARAGOZA",
-                          "SIS. MERIAM GUIB",
-                          "SIS. TERE VILLANUEVA",
-                          "SIS. JUSA IGCASAN",
-                          "SIS. ARLENE MIRANDA",
-                          "SIS. ANABEL LAYBA",
-                          "SIS. GENALINE BANEZ",
-                          "SIS. GUADA ARBUENA",
-                          "SIS. WILMA PILARCO",
-                          "SIS. MERCY DIONELA",
-                          "SIS. JASMIN TORRES",
-                          "SIS. JOVELYN KIBATAY",
-                          "SIS. CINDY GALLEGOS",
-                          "SIS. JOY PARAYAOAN",
-                          "PTRA. VILMA ANTIGO"];
+    const MASTER_NAMES = ["SIS. MELY REGALA", "SIS. ANGIE BAUTISTA", "SIS. MILA MIRANDA", "SIS. CARMELITA CADUADA", "SIS. SOL ILAGAN", "SIS. LETTY LA VALLE", "SIS. NENA DELGADO", "SIS. CECILLE REYES", "SIS. JOSEPHINE FELICIA", "SIS. IMELDA LORENZO", "SIS. NATIVIDAD BAUTISTA", "BRO. PETE AGAPAY", "BRO. BONG PEROCHE", "BRO. EDUARDO PRADO", "BRO. CESAR DELA CRUZ", "BRO. GILBERT PILARCO", "BRO. ROMAN SARMIENTO", "BRO. GILBERT ILAGAN", "BRO. RICHARD VILLANUEVA", "BRO. ALEX ANCHETA", "BRO. JOJO ALIX", "BRO. TONY GUIB", "BRO. JULIETO MABONG", "BRO. RUGIN JUMAMOY", "BRO. DAVE BANEZ", "BRO. WILLY JAVIEN", "BRO. CHARLIE PEREZ", "BRO. RONNIE BADEO", "SIS. REVY JAVIEN", "SIS. BELEN AGAPAY", "SIS. FIDES PRADO", "SIS. ELLA PEROCHE", "SIS. VINA FLORES", "SIS. ANN SARMIENTO", "SIS. MARILYN ZARAGOZA", "SIS. MERIAM GUIB", "SIS. TERE VILLANUEVA", "SIS. JUSA IGCASAN", "SIS. ARLENE MIRANDA", "SIS. ANABEL LAYBA", "SIS. GENALINE BANEZ", "SIS. GUADA ARBUENA", "SIS. WILMA PILARCO", "SIS. MERCY DIONELA", "SIS. JASMIN TORRES", "SIS. JOVELYN KIBATAY", "SIS. CINDY GALLEGOS", "SIS. JOY PARAYAOAN", "PTRA. VILMA ANTIGO"];
+    
     let statusMap = {}; 
-    let activeSuggestionBox = null;
+    let currentModalContext = null;
 
     const getCellId = (type, year, month, week, section, row) => `jil_v5_${type}_y${year}_m${month}_w${week}_s${section}_r${row}`;
-    function saveContent(id, content) { localStorage.setItem(id, content.trim()); }
+    function saveContent(id, content) { localStorage.setItem(id, content.trim().toUpperCase()); }
     function loadContent(id) { return localStorage.getItem(id) || ""; }
-    function saveFooter() {
-        localStorage.setItem('jil_footer_l_v5', document.getElementById('footer-l').innerHTML);
-        localStorage.setItem('jil_footer_r_v5', document.getElementById('footer-r').innerHTML);
-    }
-
-    function handleInput(e, id) {
-        const val = e.target.innerText;
-        saveContent(id, val);
-        if (activeSuggestionBox) activeSuggestionBox.remove();
-        if (!val.trim()) return;
-        const matches = MASTER_NAMES.filter(n => n.toLowerCase().includes(val.toLowerCase()));
-        if (matches.length > 0) showSuggestions(e.target, matches, id);
-    }
-
-    function showSuggestions(el, matches, id) {
-        const rect = el.getBoundingClientRect();
-        const box = document.createElement('div');
-        box.className = 'suggestion-box';
-        box.style.left = `${rect.left}px`;
-        box.style.top = `${rect.bottom + window.scrollY}px`;
-        box.style.width = `${rect.width}px`;
-        matches.forEach(m => {
-            const item = document.createElement('div');
-            item.className = 'suggestion-item';
-            item.innerText = m;
-            item.onclick = () => { el.innerText = m; saveContent(id, m); box.remove(); };
-            box.appendChild(item);
-        });
-        document.body.appendChild(box);
-        activeSuggestionBox = box;
-    }
 
     function init() {
         const type = document.getElementById('srvType').value;
@@ -237,13 +196,8 @@
         area.className = type === 'sunday' ? 'theme-sunday' : 'theme-midweek';
         document.getElementById('h-title').innerText = type.toUpperCase() + " SERVICE SCHEDULE";
         
-        // Dynamically change the button text to match the currently viewable screen
         const dlBtn = document.getElementById('downloadBtn');
-        if (type === 'sunday') {
-            dlBtn.innerText = "Download Sunday Only";
-        } else {
-            dlBtn.innerText = "Download Midweek Only";
-        }
+        dlBtn.innerText = type === 'sunday' ? "Download Sunday Only" : "Download Midweek Only";
 
         const monthName = new Date(year, month).toLocaleString('default', {month:'long'}).toUpperCase();
         document.getElementById('h-month').innerText = `MONTH OF ${monthName} ${year}`;
@@ -254,8 +208,6 @@
             if(d.getDay() === dayToFind) dates.push(new Date(d));
             d.setDate(d.getDate()+1);
         }
-        if(localStorage.getItem('jil_footer_l_v5')) document.getElementById('footer-l').innerHTML = localStorage.getItem('jil_footer_l_v5');
-        if(localStorage.getItem('jil_footer_r_v5')) document.getElementById('footer-r').innerHTML = localStorage.getItem('jil_footer_r_v5');
         renderControls(dates, type);
         renderContent(dates, type, year, month);
     }
@@ -275,7 +227,7 @@
     function renderContent(dates, type, year, month) {
         const container = document.getElementById('main-content');
         if (type === 'sunday') {
-            let html = `<div class="sunday-grid" style="grid-template-columns: 160px repeat(${dates.length}, 1fr)"><div></div>`;
+            let html = `<div class="sunday-grid" style="grid-template-columns: 280px repeat(${dates.length}, 1fr)"><div></div>`;
             html += dates.map(dt => `<div class="sun-date-header">${dt.getDate()} ${dt.toLocaleString('default',{month:'short'}).toUpperCase()}</div>`).join('');
             const rows = ["WORD OF GOD", "TITHES & OFFERING", "ANNOUNCEMENT", "CLOSING PRAYER"];
             [{id:'s1', n:'1ST SERVICE'}, {id:'s2', n:'2ND SERVICE'}].forEach(sec => {
@@ -287,9 +239,9 @@
                         const id = getCellId(type, year, month, cIdx, sec.id, rIdx);
                         const isDisabled = (status === 'one_s2' && sec.id === 's1') || (status === 'one_s1' && sec.id === 's2');
                         if (isDisabled) {
-                            if (rIdx === 0) html += `<div class="sun-cell" style="grid-row: span 4;"><div class="one-service-badge">ONE SERVICE ONLY</div></div>`;
+                            if (rIdx === 0) html += `<div class="sun-cell" style="grid-row: span 4; pointer-events:none;"><div class="one-service-badge">ONE SERVICE ONLY</div></div>`;
                         } else {
-                            html += `<div class="sun-cell"><div class="edit-area" contenteditable="true" oninput="handleInput(event, '${id}')">${loadContent(id)}</div></div>`;
+                            html += `<div class="sun-cell" onclick="openSundayModal(${cIdx}, '${sec.id}', '${sec.n}')"><div class="edit-area">${loadContent(id)}</div></div>`;
                         }
                     });
                 });
@@ -300,13 +252,13 @@
             const cats = ["OPENING PRAYER", "WORD OF GOD", "OFFERING", "ANNOUNCEMENT", "CLOSING PRAYER"];
             dates.forEach((dt, i) => {
                 const dateLabel = `${dt.toLocaleString('default', {month:'short'}).toUpperCase()} ${dt.getDate().toString().padStart(2, '0')}`;
-                html += `<div class="mid-card"><div class="mid-date">${dateLabel}</div>`;
+                html += `<div class="mid-card" onclick="openMidweekModal(${i}, '${dateLabel}')"><div class="mid-date">${dateLabel}</div>`;
                 if(statusMap[i] === 'no_service') {
-                    html += `<div style="flex:1; display:flex; align-items:center;"><div class="no-service-box">NO MIDWEEK SERVICE</div></div>`;
+                    html += `<div style="flex:1; display:flex; align-items:center; pointer-events:none;"><div class="no-service-box">NO MIDWEEK SERVICE</div></div>`;
                 } else {
                     cats.forEach((c, ci) => {
                         const id = getCellId(type, year, month, i, 'mid', ci);
-                        html += `<div class="mid-item"><div class="mid-cat">${c}:</div><div class="edit-area" contenteditable="true" oninput="handleInput(event, '${id}')">${loadContent(id)}</div></div>`;
+                        html += `<div class="mid-item"><div class="mid-cat">${c}:</div><div class="edit-area">${loadContent(id)}</div></div>`;
                     });
                 }
                 html += `</div>`;
@@ -315,9 +267,97 @@
         }
     }
 
+    /* MODAL OPERATIONS */
+    function openSundayModal(weekIdx, sectionId, sectionName) {
+        const type = 'sunday';
+        const year = document.getElementById('year').value;
+        const month = document.getElementById('month').value;
+        const rows = ["WORD OF GOD", "TITHES & OFFERING", "ANNOUNCEMENT", "CLOSING PRAYER"];
+        
+        document.getElementById('modalTitle').innerText = `Configure Wk ${weekIdx + 1} - ${sectionName}`;
+        currentModalContext = { keys: [] };
+
+        let bodyHtml = '';
+        rows.forEach((row, rIdx) => {
+            const id = getCellId(type, year, month, weekIdx, sectionId, rIdx);
+            currentModalContext.keys.push({ fieldId: `input_${rIdx}`, storageId: id });
+            bodyHtml += `
+                <div class="modal-form-group">
+                    <label>${row}</label>
+                    <input type="text" id="input_${rIdx}" class="modal-input" autocomplete="off" value="${loadContent(id)}" oninput="handleModalAutocomplete(event)">
+                    <div class="modal-suggest-box"></div>
+                </div>`;
+        });
+        document.getElementById('modalFields').innerHTML = bodyHtml;
+        document.getElementById('entryModal').classList.add('active');
+    }
+
+    function openMidweekModal(weekIdx, dateLabel) {
+        if(statusMap[weekIdx] === 'no_service') return;
+        const type = 'midweek';
+        const year = document.getElementById('year').value;
+        const month = document.getElementById('month').value;
+        const cats = ["OPENING PRAYER", "WORD OF GOD", "OFFERING", "ANNOUNCEMENT", "CLOSING PRAYER"];
+
+        document.getElementById('modalTitle').innerText = `Configure Midweek - ${dateLabel}`;
+        currentModalContext = { keys: [] };
+
+        let bodyHtml = '';
+        cats.forEach((cat, ci) => {
+            const id = getCellId(type, year, month, weekIdx, 'mid', ci);
+            currentModalContext.keys.push({ fieldId: `input_${ci}`, storageId: id });
+            bodyHtml += `
+                <div class="modal-form-group">
+                    <label>${cat}</label>
+                    <input type="text" id="input_${ci}" class="modal-input" autocomplete="off" value="${loadContent(id)}" oninput="handleModalAutocomplete(event)">
+                    <div class="modal-suggest-box"></div>
+                </div>`;
+        });
+        document.getElementById('modalFields').innerHTML = bodyHtml;
+        document.getElementById('entryModal').classList.add('active');
+    }
+
+    function handleModalAutocomplete(e) {
+        const val = e.target.value;
+        const sBox = e.target.nextElementSibling;
+        sBox.innerHTML = '';
+        if (!val.trim()) { sBox.style.display = 'none'; return; }
+        
+        const matches = MASTER_NAMES.filter(n => n.toLowerCase().includes(val.toLowerCase()));
+        if (matches.length === 0) { sBox.style.display = 'none'; return; }
+
+        sBox.style.display = 'block';
+        matches.forEach(m => {
+            const div = document.createElement('div');
+            div.className = 'modal-suggest-item';
+            div.innerText = m;
+            div.onclick = () => {
+                e.target.value = m;
+                sBox.innerHTML = '';
+                sBox.style.display = 'none';
+            };
+            sBox.appendChild(div);
+        });
+    }
+
+    function closeModal() {
+        document.getElementById('entryModal').classList.remove('active');
+        currentModalContext = null;
+    }
+
+    function saveModalData() {
+        if (currentModalContext && currentModalContext.keys) {
+            currentModalContext.keys.forEach(pair => {
+                const inputVal = document.getElementById(pair.fieldId).value;
+                saveContent(pair.storageId, inputVal);
+            });
+        }
+        closeModal();
+        init();
+    }
+
     function clearAllData() { if(confirm("Erase all data?")) { localStorage.clear(); location.reload(); } }
 
-    // Completely separated download feature to safely extract only the active screen layout
     async function downloadCurrentService() {
         const btn = document.getElementById('downloadBtn');
         const type = document.getElementById('srvType').value;
@@ -326,7 +366,6 @@
         btn.innerText = "Capturing..."; 
         btn.disabled = true;
         
-        // Brief freeze mitigation layout check
         await new Promise(r => setTimeout(r, 400)); 
         
         const canvas = await html2canvas(document.querySelector("#capture-area"), {
@@ -344,6 +383,7 @@
                 const area = clonedDoc.getElementById('capture-area'); 
                 area.style.transform = 'none'; 
                 area.style.margin = '0'; 
+                area.style.border = 'none';
             }
         });
         
@@ -355,6 +395,14 @@
         btn.innerText = originalText; 
         btn.disabled = false;
     }
+
+    // Close autocompletes if clicking elsewhere
+    document.addEventListener('click', function(e) {
+        if(!e.target.classList.contains('modal-input')) {
+            document.querySelectorAll('.modal-suggest-box').forEach(b => b.style.display = 'none');
+        }
+    });
+
     window.onload = init;
 </script>
 </body>
