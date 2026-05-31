@@ -33,6 +33,8 @@
     .btn-group { display: flex; gap: 10px; margin-left: auto; }
     button { padding: 12px 24px; border-radius: 8px; border: none; font-weight: 800; cursor: pointer; transition: 0.3s; }
     .clear-btn { background: #fee; color: #d33; }
+    .reset-sizes-btn { background: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
+    .reset-sizes-btn:hover { background: #ffeeba; }
     .dl-btn { background: var(--accent); color: white; }
     
     /* PREVIEW LABEL */
@@ -60,22 +62,32 @@
     .sun-divider { grid-column: 1 / -1; text-align: center; font-size: 26px; font-weight: 900; letter-spacing: 15px; padding: 4px 0; text-transform: uppercase; }
     
     .sun-row-label { background: var(--sun-dark); color: white; padding: 5px 15px; font-size: 24px; font-weight: 900; display: flex; align-items: center; justify-content: center; text-align: center; border-radius: 6px; box-sizing: border-box; }
-    .sun-cell { background: white; border-radius: 6px; display: flex; align-items: center; justify-content: center; min-height: 54px; text-align: center; cursor: pointer; transition: 0.2s; }
+    
+    /* Centered layout for cells */
+    .sun-cell { background: white; border-radius: 6px; display: flex; align-items: center; justify-content: center; min-height: 54px; text-align: center; cursor: pointer; transition: 0.2s; padding: 4px 12px; box-sizing: border-box; overflow: hidden; }
     .sun-cell:hover { background: #fbf9ff; box-shadow: inset 0 0 0 2px var(--sun-dark); }
 
     /* MIDWEEK FLEX */
     .midweek-flex { display: flex; justify-content: center; gap: 20px; width: 100%; flex: 1; align-items: stretch; padding: 10px 0; max-height: 610px; box-sizing: border-box; }
-    .mid-card { background: rgba(255, 255, 255, 0.9); flex: 1; max-width: 380px; padding: 16px 12px; border-radius: 12px; text-align: center; display: flex; flex-direction: column; justify-content: space-between; box-sizing: border-box; cursor: pointer; transition: 0.2s; }
+    .mid-card { background: rgba(255, 255, 255, 0.9); flex: 1; max-width: 380px; padding: 16px 12px; border-radius: 12px; text-align: center; display: flex; flex-direction: column; justify-content: space-between; box-sizing: border-box; cursor: pointer; transition: 0.2s; overflow: hidden; }
     .mid-card:hover { background: rgba(255, 255, 255, 1); box-shadow: 0 0 0 3px var(--mid-dark); }
     .mid-date { font-size: 50px; font-weight: 900; margin-bottom: 12px; color: var(--mid-dark); border-bottom: 5px solid var(--mid-dark); padding-bottom: 6px; }
     
-    .mid-item { margin-bottom: 8px; flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 6px; }
+    .mid-item { margin-bottom: 8px; flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 4px; overflow: hidden; width: 100%; }
     .mid-item:last-child { margin-bottom: 0; }
-    .mid-cat { font-size: 22px; font-weight: 900; color: var(--mid-dark); text-transform: uppercase; letter-spacing: 1.5px; }
+    .mid-cat { font-size: 21px; font-weight: 900; color: var(--mid-dark); text-transform: uppercase; letter-spacing: 1.5px; }
 
-    /* Output text containers */
-    .edit-area { width: 100%; font-weight: 800; font-size: 32px; color: #111; line-height: 1.15; word-wrap: break-word; pointer-events: none; }
-    .theme-sunday .edit-area { font-size: 28px; }
+    /* FIXED FONT SIZE TWEAKS */
+    .edit-area { 
+        width: 100%; 
+        font-weight: 800; 
+        color: #111; 
+        line-height: 1.2; 
+        pointer-events: none;
+        white-space: normal; 
+        text-align: center;
+        word-break: keep-all; 
+    }
 
     /* FOOTER LOCKED POSITIONS */
     .footer { margin-top: auto; color: white; padding: 20px 50px; border-radius: 15px; width: 100%; box-sizing: border-box; max-height: 250px; }
@@ -93,21 +105,28 @@
     /* ENTRY MODAL STYLES */
     .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center; z-index: 2000; opacity: 0; pointer-events: none; transition: 0.2s ease-in-out; }
     .modal-overlay.active { opacity: 1; pointer-events: auto; }
-    .modal-box { background: white; padding: 30px; border-radius: 16px; width: 500px; max-width: 90%; box-shadow: 0 10px 30px rgba(0,0,0,0.3); display: flex; flex-direction: column; gap: 20px; position: relative; transform: translateY(-20px); transition: 0.2s ease-in-out; }
+    .modal-box { background: white; padding: 30px; border-radius: 16px; width: 560px; max-width: 90%; box-shadow: 0 10px 30px rgba(0,0,0,0.3); display: flex; flex-direction: column; gap: 20px; position: relative; transform: translateY(-20px); transition: 0.2s ease-in-out; }
     .modal-overlay.active .modal-box { transform: translateY(0); }
     .modal-header { font-size: 22px; font-weight: 900; color: #333; border-bottom: 2px solid #eee; padding-bottom: 10px; text-transform: uppercase; }
     .modal-body { display: flex; flex-direction: column; gap: 15px; max-height: 60vh; overflow-y: auto; padding-right: 5px; }
+    
     .modal-form-group { display: flex; flex-direction: column; gap: 6px; position: relative; }
     .modal-form-group label { font-size: 12px; font-weight: 800; color: #555; text-transform: uppercase; }
-    .modal-input { padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; font-weight: 700; outline: none; transition: 0.2s; }
+    
+    /* Form control alignment wrapper */
+    .modal-input-row { display: flex; gap: 10px; width: 100%; }
+    .modal-input { flex: 1; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; font-weight: 700; outline: none; transition: 0.2s; min-width: 0; }
     .modal-input:focus { border-color: var(--accent); }
+    .modal-size-select { width: 100px; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 14px; font-weight: 700; background: #f9f9f9; outline: none; cursor: pointer; }
+    .modal-size-select:focus { border-color: var(--accent); }
+
     .modal-footer { display: flex; justify-content: flex-end; gap: 12px; border-top: 2px solid #eee; padding-top: 15px; }
     .modal-btn { padding: 12px 20px; font-weight: 800; font-size: 14px; border-radius: 8px; border: none; cursor: pointer; }
     .modal-btn-cancel { background: #eee; color: #333; }
     .modal-btn-save { background: var(--accent); color: white; }
 
     /* AUTOCOMPLETE SUGGESTIONS CONTAINER FOR MODAL */
-    .modal-suggest-box { position: absolute; top: 100%; left: 0; width: 100%; background: white; border: 1px solid #ccc; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 2500; border-radius: 8px; max-height: 180px; overflow-y: auto; margin-top: 2px; display: none; }
+    .modal-suggest-box { position: absolute; top: 100%; left: 0; width: calc(100% - 110px); background: white; border: 1px solid #ccc; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 2500; border-radius: 8px; max-height: 180px; overflow-y: auto; margin-top: 2px; display: none; }
     .modal-suggest-item { padding: 10px 14px; cursor: pointer; font-size: 15px; color: #333; border-bottom: 1px solid #eee; font-weight: 700; }
     .modal-suggest-item:hover { background: #f0f0f0; }
 
@@ -130,9 +149,18 @@
         <div class="control-item"><label>Service</label><select id="srvType" onchange="init()"><option value="sunday">Sunday Service</option><option value="midweek">Midweek Service</option></select></div>
         <div class="control-item"><label>Year</label><select id="year" onchange="init()"><option value="2025">2025</option><option value="2026" selected>2026</option><option value="2027">2027</option></select></div>
         <div class="control-item"><label>Month</label><select id="month" onchange="init()"><option value="0">Jan</option><option value="1">Feb</option><option value="2">Mar</option><option value="3">Apr</option><option value="4" selected>May</option><option value="5">Jun</option><option value="6">Jul</option><option value="7">Aug</option><option value="8">Sep</option><option value="9">Oct</option><option value="10">Nov</option><option value="11">Dec</option></select></div>
+        
+        <div class="control-item"><label>Global Sunday Font Size</label>
+            <select id="globalSunSize" onchange="updateGlobalSizes()"></select>
+        </div>
+        <div class="control-item"><label>Global Midweek Font Size</label>
+            <select id="globalMidSize" onchange="updateGlobalSizes()"></select>
+        </div>
+
         <div id="wk-status" style="display:flex; gap:10px; flex-wrap:wrap;"></div>
     </div>
     <div class="btn-group">
+        <button class="reset-sizes-btn" onclick="clearCustomCellSizes()">Use Global Font Sizes</button>
         <button class="clear-btn" onclick="clearAllData()">Reset All</button>
         <button id="downloadBtn" class="dl-btn" onclick="downloadCurrentService()">Download Sunday Only</button>
     </div>
@@ -164,13 +192,11 @@
     </div>
 </div>
 
-<!-- ENTRY DATA TERMINAL MODAL OVERLAY -->
 <div class="modal-overlay" id="entryModal">
     <div class="modal-box">
         <div class="modal-header" id="modalTitle">Setup Entries</div>
         <div class="modal-body" id="modalFields">
-            <!-- Dynamically populates inputs -->
-        </div>
+            </div>
         <div class="modal-footer">
             <button class="modal-btn modal-btn-cancel" onclick="closeModal()">Cancel</button>
             <button class="modal-btn modal-btn-save" onclick="saveModalData()">Apply Changes</button>
@@ -181,12 +207,69 @@
 <script>
     const MASTER_NAMES = ["SIS. MELY REGALA", "SIS. ANGIE BAUTISTA", "SIS. MILA MIRANDA", "SIS. CARMELITA CADUADA", "SIS. SOL ILAGAN", "SIS. LETTY LA VALLE", "SIS. NENA DELGADO", "SIS. CECILLE REYES", "SIS. JOSEPHINE FELICIA", "SIS. IMELDA LORENZO", "SIS. NATIVIDAD BAUTISTA", "BRO. PETE AGAPAY", "BRO. BONG PEROCHE", "BRO. EDUARDO PRADO", "BRO. CESAR DELA CRUZ", "BRO. GILBERT PILARCO", "BRO. ROMAN SARMIENTO", "BRO. GILBERT ILAGAN", "BRO. RICHARD VILLANUEVA", "BRO. ALEX ANCHETA", "BRO. JOJO ALIX", "BRO. TONY GUIB", "BRO. JULIETO MABONG", "BRO. RUGIN JUMAMOY", "BRO. DAVE BANEZ", "BRO. WILLY JAVIEN", "BRO. CHARLIE PEREZ", "BRO. RONNIE BADEO", "SIS. REVY JAVIEN", "SIS. BELEN AGAPAY", "SIS. FIDES PRADO", "SIS. ELLA PEROCHE", "SIS. VINA FLORES", "SIS. ANN SARMIENTO", "SIS. MARILYN ZARAGOZA", "SIS. MERIAM GUIB", "SIS. TERE VILLANUEVA", "SIS. JUSA IGCASAN", "SIS. ARLENE MIRANDA", "SIS. ANABEL LAYBA", "SIS. GENALINE BANEZ", "SIS. GUADA ARBUENA", "SIS. WILMA PILARCO", "SIS. MERCY DIONELA", "SIS. JASMIN TORRES", "SIS. JOVELYN KIBATAY", "SIS. CINDY GALLEGOS", "SIS. JOY PARAYAOAN", "PTRA. VILMA ANTIGO"];
     
+    const AVAILABLE_SIZES = [
+        {val: "24px", label: "24 px"},
+        {val: "21px", label: "21 px (Mid-Def)"},
+        {val: "19px", label: "19 px"},
+        {val: "17.5px", label: "17.5 px (Sun-Def)"},
+        {val: "15px", label: "15 px"},
+        {val: "13px", label: "13 px"},
+        {val: "11px", label: "11 px"}
+    ];
+
     let statusMap = {}; 
     let currentModalContext = null;
 
     const getCellId = (type, year, month, week, section, row) => `jil_v5_${type}_y${year}_m${month}_w${week}_s${section}_r${row}`;
-    function saveContent(id, content) { localStorage.setItem(id, content.trim().toUpperCase()); }
+    const getSizeId = (cellId) => `${cellId}_fsize`;
+
+    function saveContent(id, content, size) { 
+        localStorage.setItem(id, content.trim().toUpperCase()); 
+        if(size) {
+            localStorage.setItem(getSizeId(id), size);
+        }
+    }
     function loadContent(id) { return localStorage.getItem(id) || ""; }
+    
+    function loadSize(id, type) { 
+        const savedCellSize = localStorage.getItem(getSizeId(id));
+        // Use individual override if it exists AND is not set to "default" inherit rule
+        if (savedCellSize && savedCellSize !== 'inherit') return savedCellSize;
+
+        if (type === 'sunday') {
+            return localStorage.getItem('jil_global_sun_size') || "17.5px";
+        } else {
+            return localStorage.getItem('jil_global_mid_size') || "21px";
+        }
+    }
+
+    function setupGlobalDropdowns() {
+        const sunSelect = document.getElementById('globalSunSize');
+        const midSelect = document.getElementById('globalMidSize');
+        
+        const currentGlobalSun = localStorage.getItem('jil_global_sun_size') || "17.5px";
+        const currentGlobalMid = localStorage.getItem('jil_global_mid_size') || "21px";
+
+        sunSelect.innerHTML = AVAILABLE_SIZES.map(sz => `<option value="${sz.val}" ${currentGlobalSun === sz.val ? 'selected' : ''}>${sz.label}</option>`).join('');
+        midSelect.innerHTML = AVAILABLE_SIZES.map(sz => `<option value="${sz.val}" ${currentGlobalMid === sz.val ? 'selected' : ''}>${sz.label}</option>`).join('');
+    }
+
+    function updateGlobalSizes() {
+        localStorage.setItem('jil_global_sun_size', document.getElementById('globalSunSize').value);
+        localStorage.setItem('jil_global_mid_size', document.getElementById('globalMidSize').value);
+        init();
+    }
+
+    function clearCustomCellSizes() {
+        if(confirm("This will clear individual custom size limits so that your global size selections apply everywhere. Your names will NOT be erased. Proceed?")) {
+            Object.keys(localStorage).forEach(key => {
+                if(key.endsWith('_fsize')) {
+                    localStorage.removeItem(key);
+                }
+            });
+            init();
+        }
+    }
 
     function init() {
         const type = document.getElementById('srvType').value;
@@ -237,11 +320,12 @@
                     dates.forEach((_, cIdx) => {
                         const status = statusMap[cIdx] || 'none';
                         const id = getCellId(type, year, month, cIdx, sec.id, rIdx);
+                        const cellFontSize = loadSize(id, 'sunday');
                         const isDisabled = (status === 'one_s2' && sec.id === 's1') || (status === 'one_s1' && sec.id === 's2');
                         if (isDisabled) {
                             if (rIdx === 0) html += `<div class="sun-cell" style="grid-row: span 4; pointer-events:none;"><div class="one-service-badge">ONE SERVICE ONLY</div></div>`;
                         } else {
-                            html += `<div class="sun-cell" onclick="openSundayModal(${cIdx}, '${sec.id}', '${sec.n}')"><div class="edit-area">${loadContent(id)}</div></div>`;
+                            html += `<div class="sun-cell" onclick="openSundayModal(${cIdx}, '${sec.id}', '${sec.n}')"><div class="edit-area" style="font-size: ${cellFontSize};">${loadContent(id)}</div></div>`;
                         }
                     });
                 });
@@ -258,7 +342,8 @@
                 } else {
                     cats.forEach((c, ci) => {
                         const id = getCellId(type, year, month, i, 'mid', ci);
-                        html += `<div class="mid-item"><div class="mid-cat">${c}:</div><div class="edit-area">${loadContent(id)}</div></div>`;
+                        const cellFontSize = loadSize(id, 'midweek');
+                        html += `<div class="mid-item"><div class="mid-cat">${c}:</div><div class="edit-area" style="font-size: ${cellFontSize};">${loadContent(id)}</div></div>`;
                     });
                 }
                 html += `</div>`;
@@ -267,7 +352,17 @@
         }
     }
 
-    /* MODAL OPERATIONS */
+    function makeFontSizeDropdown(selectId, currentSize) {
+        let s = `<select id="${selectId}" class="modal-size-select">`;
+        // Allow fallback inheritance option
+        s += `<option value="inherit" ${(!currentSize || currentSize === 'inherit') ? 'selected' : ''}>Match Global</option>`;
+        AVAILABLE_SIZES.forEach(sz => {
+            s += `<option value="${sz.val}" ${currentSize === sz.val ? 'selected' : ''}>${sz.label}</option>`;
+        });
+        s += `</select>`;
+        return s;
+    }
+
     function openSundayModal(weekIdx, sectionId, sectionName) {
         const type = 'sunday';
         const year = document.getElementById('year').value;
@@ -280,11 +375,16 @@
         let bodyHtml = '';
         rows.forEach((row, rIdx) => {
             const id = getCellId(type, year, month, weekIdx, sectionId, rIdx);
-            currentModalContext.keys.push({ fieldId: `input_${rIdx}`, storageId: id });
+            const savedSize = localStorage.getItem(getSizeId(id)) || 'inherit';
+            currentModalContext.keys.push({ fieldId: `input_${rIdx}`, sizeId: `size_${rIdx}`, storageId: id });
+            
             bodyHtml += `
                 <div class="modal-form-group">
                     <label>${row}</label>
-                    <input type="text" id="input_${rIdx}" class="modal-input" autocomplete="off" value="${loadContent(id)}" oninput="handleModalAutocomplete(event)">
+                    <div class="modal-input-row">
+                        <input type="text" id="input_${rIdx}" class="modal-input" autocomplete="off" value="${loadContent(id)}" oninput="handleModalAutocomplete(event)">
+                        ${makeFontSizeDropdown(`size_${rIdx}`, savedSize)}
+                    </div>
                     <div class="modal-suggest-box"></div>
                 </div>`;
         });
@@ -305,11 +405,16 @@
         let bodyHtml = '';
         cats.forEach((cat, ci) => {
             const id = getCellId(type, year, month, weekIdx, 'mid', ci);
-            currentModalContext.keys.push({ fieldId: `input_${ci}`, storageId: id });
+            const savedSize = localStorage.getItem(getSizeId(id)) || 'inherit';
+            currentModalContext.keys.push({ fieldId: `input_${ci}`, sizeId: `size_${ci}`, storageId: id });
+            
             bodyHtml += `
                 <div class="modal-form-group">
                     <label>${cat}</label>
-                    <input type="text" id="input_${ci}" class="modal-input" autocomplete="off" value="${loadContent(id)}" oninput="handleModalAutocomplete(event)">
+                    <div class="modal-input-row">
+                        <input type="text" id="input_${ci}" class="modal-input" autocomplete="off" value="${loadContent(id)}" oninput="handleModalAutocomplete(event)">
+                        ${makeFontSizeDropdown(`size_${ci}`, savedSize)}
+                    </div>
                     <div class="modal-suggest-box"></div>
                 </div>`;
         });
@@ -319,7 +424,7 @@
 
     function handleModalAutocomplete(e) {
         const val = e.target.value;
-        const sBox = e.target.nextElementSibling;
+        const sBox = e.target.closest('.modal-form-group').querySelector('.modal-suggest-box');
         sBox.innerHTML = '';
         if (!val.trim()) { sBox.style.display = 'none'; return; }
         
@@ -349,7 +454,8 @@
         if (currentModalContext && currentModalContext.keys) {
             currentModalContext.keys.forEach(pair => {
                 const inputVal = document.getElementById(pair.fieldId).value;
-                saveContent(pair.storageId, inputVal);
+                const sizeVal = document.getElementById(pair.sizeId).value;
+                saveContent(pair.storageId, inputVal, sizeVal);
             });
         }
         closeModal();
@@ -396,14 +502,16 @@
         btn.disabled = false;
     }
 
-    // Close autocompletes if clicking elsewhere
     document.addEventListener('click', function(e) {
         if(!e.target.classList.contains('modal-input')) {
             document.querySelectorAll('.modal-suggest-box').forEach(b => b.style.display = 'none');
         }
     });
 
-    window.onload = init;
+    window.onload = function() {
+        setupGlobalDropdowns();
+        init();
+    };
 </script>
 </body>
 </html>
