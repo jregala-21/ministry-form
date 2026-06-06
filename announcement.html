@@ -326,8 +326,8 @@
     <div class="schedule-panel">
         <div class="schedule-toggle-container" onclick="toggleScheduleView()">
             <div style="display: flex; align-items: center; gap: 10px;">
-                <input type="checkbox" id="isScheduled" onclick="event.stopPropagation(); handleScheduleCheckbox(this)">
-                <label for="isScheduled" style="cursor:pointer; font-weight: 600; font-size: 14px;">📅 Schedule this announcement</label>
+                <input type="checkbox" id="isScheduled" style="pointer-events: none;">
+                <label style="cursor:pointer; font-weight: 600; font-size: 14px; user-select:none;">📅 Schedule this announcement</label>
             </div>
             <span id="angleIndicator" style="color: var(--text-muted); font-size: 12px;">▶</span>
         </div>
@@ -362,13 +362,13 @@
         window.location.href = "login.html";
     }
 
+    // FIXED: Container click handles structural evaluation natively now
     function toggleScheduleView() {
         const checkbox = document.getElementById("isScheduled");
         checkbox.checked = !checkbox.checked;
         handleScheduleCheckbox(checkbox);
     }
 
-    // UPDATED FUNCTION: Automatically sets default values to today's date and exact current time
     function handleScheduleCheckbox(cb) {
         const fields = document.getElementById("scheduleFields");
         const angle = document.getElementById("angleIndicator");
@@ -380,7 +380,6 @@
             sendBtn.innerText = "📅 Queue Scheduled Announcement";
             sendBtn.classList.add("scheduled-mode");
             
-            // Generate exact current local date and time values
             const now = new Date();
             const year = now.getFullYear();
             const month = String(now.getMonth() + 1).padStart(2, '0');
@@ -388,7 +387,6 @@
             const hours = String(now.getHours()).padStart(2, '0');
             const minutes = String(now.getMinutes()).padStart(2, '0');
             
-            // Format format: YYYY-MM-DDTHH:MM
             document.getElementById("scheduledTimestamp").value = `${year}-${month}-${day}T${hours}:${minutes}`;
         } else {
             fields.classList.remove("visible");
@@ -481,17 +479,28 @@
     async function executeScheduleCommit() {
         const caption = document.getElementById("caption").value;
         const fileInput = document.getElementById("fileInput");
-        const targetTime = document.getElementById("scheduledTimestamp").value; // This looks like "2026-05-25T03:05"
+        const targetTime = document.getElementById("scheduledTimestamp").value;
         const status = document.getElementById("status");
         const sendBtn = document.getElementById("sendBtn");
 
         const selected = Array.from(document.querySelectorAll(".emailCheck:checked")).map(cb => cb.value);
 
-        if (selected.length === 0) return alert("Please select at least one recipient.");
-        if (!caption) return alert("Please enter a caption.");
-        if (!targetTime) return alert("Please select a valid date and time.");
-
+        // FIXED: Button gets locked out BEFORE running validation alerts to eliminate double submissions
         sendBtn.disabled = true;
+
+        if (selected.length === 0) {
+            sendBtn.disabled = false;
+            return alert("Please select at least one recipient.");
+        }
+        if (!caption) {
+            sendBtn.disabled = false;
+            return alert("Please enter a caption.");
+        }
+        if (!targetTime) {
+            sendBtn.disabled = false;
+            return alert("Please select a valid date and time.");
+        }
+
         status.style.color = "var(--warning)";
         status.innerText = "⏳ Saving schedule to Google Sheets...";
 
@@ -509,11 +518,15 @@
             attachments.push(autoLoadedPdf);
         }
 
+        // FIXED: Created a unique scheduleId/nonce to block server-side duplicate entry writes
+        const uniqueId = "SCH-" + Date.now() + "-" + Math.random().toString(36).substr(2, 9);
+
         const schedulePayload = {
             action: "registerSchedule",
+            scheduleId: uniqueId, 
             recipients: selected, 
             message: caption,
-            scheduledTime: targetTime, // FIX: Sends your raw local time string exactly as you see it on screen
+            scheduledTime: targetTime, 
             attachments: attachments
         };
 
@@ -548,10 +561,17 @@
 
         const selected = Array.from(document.querySelectorAll(".emailCheck:checked")).map(cb => cb.value);
 
-        if (selected.length === 0) return alert("Please select at least one recipient.");
-        if (!caption) return alert("Please enter a caption.");
-
         sendBtn.disabled = true;
+
+        if (selected.length === 0) {
+            sendBtn.disabled = false;
+            return alert("Please select at least one recipient.");
+        }
+        if (!caption) {
+            sendBtn.disabled = false;
+            return alert("Please enter a caption.");
+        }
+
         status.style.color = "var(--text-muted)";
         status.innerText = "⏳ Sending...";
 
