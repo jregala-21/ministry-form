@@ -357,14 +357,77 @@
             } catch (e) { document.getElementById('archive-container').innerText = "Sync failed."; }
         }
 
-        function detectOriginalKey(content) {
-            if (!content) return "Unknown";
-            const match = content.match(/\[([A-G][#b]?)(.*?)\]/);
-            if (match && match[1]) {
-                return flatMap[match[1]] || match[1];
+        // New majority-based key detection logic
+    // Enhanced majority-based key detection logic with chord quality preservation
+    function detectOriginalKey(content) {
+        if (!content) return "Unknown";
+
+        // 1. Extract all unique chords from the song (e.g., [C], [D], [Em])
+        const chordMatches = content.match(/\[([A-G][#b]?)(.*?)\]/g);
+        if (!chordMatches) return "N/A";
+
+        // Helper function to normalize chord names to match keyScales format (e.g., C, Am, Bdim)
+        function cleanChord(m) {
+            let inside = m.replace(/[\[\]]/g, ''); // Remove brackets
+            let rootMatch = inside.match(/^([A-G][#b]?)/);
+            if (!rootMatch) return "";
+            let root = rootMatch[1];
+            let normalizedRoot = flatMap[root] || root;
+            
+            let remainder = inside.substring(root.length);
+            if (remainder.startsWith('dim')) {
+                return normalizedRoot + 'dim';
+            } else if (remainder.startsWith('m') && !remainder.startsWith('maj')) {
+                return normalizedRoot + 'm';
+            } else {
+                return normalizedRoot;
             }
-            return "N/A";
         }
+
+        // Get the root of the very first chord in the song to act as a tie-breaker
+        let firstChordMatch = chordMatches[0].match(/\[([A-G][#b]?)/);
+        let firstChordRoot = firstChordMatch ? (flatMap[firstChordMatch[1]] || firstChordMatch[1]) : null;
+
+        // Clean unique chords to their normalized forms (preserving 'm' and 'dim')
+        const uniqueChords = [...new Set(chordMatches.map(m => cleanChord(m)))].filter(Boolean);
+
+        // 2. Define the standard 7 chords for every major key
+        const keyScales = {
+            'C':  ['C', 'Dm', 'Em', 'F', 'G', 'Am', 'Bdim'],
+            'C#': ['C#', 'D#m', 'E#m', 'F#', 'G#', 'A#m', 'B#dim'],
+            'D':  ['D', 'Em', 'F#m', 'G', 'A', 'Bm', 'C#dim'],
+            'D#': ['D#', 'Fm', 'Gm', 'G#', 'A#', 'Cm', 'Ddim'],
+            'E':  ['E', 'F#m', 'G#m', 'A', 'B', 'C#m', 'D#dim'],
+            'F':  ['F', 'Gm', 'Am', 'Bb', 'C', 'Dm', 'Edim'],
+            'F#': ['F#', 'G#m', 'A#m', 'B', 'C#', 'D#m', 'E#dim'],
+            'G':  ['G', 'Am', 'Bm', 'C', 'D', 'Em', 'F#dim'],
+            'G#': ['G#', 'A#m', 'Cm', 'C#', 'D#', 'Fm', 'Gdim'],
+            'A':  ['A', 'Bm', 'C#m', 'D', 'E', 'F#m', 'G#dim'],
+            'A#': ['A#', 'Cm', 'Dm', 'D#', 'F', 'Gm', 'Adim'],
+            'B':  ['B', 'C#m', 'D#m', 'E', 'F#', 'G#m', 'A#dim']
+        };
+
+        let bestKey = "C";
+        let highestScore = -1;
+
+        // 3. Score each key based on how many of the song's chords fit into that key's scale
+        for (const [key, scale] of Object.entries(keyScales)) {
+            let score = 0;
+            uniqueChords.forEach(chord => {
+                if (scale.includes(chord)) {
+                    score++;
+                }
+            });
+
+            // Ties are broken by checking if the evaluated key matches the first chord's root note
+            if (score > highestScore || (score === highestScore && key === firstChordRoot)) {
+                highestScore = score;
+                bestKey = key;
+            }
+        }
+
+        return bestKey;
+    }
 
         function renderArchive() {
             const container = document.getElementById('archive-container');
