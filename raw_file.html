@@ -127,7 +127,7 @@
         h2 { margin: 0; font-size: 20px; color: var(--text-primary); font-weight: 600; }
 
         .action-controls { display: flex; gap: 10px; align-items: center; }
-        .toggle-btn, .home-nav-btn, .refresh-nav-btn, .bulk-delete-btn {
+        .toggle-btn, .home-nav-btn, .refresh-nav-btn, .bulk-delete-btn, .bulk-download-btn {
             background: var(--bg-hover); color: var(--text-primary); border: 1px solid var(--border-color); 
             padding: 8px 14px; border-radius: 20px; cursor: pointer; font-size: 14px; font-weight: 600;
             display: flex; align-items: center; gap: 6px; transition: all 0.2s ease;
@@ -143,6 +143,14 @@
             display: none;
         }
         .bulk-delete-btn:hover { background: var(--accent-red); color: var(--bg-main); }
+
+        .bulk-download-btn {
+            background: rgba(56, 189, 248, 0.2); 
+            border-color: var(--accent-blue); 
+            color: var(--accent-blue);
+            display: none;
+        }
+        .bulk-download-btn:hover { background: var(--accent-blue); color: var(--bg-main); }
 
         /* LIST CONTROL BOX FOR SELECT ALL */
         .list-utility-bar {
@@ -167,12 +175,14 @@
         .item-name { font-weight: 500; color: var(--text-primary); font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .preview-action { color: var(--accent-blue); font-weight: bold; font-size: 13px; white-space: nowrap; margin-right: 5px; }
         
-        .delete-btn {
+        .delete-btn, .download-btn {
             background: transparent; color: var(--text-secondary); border: none;
             padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 14px;
             transition: all 0.2s ease; display: flex; align-items: center; justify-content: center;
         }
         .delete-btn:hover { background: rgba(248, 113, 113, 0.2); color: var(--accent-red); }
+        .download-btn { color: var(--text-secondary); }
+        .download-btn:hover { background: rgba(74, 222, 128, 0.2); color: var(--accent-green); }
         
         .icon { margin-right: 4px; font-size: 18px; display: inline-block; width: 24px; text-align: center; flex-shrink: 0; }
         .folder-icon { color: #f59e0b; }
@@ -183,7 +193,6 @@
 
         .preview-container { flex-grow: 1; border: 2px dashed var(--border-color); border-radius: 8px; background: var(--bg-main); display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; }
         .preview-container iframe { width: 100%; height: 100%; border: none; background: white; }
-        .preview-container img { max-width: 100%; max-height: 100%; object-fit: contain; }
         .preview-placeholder { color: var(--text-secondary); font-style: italic; font-size: 14px; text-align: center; padding: 20px; }
 
         .modal-overlay {
@@ -242,6 +251,7 @@
             <div class="header-container">
                 <h2>Workspace Storage</h2>
                 <div class="action-controls">
+                    <button id="bulkDownloadBtn" class="bulk-download-btn" onclick="executeBulkDownload()">📥 Download Selected</button>
                     <button id="bulkDeleteBtn" class="bulk-delete-btn" onclick="executeBulkDeletion()">🗑️ Delete Selected</button>
                     <button class="home-nav-btn" onclick="goToHome()">🏠 Home</button>
                     <button class="refresh-nav-btn" onclick="refreshFolderContents()">🔄 Refresh</button>
@@ -398,7 +408,7 @@
     function closeUploadModal() {
         if(uploadAbortionEngine) { if(!confirm("Upload stream running. Close console and cancel operations?")) return; cancelUploads(); }
         document.getElementById('uploadModal').style.display = 'none';
-        document.getElementById('eyeIcon').innerText = "👁️";
+        document.getElementById('eyeIcon').innerText = "👁";
     }
 
     function closeModalOnOverlay(e) { if (e.target.id === 'uploadModal') closeUploadModal(); }
@@ -445,7 +455,7 @@
         explorerStatus.innerText = "Syncing directory registry arrays...";
         utilityBar.style.display = "none";
         selectAllBox.checked = false;
-        evaluateBulkDeleteButtonVisibility();
+        evaluateBulkActionVisibility();
 
         const url = targetId ? `${WEB_APP_URL}?folderId=${targetId}` : WEB_APP_URL;
 
@@ -476,9 +486,11 @@
                     folders.forEach(folder => {
                         const li = document.createElement('li'); li.className = 'item';
                         li.innerHTML = `
-                            <input type="checkbox" class="item-checkbox" data-id="${folder.id}" data-type="folder" onclick="event.stopPropagation(); evaluateBulkDeleteButtonVisibility();">
+                            <input type="checkbox" class="item-checkbox" data-id="${folder.id}" data-type="folder" onclick="event.stopPropagation(); evaluateBulkActionVisibility();">
                             <div class="item-clickable"><span class="icon folder-icon">📁</span><span class="item-name">${folder.name}</span><span style="color:var(--text-secondary); font-size:12px; white-space:nowrap; margin-right:5px;">Open ➔</span></div>
-                            <button class="delete-btn">🗑️</button>
+                            <div style="display: flex; gap: 4px;">
+                                <button class="delete-btn" title="Delete Folder">🗑️</button>
+                            </div>
                         `;
                         li.querySelector('.item-clickable').onclick = function() { folderHistory.push(currentFolderId); loadFolderContents(folder.id); };
                         li.querySelector('.delete-btn').onclick = function(e) { e.stopPropagation(); deleteItem(folder.id, 'folder', folder.name); };
@@ -488,11 +500,15 @@
                     files.forEach(file => {
                         const li = document.createElement('li'); li.className = 'item';
                         li.innerHTML = `
-                            <input type="checkbox" class="item-checkbox" data-id="${file.id}" data-type="file" onclick="event.stopPropagation(); evaluateBulkDeleteButtonVisibility();">
+                            <input type="checkbox" class="item-checkbox" data-id="${file.id}" data-type="file" onclick="event.stopPropagation(); evaluateBulkActionVisibility();">
                             <div class="item-clickable"><span class="icon file-icon">📄</span><span class="item-name">${file.name}</span><span class="preview-action">View Inline</span></div>
-                            <button class="delete-btn">🗑️</button>
+                            <div style="display: flex; gap: 4px;">
+                                <button class="download-btn" title="Download File">📥</button>
+                                <button class="delete-btn" title="Delete File">🗑️</button>
+                            </div>
                         `;
                         li.querySelector('.item-clickable').onclick = function() { showInlinePreview(file); };
+                        li.querySelector('.download-btn').onclick = function(e) { e.stopPropagation(); downloadSingleFile(file.id); };
                         li.querySelector('.delete-btn').onclick = function(e) { e.stopPropagation(); deleteItem(file.id, 'file', file.name); };
                         contentList.appendChild(li);
                     });
@@ -503,18 +519,51 @@
     function toggleSelectAllItems(masterCheckbox) {
         const checkboxes = document.querySelectorAll('.item-list .item-checkbox');
         checkboxes.forEach(cb => cb.checked = masterCheckbox.checked);
-        evaluateBulkDeleteButtonVisibility();
+        evaluateBulkActionVisibility();
     }
 
-    function evaluateBulkDeleteButtonVisibility() {
+    function evaluateBulkActionVisibility() {
         const selectedCheckboxes = document.querySelectorAll('.item-list .item-checkbox:checked');
-        const bulkBtn = document.getElementById('bulkDeleteBtn');
+        const bulkDeleteBtn = document.getElementById('bulkDeleteBtn');
+        const bulkDownloadBtn = document.getElementById('bulkDownloadBtn');
+        
         if (selectedCheckboxes.length > 0) {
-            bulkBtn.style.display = 'flex';
-            bulkBtn.innerText = `🗑️ Delete Selected (${selectedCheckboxes.length})`;
+            bulkDeleteBtn.style.display = 'flex';
+            bulkDeleteBtn.innerText = `🗑️ Delete Selected (${selectedCheckboxes.length})`;
+            
+            let fileCount = 0;
+            selectedCheckboxes.forEach(cb => {
+                if (cb.getAttribute('data-type') === 'file') fileCount++;
+            });
+            
+            if (fileCount > 0) {
+                bulkDownloadBtn.style.display = 'flex';
+                bulkDownloadBtn.innerText = `📥 Download Selected (${fileCount})`;
+            } else {
+                bulkDownloadBtn.style.display = 'none';
+            }
         } else {
-            bulkBtn.style.display = 'none';
+            bulkDeleteBtn.style.display = 'none';
+            bulkDownloadBtn.style.display = 'none';
         }
+    }
+
+    function executeBulkDownload() {
+        const selectedCheckboxes = document.querySelectorAll('.item-list .item-checkbox:checked');
+        let delay = 0;
+        selectedCheckboxes.forEach(cb => {
+            if (cb.getAttribute('data-type') === 'file') {
+                // Staggered triggers guarantee modern web-browsers do not block file initialization popups
+                setTimeout(() => {
+                    downloadSingleFile(cb.getAttribute('data-id'));
+                }, delay);
+                delay += 400; 
+            }
+        });
+    }
+
+    function downloadSingleFile(id) {
+        window.open(`https://drive.google.com/uc?export=download&id=${id}`, '_blank');
     }
 
     function executeBulkDeletion() {
@@ -579,20 +628,18 @@
         let fileId = file.id;
         let cleanUrl = file.url || "";
         
-        const isImage = file.name.match(/\.(jpeg|jpg|gif|png|webp|bmp)$/i);
-        
-        if (isImage) {
-            container.innerHTML = `<img src="https://drive.google.com/uc?export=view&id=${fileId}" alt="Loading Image Stream...">`;
+        // Pictures are now safely processed via Google's /preview player sandbox.
+        // This stops cookies, frame rules, and cross-origin blocks from breaking the stream.
+        if (cleanUrl.includes('/view')) {
+            cleanUrl = cleanUrl.replace('/view', '/preview');
+        } else if (cleanUrl.includes('id=')) {
+            const urlParams = new URLSearchParams(cleanUrl.split('?')[1]);
+            fileId = urlParams.get('id') || fileId;
+            cleanUrl = `https://drive.google.com/file/d/${fileId}/preview`;
         } else {
-            if (cleanUrl.includes('/view')) {
-                cleanUrl = cleanUrl.replace('/view', '/preview');
-            } else if (cleanUrl.includes('id=')) {
-                const urlParams = new URLSearchParams(cleanUrl.split('?')[1]);
-                fileId = urlParams.get('id') || fileId;
-                cleanUrl = `https://drive.google.com/file/d/${fileId}/preview`;
-            }
-            container.innerHTML = `<iframe src="${cleanUrl}" allow="autoplay"></iframe>`;
+            cleanUrl = `https://drive.google.com/file/d/${fileId}/preview`;
         }
+        container.innerHTML = `<iframe src="${cleanUrl}" allow="autoplay"></iframe>`;
     }
 
     function goBack() { if (folderHistory.length > 0) loadFolderContents(folderHistory.pop()); }
