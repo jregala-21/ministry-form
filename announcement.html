@@ -306,9 +306,10 @@
     </div>
 
     <div class="input-group">
-        <label class="section-label">File Attachment:</label>
-        <input type="file" id="fileInput">
-    </div>
+    <label class="section-label">File Attachments:</label>
+    <input type="file" id="fileInput" multiple>
+    <div id="fileListPreview" style="margin-top:8px; text-align:left; font-size:13px; color:var(--text-muted);"></div>
+</div>
 
     <div class="input-group">
         <label class="section-label">Select Recipients:</label>
@@ -398,12 +399,30 @@
 
     async function loadEmailsFromSheet() {
         try {
+
             const response = await fetch(GET_EMAILS_URL);
             emailList = await response.json();
+
             renderEmailList();
+
+            const isAutoMode =
+                localStorage.getItem("autoAnnouncementMode") === "true";
+
+            if (isAutoMode) {
+
+                document.getElementById("selectAllBox").checked = true;
+
+                document.querySelectorAll(".emailCheck").forEach(cb => {
+                    cb.checked = true;
+                });
+
+                localStorage.removeItem("autoAnnouncementMode");
+            }
+
         } catch (error) {
             console.error("Error fetching emails:", error);
-            document.getElementById("emailContainer").innerText = "❌ Failed to load members.";
+            document.getElementById("emailContainer").innerText =
+                "❌ Failed to load members.";
         }
     }
 
@@ -515,8 +534,14 @@
                 });
             }
         } else if (autoLoadedPdf) {
-            attachments.push(autoLoadedPdf);
-        }
+
+    if (Array.isArray(autoLoadedPdf)) {
+        attachments.push(...autoLoadedPdf);
+    } else {
+        attachments.push(autoLoadedPdf);
+    }
+
+}
 
         // FIXED: Created a unique scheduleId/nonce to block server-side duplicate entry writes
         const uniqueId = "SCH-" + Date.now() + "-" + Math.random().toString(36).substr(2, 9);
@@ -586,7 +611,13 @@
                 });
             }
         } else if (autoLoadedPdf) {
-            attachments.push(autoLoadedPdf);
+
+            if (Array.isArray(autoLoadedPdf)) {
+                attachments.push(...autoLoadedPdf);
+            } else {
+                attachments.push(autoLoadedPdf);
+            }
+
         }
 
         let successCount = 0;
@@ -640,39 +671,82 @@
 
     window.addEventListener('DOMContentLoaded', () => {
         const savedCaption = localStorage.getItem("autoLineupCaption");
-        const savedPdf = localStorage.getItem("autoLineupPdf");
 
         if (savedCaption) {
             document.getElementById("caption").value = savedCaption;
-            localStorage.removeItem("autoLineupCaption"); 
+            localStorage.removeItem("autoLineupCaption");
         }
+        const savedPdfBatch = localStorage.getItem("autoLineupPdfBatch");
+        const savedPdf = localStorage.getItem("autoLineupPdf");
 
-        if (savedPdf) {
-            autoLoadedPdf = JSON.parse(savedPdf);
-            localStorage.removeItem("autoLineupPdf");
+        if (savedPdfBatch) {
+
+            autoLoadedPdf = JSON.parse(savedPdfBatch);
+
+            localStorage.removeItem("autoLineupPdfBatch");
+
             const fileInput = document.getElementById("fileInput");
             fileInput.style.borderColor = "var(--success)";
-            
+
             const note = document.createElement("div");
+            note.id = "pdfStagedNote";
             note.style.color = "var(--success)";
             note.style.fontSize = "13px";
             note.style.marginTop = "6px";
             note.style.fontWeight = "600";
             note.style.textAlign = "left";
+
+            note.innerHTML =
+                `📎 ${autoLoadedPdf.length} poster(s) automatically attached`;
+
+            fileInput.parentNode.appendChild(note);
+
+        } else if (savedPdf) {
+
+            autoLoadedPdf = [JSON.parse(savedPdf)];
+
+            localStorage.removeItem("autoLineupPdf");
+
+            const fileInput = document.getElementById("fileInput");
+            fileInput.style.borderColor = "var(--success)";
+
+            const note = document.createElement("div");
             note.id = "pdfStagedNote";
-            note.innerText = `📎 Auto-attached: ${autoLoadedPdf.fileName}`;
+            note.style.color = "var(--success)";
+            note.style.fontSize = "13px";
+            note.style.marginTop = "6px";
+            note.style.fontWeight = "600";
+            note.style.textAlign = "left";
+
+            note.innerHTML =
+                `📎 1 poster automatically attached`;
+
             fileInput.parentNode.appendChild(note);
         }
     });
 
     document.getElementById("fileInput").addEventListener("change", function() {
-        if (this.files.length > 0) {
-            autoLoadedPdf = null;
-            const note = document.getElementById("pdfStagedNote");
-            if (note) note.remove();
-            this.style.borderColor = "var(--border)";
-        }
-    });
+    const preview = document.getElementById("fileListPreview");
+
+    if (this.files.length > 0) {
+        autoLoadedPdf = null;
+
+        const note = document.getElementById("pdfStagedNote");
+        if (note) note.remove();
+
+        this.style.borderColor = "var(--border)";
+
+        preview.innerHTML = "";
+
+        Array.from(this.files).forEach(file => {
+            preview.innerHTML += `
+                <div>📎 ${file.name} (${(file.size / 1024).toFixed(1)} KB)</div>
+            `;
+        });
+    } else {
+        preview.innerHTML = "";
+    }
+});
 
     loadEmailsFromSheet();
 </script>
