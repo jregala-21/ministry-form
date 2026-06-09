@@ -9,7 +9,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="#0f172a">
     <meta name="apple-mobile-web-app-title" content="JIL Portal">
-    <link rel="apple-touch-icon" href="logo.jpg">
+    <link rel="apple-touch-icon" href="icon-192.png">
     <style>
         :root {
             --bg: #0f172a;
@@ -311,7 +311,7 @@
             💼 PASTORS / ADMIN PORTAL
         </button>
 
-        <button class="menu-btn btn-history-home" onclick="location.href='album'">
+        <button class="menu-btn btn-history-home" onclick="location.href='album.html'">
             📖 View JIL Taguig History
         </button>
 
@@ -357,9 +357,19 @@
     <div id="pastorsView" class="portal-section">
         <button class="btn-back" onclick="switchView('selectionView')">⬅️ Back to Main Menu</button>
 
-        <button class="menu-btn btn-man" onclick="location.href='schedule_maker.html'">
-            🖥️ Sunday / Midweek Scheduler
+        <button class="menu-btn btn-man" onclick="toggleMenu('schedulerMenu', 'schedulerArrow')">
+            📅 Scheduler <span id="schedulerArrow" class="arrow">▼</span>
         </button>
+
+        <div id="schedulerMenu" class="submenu">
+            <button class="menu-btn sub-btn" onclick="location.href='schedule_maker.html'">
+                🖥️ Sunday / Midweek Scheduler
+            </button>
+
+            <button class="menu-btn sub-btn" onclick="location.href='schedule_wan.html'">
+                🎸 JAM Scheduler
+            </button>
+        </div>
 
         <button class="menu-btn btn-via" onclick="location.href='info.html'">
             ℹ️ WAN-MAN Information
