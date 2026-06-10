@@ -3,14 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JAM Scheduler</title>
+    <title>JAM / VIA Scheduler</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@800;900&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-
-
-
 
     <style>
         :root {
@@ -30,12 +27,19 @@
             background-color: var(--bg-workspace);
             color: var(--text-main);
             margin: 0;
-            padding: 24px;
+            padding: 16px;
             box-sizing: border-box;
-            height: 100vh;
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
-            overflow: hidden;
+        }
+
+        @media (min-width: 1024px) {
+            body {
+                padding: 24px;
+                height: 100vh;
+                overflow: hidden;
+            }
         }
 
         header {
@@ -43,13 +47,21 @@
             border-bottom: 1px solid var(--border-ui);
             padding-bottom: 14px;
             display: flex;
-            justify-content: space-between;
-            align-items: center;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        @media (min-width: 640px) {
+            header {
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+            }
         }
 
         header h1 {
             margin: 0;
-            font-size: 22px;
+            font-size: 20px;
             font-weight: 700;
             letter-spacing: -0.5px;
             background: linear-gradient(to right, #f9fafb, var(--accent-glow));
@@ -59,38 +71,83 @@
 
         .studio-container {
             display: flex;
-            gap: 24px;
-            flex-grow: 1;
-            height: calc(100vh - 100px);
+            flex-direction: column;
+            gap: 20px;
             width: 100%;
+            flex-grow: 1;
+        }
+
+        @media (min-width: 1024px) {
+            .studio-container {
+                flex-direction: row;
+                height: calc(100vh - 100px);
+                gap: 24px;
+                overflow: hidden;
+            }
+        }
+
+        /* NAVIGATION TABS */
+        .tab-navigation {
+            display: flex;
+            border-bottom: 1px solid var(--border-ui);
+            margin-bottom: 16px;
+            gap: 4px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            padding: 10px 12px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .tab-btn.active {
+            color: var(--accent-glow);
+            border-bottom-color: var(--accent-glow);
+            background: rgba(56, 189, 248, 0.05);
         }
 
         /* CONTROL PANEL */
         .control-panel {
-            width: 42%;
-            min-width: 380px;
+            width: 100%;
             background-color: var(--bg-control);
             border: 1px solid var(--border-ui);
             border-radius: 14px;
-            padding: 24px;
-            overflow-y: auto;
+            padding: 16px;
             box-sizing: border-box;
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: 16px;
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+        }
+
+        @media (min-width: 1024px) {
+            .control-panel {
+                width: 42%;
+                min-width: 380px;
+                padding: 24px;
+                overflow-y: auto;
+                gap: 20px;
+            }
         }
 
         .form-section {
             background: rgba(9, 13, 22, 0.5);
             border: 1px solid var(--border-ui);
             border-radius: 10px;
-            padding: 16px;
+            padding: 14px;
         }
 
         .form-section h3 {
-            margin: 0 0 14px 0;
-            font-size: 12px;
+            margin: 0 0 12px 0;
+            font-size: 11px;
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 1.5px;
@@ -106,6 +163,13 @@
 
         .input-group:last-child { margin-bottom: 0; }
 
+        .toggle-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 4px;
+        }
+
         label {
             font-size: 11px;
             font-weight: 600;
@@ -118,12 +182,14 @@
             background-color: var(--bg-input);
             border: 1px solid var(--border-ui);
             border-radius: 8px;
-            padding: 10px 14px;
+            padding: 10px 12px;
             color: var(--text-main);
             font-size: 14px;
             font-family: inherit;
             outline: none;
             transition: all 0.2s;
+            width: 100%;
+            box-sizing: border-box;
         }
 
         input:focus {
@@ -131,10 +197,9 @@
             box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
         }
 
-        /* CUSTOM CHECKBOXES */
         input[type="checkbox"] {
-            width: 16px;
-            height: 16px;
+            width: 18px;
+            height: 18px;
             accent-color: var(--accent-glow);
             cursor: pointer;
         }
@@ -149,7 +214,7 @@
         }
         
         .week-card-header {
-            padding: 14px;
+            padding: 12px 14px;
             background: rgba(255,255,255,0.02);
             font-weight: 700;
             font-size: 13px;
@@ -168,7 +233,7 @@
         }
 
         .week-card-body {
-            padding: 16px;
+            padding: 14px;
             display: none;
             border-top: 1px solid var(--border-ui);
         }
@@ -176,9 +241,17 @@
         .week-card-body.open { display: block; }
         
         .service-split {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        @media (min-width: 480px) {
+            .service-split {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 15px;
+            }
         }
         
         .service-split h4 { 
@@ -192,18 +265,18 @@
         .theme-selector {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 10px;
+            gap: 8px;
         }
 
         .theme-btn {
             background: var(--bg-input);
             border: 1px solid var(--border-ui);
             color: var(--text-main);
-            padding: 12px;
+            padding: 10px;
             border-radius: 8px;
             cursor: pointer;
             font-weight: 600;
-            font-size: 13px;
+            font-size: 12px;
             transition: all 0.2s ease;
         }
 
@@ -217,8 +290,7 @@
             display: flex;
             flex-direction: column;
             gap: 10px;
-            margin-top: auto;
-            padding-top: 10px;
+            margin-top: 10px;
         }
 
         .select-all-container {
@@ -226,20 +298,19 @@
             align-items: center;
             gap: 10px;
             background: rgba(56, 189, 248, 0.1);
-            padding: 12px 16px;
+            padding: 12px;
             border-radius: 8px;
             border: 1px solid var(--border-ui);
             font-size: 13px;
             font-weight: 600;
             cursor: pointer;
-            margin-bottom: 4px;
         }
 
-        .btn-row { display: flex; gap: 12px; }
+        .btn-row { display: flex; gap: 10px; width: 100%; }
 
         .btn {
             flex: 1;
-            padding: 14px;
+            padding: 12px;
             border-radius: 8px;
             font-weight: 700;
             font-size: 13px;
@@ -257,34 +328,42 @@
         .btn-download { background-color: transparent; border: 1px solid var(--border-ui); color: var(--text-main); }
         .btn-download:hover { background-color: var(--bg-input); }
         .btn-save { background-color: var(--accent-glow); color: #090d16; }
-        .btn-save:hover { opacity: 0.9; transform: translateY(-1px); }
-        .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none !important; }
+        .btn-save:hover { opacity: 0.9; }
+        .btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
         /* CANVAS PREVIEW PANEL */
         .preview-panel {
-            width: 58%;
+            width: 100%;
             background-color: rgba(17, 24, 39, 0.4);
             border: 1px solid var(--border-ui);
             border-radius: 14px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 20px;
+            padding: 16px;
             box-sizing: border-box;
             position: relative;
-            overflow-y: auto;
-            gap: 30px; 
+            gap: 24px; 
         }
 
-        /* POSTER CANVAS (4:5 Aspect Ratio) */
+        @media (min-width: 1024px) {
+            .preview-panel {
+                width: 58%;
+                padding: 20px;
+                overflow-y: auto;
+            }
+        }
+
+        /* POSTER CANVAS (4:5 Aspect Ratio Setup) */
         .poster-canvas {
-            width: 400px;
+            width: 100%;
+            max-width: 400px;
             min-height: 500px;
             border-radius: 12px;
             box-shadow: 0 25px 50px -12px rgba(0,0,0,0.7);
             display: flex;
             flex-direction: column;
-            padding: 40px 32px;
+            padding: 36px 28px;
             box-sizing: border-box;
             position: relative;
             overflow: hidden;
@@ -300,16 +379,26 @@
         .theme-sunset { background: linear-gradient(135deg, #4c0519, #7c2d12); color: #ffedd5; }
         .theme-emerald { background: linear-gradient(135deg, #022c22, #064e3b); color: #ccfbf1; }
 
-        .poster-header { text-align: center; margin-bottom: 28px; }
+        .poster-header { text-align: center; margin-bottom: 24px; }
 
         .poster-title {
             font-family: 'Montserrat', sans-serif;
-            font-size: 28px;
+            font-size: 24px;
             font-weight: 900;
             text-transform: uppercase;
-            letter-spacing: 4px;
+            letter-spacing: 2px;
             margin: 0 0 6px 0;
-            line-height: 1;
+            line-height: 1.2;
+        }
+        
+        .poster-subtitle {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 16px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin: 4px 0 0 0;
+            opacity: 0.9;
         }
 
         .theme-light .poster-title { color: #0f172a; }
@@ -319,7 +408,7 @@
         .theme-emerald .poster-title { color: #2dd4bf; }
 
         .poster-date {
-            font-size: 12px;
+            font-size: 11px;
             letter-spacing: 2px;
             text-transform: uppercase;
             opacity: 0.8;
@@ -329,8 +418,17 @@
         .services-layout {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 18px;
+            gap: 14px;
             flex-grow: 1;
+        }
+        
+        /* Unified Monthly Service Grid System Layout */
+        .services-monthly-layout {
+            display: flex;
+            flex-direction: column;
+            gap: 16px; /* Added more space between each line card row */
+            flex-grow: 1;
+            width: 100%;
         }
 
         .service-column {
@@ -339,7 +437,7 @@
             backdrop-filter: blur(4px);
             -webkit-backdrop-filter: blur(4px);
             border-radius: 10px;
-            padding: 16px 14px;
+            padding: 14px 12px;
             display: flex;
             flex-direction: column;
         }
@@ -347,13 +445,13 @@
         .theme-light .service-column { background: rgba(0, 0, 0, 0.03); border: 1px solid rgba(0, 0, 0, 0.06); }
 
         .service-title {
-            font-size: 13px;
+            font-size: 12px;
             text-transform: uppercase;
             letter-spacing: 1.5px;
             font-weight: 800;
             text-align: center;
-            margin: 0 0 16px 0;
-            padding-bottom: 8px;
+            margin: 0 0 12px 0;
+            padding-bottom: 6px;
             border-bottom: 1px solid rgba(255,255,255,0.12);
         }
 
@@ -362,38 +460,57 @@
         .theme-sunset .service-title { color: #ffedd5; }
         .theme-emerald .service-title { color: #ccfbf1; }
 
-        .roster-list { display: flex; flex-direction: column; gap: 12px; }
+        .roster-list { display: flex; flex-direction: column; gap: 10px; }
         .roster-row { display: flex; flex-direction: column; }
         .roster-role {
             font-size: 9px;
             text-transform: uppercase;
             letter-spacing: 0.8px;
-            opacity: 0.5;
+            opacity: 0.6;
             font-weight: 700;
             margin-bottom: 2px;
         }
         .theme-light .roster-role { opacity: 0.7; color: #4b5563; }
 
         .roster-name {
-        font-size: 13px;
-        font-weight: 600;
-        line-height: 1.2;
+            font-size: 13px;
+            font-weight: 600;
+            line-height: 1.2;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            word-break: break-word;
+            min-height: 24px;
+        }
 
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
-
-        overflow: hidden;
-        word-break: break-word;
-        min-height: 30px;
-    }
+        /* Monthly Card Layout for Row Data Grid Views */
+        .poster-monthly-row {
+            display: grid;
+            grid-template-columns: 100px 1fr 1fr;
+            gap: 12px;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            padding: 12px 14px; /* Increased line row height/padding layout */
+            border-radius: 8px;
+        }
+        .theme-light .poster-monthly-row { background: rgba(0, 0, 0, 0.02); border-color: rgba(0, 0, 0, 0.05); }
+        
+        .poster-monthly-date {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--accent-glow);
+            text-transform: uppercase;
+        }
+        .theme-light .poster-monthly-date { color: inherit; font-weight: 800; }
 
         .poster-footer {
             text-align: center;
             font-size: 10px;
             letter-spacing: 2px;
             opacity: 0.5;
-            margin-top: 20px;
+            margin-top: 24px;
             text-transform: uppercase;
             font-weight: 600;
         }
@@ -401,13 +518,13 @@
         /* TRACKING HUD STATUS INDICATOR */
         .status-hud {
             position: absolute;
-            bottom: 20px;
-            left: 20px;
-            right: 20px;
+            bottom: 16px;
+            left: 16px;
+            right: 16px;
             background-color: var(--bg-control);
             border: 1px solid var(--border-ui);
             border-radius: 8px;
-            padding: 14px 18px;
+            padding: 12px 16px;
             font-size: 13px;
             display: none;
             flex-direction: column;
@@ -416,58 +533,22 @@
             z-index: 100;
         }
 
-        .header-home-btn {
-        background: transparent;
-        border: 1px solid var(--border-ui);
-        color: var(--text-main);
-        padding: 10px 16px;
-        border-radius: 8px;
-        cursor: pointer;
-        font-weight: 700;
-        transition: all 0.2s ease;
-    }
-
-    .header-home-btn:hover {
-        background: var(--bg-input);
-        border-color: var(--accent-glow);
-    }
-
-        @media (max-width: 950px) {
-            body { height: auto; overflow-y: auto; }
-            .studio-container { flex-direction: column; height: auto; }
-            .control-panel, .preview-panel { width: 100%; }
-            .poster-canvas { width: 100%; max-width: 400px; margin: 0 auto; }
-        }
+        .tab-content { display: none; }
+        .tab-content.active-content { display: flex; flex-direction: column; gap: 16px; }
     </style>
 </head>
 <body>
 
     <header>
         <div>
-            <h1>JAM Scheduler Workspace</h1>
+            <h1>JAM / VIA Scheduler Workspace</h1>
         </div>
-
-        <div style="display:flex; align-items:center; gap:12px;">
-            <button
-                onclick="window.location.href='index.html'"
-                style="
-                    background: var(--bg-input);
-                    border: 1px solid var(--border-ui);
-                    color: var(--text-main);
-                    padding: 10px 16px;
-                    border-radius: 8px;
-                    cursor: pointer;
-                    font-weight: 600;
-                    transition: all 0.2s;
-                "
-                onmouseover="this.style.borderColor='var(--accent-glow)'"
-                onmouseout="this.style.borderColor='var(--border-ui)'"
-            >
+        <div style="display:flex; align-items:center; gap:12px; justify-content: space-between;">
+            <button onclick="window.location.href='index.html'" style="background: var(--bg-input); border: 1px solid var(--border-ui); color: var(--text-main); padding: 8px 14px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 13px;">
                 🏠 Home
             </button>
-
-            <div style="font-size: 13px; color: var(--text-muted);">
-                Target Directory: Workspace Root
+            <div style="font-size: 12px; color: var(--text-muted);">
+                Workspace Root
             </div>
         </div>
     </header>
@@ -476,7 +557,13 @@
         <div class="control-panel">
             <div class="input-group">
                 <label for="schedMonth">Target Month Compilation</label>
-                <input type="month" id="schedMonth" onchange="generateMonthlyBatch()">
+                <input type="month" id="schedMonth" onchange="handleMonthChange()">
+            </div>
+
+            <!-- TABS CONTROLLER CONTAINER -->
+            <div class="tab-navigation">
+                <button class="tab-btn active" id="tabBand" onclick="switchMainTab('band')">Band Roster</button>
+                <button class="tab-btn" id="tabServices" onclick="switchMainTab('services')">Sunday Services</button>
             </div>
 
             <div class="form-section">
@@ -491,22 +578,34 @@
                 </div>
             </div>
 
-            <div id="monthlyFormsContainer">
+            <!-- TAB 1: ORIGINAL BAND SCHEDULER SYSTEM CONTENT -->
+            <div id="contentBand" class="tab-content active-content">
+                <div id="monthlyFormsContainer"></div>
+                <div class="action-block">
+                    <label class="select-all-container">
+                        <input type="checkbox" id="selectAllCheckbox" checked onchange="toggleAllWeeks(this)">
+                        Select All / Deselect All Weeks
+                    </label>
+                    <div class="btn-row">
+                        <button class="btn btn-download" onclick="downloadSelectedPosters()">📥 Download Selected</button>
+                    </div>
+                    <button id="syncBatchBtn" class="btn btn-save" onclick="sendSelectedToAnnouncementPage('band')">🚀 Send Selected to Announcement</button>
                 </div>
+            </div>
 
-            <div class="action-block">
-                <label class="select-all-container">
-                    <input type="checkbox" id="selectAllCheckbox" checked onchange="toggleAllWeeks(this)">
-                    Select All / Deselect All Weeks
-                </label>
-                
-                <div class="btn-row">
-                    <button class="btn btn-download" onclick="downloadSelectedPosters()">💾 Download Selected PNGs</button>
+            <!-- TAB 2: NEW SUNDAY SERVICES SCHEDULER SYSTEM CONTENT -->
+            <div id="contentServices" class="tab-content">
+                <div id="servicesFormsContainer" style="display:flex; flex-direction:column; gap:12px;"></div>
+                <div class="action-block">
+                    <div class="btn-row">
+                        <button class="btn btn-download" onclick="downloadSinglePoster('servicesMonthlyPoster')">📥 Download Poster</button>
+                    </div>
+                    <button id="syncServicesBtn" class="btn btn-save" onclick="sendSelectedToAnnouncementPage('services')">🚀 Send to Announcement</button>
                 </div>
-                <button id="syncBatchBtn" class="btn btn-save" onclick="sendSelectedToAnnouncementPage()">🚀 Send Selected to Announcement</button>
             </div>
         </div>
 
+        <!-- CANVAS VISUAL PREVIEW MATRIX CONTAINER -->
         <div class="preview-panel" id="batchPreviewContainer">
             <div class="status-hud" id="statusHudBatch">
                 <div class="hud-meta"><span id="batchHudMsg">Preparing operations...</span></div>
@@ -515,10 +614,11 @@
     </div>
 
 <script>
-
     const MEMBER_API = "https://script.google.com/macros/s/AKfycbz7xG5gki0Jr8TidIbKKpT8YM52XDxTK_6JN2XcX7xESn8ABgdp98E_Q9WS2D8geKfB/exec";
-
     let memberDirectory = [];
+    let activeTab = 'band';
+    let batchSundays = [];
+    let currentBatchTheme = 'theme-worship';
 
     const instruments = [
         { id: 'keys', label: 'Keyboardist' },
@@ -531,66 +631,65 @@
     async function loadMemberDirectory() {
         try {
             const response = await fetch(MEMBER_API);
-
             memberDirectory = await response.json();
             buildMemberSuggestions();
-
-            console.log(
-                "Loaded members:",
-                memberDirectory.length
-            );
-
         } catch(err) {
-            console.error(
-                "Failed loading member directory",
-                err
-            );
-
+            console.error("Failed loading member directory", err);
             memberDirectory = [];
         }
     }
 
     function buildMemberSuggestions() {
-
-        const datalist =
-            document.getElementById("memberSuggestions");
-
+        const datalist = document.getElementById("memberSuggestions");
         datalist.innerHTML = "";
-
         memberDirectory.forEach(member => {
-
-            const option =
-                document.createElement("option");
-
+            const option = document.createElement("option");
             option.value = member.name;
             option.label = `${member.name} (${member.ministry})`;
-
             datalist.appendChild(option);
-
         });
     }
 
-    let batchSundays = [];
-    let currentBatchTheme = 'theme-worship';
-
     window.addEventListener('DOMContentLoaded', async () => {
-
         const d = new Date();
-        const monthStr =
-            d.getFullYear() +
-            "-" +
-            String(d.getMonth() + 1).padStart(2, '0');
-
+        const monthStr = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, '0');
         document.getElementById('schedMonth').value = monthStr;
-
         await loadMemberDirectory();
-
-        generateMonthlyBatch();
+        handleMonthChange();
     });
+
+    function switchMainTab(tabName) {
+        activeTab = tabName;
+        document.getElementById('tabBand').classList.toggle('active', tabName === 'band');
+        document.getElementById('tabServices').classList.toggle('active', tabName === 'services');
+        document.getElementById('contentBand').classList.toggle('active-content', tabName === 'band');
+        document.getElementById('contentServices').classList.toggle('active-content', tabName === 'services');
+        renderPreviews();
+    }
+
+    function handleMonthChange() {
+        calculateSundays();
+        generateBandForms();
+        generateServicesForms();
+        renderPreviews();
+    }
+
+    function calculateSundays() {
+        const monthVal = document.getElementById('schedMonth').value;
+        if(!monthVal) return;
+        const [year, month] = monthVal.split('-');
+        const daysInMonth = new Date(year, month, 0).getDate();
+        
+        batchSundays = [];
+        for(let i=1; i<=daysInMonth; i++) {
+            let d = new Date(year, month-1, i);
+            if(d.getDay() === 0) batchSundays.push(d);
+        }
+    }
 
     function toggleAccordion(id) {
         const body = document.getElementById(`week-body-${id}`);
-        body.classList.toggle('open');
+        if(body) body.classList.toggle('open');
     }
 
     function toggleAllWeeks(masterCheckbox) {
@@ -599,43 +698,22 @@
         });
     }
 
-    // Uncheck "Select All" if a user manually unchecks a single week
     function handleSingleCheckboxChange() {
         const total = document.querySelectorAll('.week-checkbox').length;
         const checked = document.querySelectorAll('.week-checkbox:checked').length;
         const master = document.getElementById('selectAllCheckbox');
-        master.checked = (total === checked);
+        if(master) master.checked = (total === checked);
     }
 
-    function generateMonthlyBatch() {
-        const monthVal = document.getElementById('schedMonth').value;
+    /* GENERATOR: ORIGINAL BAND FORMS MODULE */
+    function generateBandForms() {
         const formsContainer = document.getElementById('monthlyFormsContainer');
-        const previewContainer = document.getElementById('batchPreviewContainer');
-        
-        if(!monthVal) return;
-        const [year, month] = monthVal.split('-');
-        const daysInMonth = new Date(year, month, 0).getDate();
-        
-        batchSundays = [];
-        for(let i=1; i<=daysInMonth; i++) {
-            let d = new Date(year, month-1, i);
-            if(d.getDay() === 0) batchSundays.push(d); // Sunday
+        formsContainer.innerHTML = '';
+        if(document.getElementById('selectAllCheckbox')) {
+            document.getElementById('selectAllCheckbox').checked = true;
         }
 
-        formsContainer.innerHTML = '';
-        
-        // Clear old canvases but keep the HUD
-        const huds = previewContainer.querySelectorAll('.status-hud');
-        previewContainer.innerHTML = '';
-        huds.forEach(hud => previewContainer.appendChild(hud));
-
-        // Reset global checkbox
-        document.getElementById('selectAllCheckbox').checked = true;
-
         batchSundays.forEach((sunday, idx) => {
-            const dateStr = sunday.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
-            
-            // 1. Build Left Form Card (With Checkbox)
             let formHtml = `
                 <div class="week-card">
                     <div class="week-card-header" onclick="toggleAccordion(${idx})">
@@ -660,30 +738,126 @@
             });
             formHtml += `</div></div></div></div>`;
             formsContainer.innerHTML += formHtml;
-
-            // 2. Build Right Canvas
-            let canvasHtml = `
-            <div id="batchCanvas-${idx}" class="poster-canvas ${currentBatchTheme} batch-canvas-instance">
-                <div class="poster-header">
-                    <div class="poster-title">JAM ASSIGNED</div>
-                    <div class="poster-date">${dateStr}</div>
-                </div>
-                <div class="services-layout">
-                    <div class="service-column">
-                        <div class="service-title">1st Service</div>
-                        <div class="roster-list">`;
-            instruments.forEach(inst => {
-                canvasHtml += `<div class="roster-row"><span class="roster-role">${inst.label}</span><span id="b${idx}-s1-${inst.id}" class="roster-name">Unassigned</span></div>`;
-            });
-            canvasHtml += `</div></div><div class="service-column"><div class="service-title">2nd Service</div><div class="roster-list">`;
-            instruments.forEach(inst => {
-                canvasHtml += `<div class="roster-row"><span class="roster-role">${inst.label}</span><span id="b${idx}-s2-${inst.id}" class="roster-name">Unassigned</span></div>`;
-            });
-            canvasHtml += `</div></div></div><div class="poster-footer">JAM SCHEDULE MINISTRY</div></div>`;
-            
-            // Insert canvas before the HUD
-            previewContainer.insertAdjacentHTML('afterbegin', canvasHtml);
         });
+    }
+
+    /* GENERATOR: NEW SUNDAY SERVICES INPUT FORMS MODULE */
+    function generateServicesForms() {
+        const container = document.getElementById('servicesFormsContainer');
+        container.innerHTML = '';
+
+        batchSundays.forEach((sunday, idx) => {
+            const dateLabel = sunday.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+            let html = `
+                <div class="form-section">
+                    <h3 style="color:var(--accent-purple)">${dateLabel}</h3>
+                    <div class="input-group">
+                        <label>Praise & Worship</label>
+                        <input type="text" list="memberSuggestions" id="input-pw-${idx}" oninput="syncServiceData(${idx})">
+                    </div>
+                    <div class="input-group">
+                        <div class="toggle-group">
+                            <input type="checkbox" id="toggle-vic-${idx}" onchange="syncServiceData(${idx})">
+                            <label for="toggle-vic-${idx}" style="text-transform:none; cursor:pointer;">Independent Victory Worker</label>
+                        </div>
+                        <input type="text" list="memberSuggestions" id="input-vic-${idx}" oninput="syncServiceData(${idx})" disabled style="opacity:0.5; margin-top:6px;">
+                    </div>
+                </div>
+            `;
+            container.innerHTML += html;
+        });
+    }
+
+    /* LOGIC CONTROLLER FOR LIVE CONDITIONAL SYNCING VIA TOGGLES */
+    function syncServiceData(idx) {
+        const pwVal = document.getElementById(`input-pw-${idx}`).value.trim() || "Unassigned";
+        const vicToggle = document.getElementById(`toggle-vic-${idx}`).checked;
+        const vicInput = document.getElementById(`input-vic-${idx}`);
+        
+        let finalVicVal = pwVal;
+        
+        if(vicToggle) {
+            vicInput.disabled = false;
+            vicInput.style.opacity = "1";
+            finalVicVal = vicInput.value.trim() || "Unassigned";
+        } else {
+            vicInput.disabled = true;
+            vicInput.style.opacity = "0.5";
+        }
+
+        const previewPw = document.getElementById(`render-pw-${idx}`);
+        const previewVic = document.getElementById(`render-vic-${idx}`);
+        if(previewPw) previewPw.innerText = pwVal;
+        if(previewVic) previewVic.innerText = finalVicVal;
+    }
+
+    /* CANVAS ASSEMBLY PLANT: RENDERS THE CURRENTLY SELECTED VIEW ONLY */
+    function renderPreviews() {
+        const previewContainer = document.getElementById('batchPreviewContainer');
+        const huds = previewContainer.querySelectorAll('.status-hud');
+        previewContainer.innerHTML = '';
+        huds.forEach(hud => previewContainer.appendChild(hud));
+
+        const monthVal = document.getElementById('schedMonth').value;
+        if(!monthVal) return;
+        const [year, month] = monthVal.split('-');
+        const dateObj = new Date(year, month - 1, 1);
+        const displayMonthCaps = dateObj.toLocaleDateString('en-US', { month: 'long' }).toUpperCase();
+
+        if (activeTab === 'band') {
+            batchSundays.forEach((sunday, idx) => {
+                const dateStr = sunday.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+                let canvasHtml = `
+                <div id="batchCanvas-${idx}" class="poster-canvas ${currentBatchTheme} batch-canvas-instance">
+                    <div class="poster-header">
+                        <div class="poster-title">JAM ASSIGNED</div>
+                        <div class="poster-date">${dateStr}</div>
+                    </div>
+                    <div class="services-layout">
+                        <div class="service-column">
+                            <div class="service-title">1st Service</div>
+                            <div class="roster-list">`;
+                instruments.forEach(inst => {
+                    canvasHtml += `<div class="roster-row"><span class="roster-role">${inst.label}</span><span id="b${idx}-s1-${inst.id}" class="roster-name">Unassigned</span></div>`;
+                });
+                canvasHtml += `</div></div><div class="service-column"><div class="service-title">2nd Service</div><div class="roster-list">`;
+                instruments.forEach(inst => {
+                    canvasHtml += `<div class="roster-row"><span class="roster-role">${inst.label}</span><span id="b${idx}-s2-${inst.id}" class="roster-name">Unassigned</span></div>`;
+                });
+                canvasHtml += `</div></div></div><div class="poster-footer">JAM SCHEDULE MINISTRY</div></div>`;
+                previewContainer.insertAdjacentHTML('beforeend', canvasHtml);
+            });
+        } else {
+            /* COMPOSITE SINGLE POSTER FOR SUNDAY SERVICES VIEW MATCHING IMAGE DESIGN SPEC */
+            let servicesHtml = `
+            <div id="servicesMonthlyPoster" class="poster-canvas ${currentBatchTheme} batch-canvas-instance" style="justify-content: flex-start;">
+                <div class="poster-header" style="margin-bottom:20px;">
+                    <div class="poster-title" style="font-size:22px; letter-spacing:1px; line-height:1.3;">SUNDAY WORSHIP<br>LEADERS ASSIGNED</div>
+                    <div class="poster-subtitle" style="font-size:15px; margin-top:8px;">MONTH OF ${displayMonthCaps}</div>
+                </div>
+                <div class="services-monthly-layout">
+                    <div class="poster-monthly-row" style="background:transparent; border:none; padding:2px 14px; font-weight:800; opacity:0.5;">
+                        <div class="roster-role">Date</div>
+                        <div class="roster-role">Praise & Worship</div>
+                        <div class="roster-role">Victory</div>
+                    </div>`;
+            
+            batchSundays.forEach((sunday, idx) => {
+                const dayLabel = sunday.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                servicesHtml += `
+                    <div class="poster-monthly-row">
+                        <div class="poster-monthly-date">${dayLabel}</div>
+                        <div class="roster-name" id="render-pw-${idx}" style="min-height:auto; font-size:13px; font-weight:700;">Unassigned</div>
+                        <div class="roster-name" id="render-vic-${idx}" style="min-height:auto; font-size:13px; font-weight:700;">Unassigned</div>
+                    </div>
+                `;
+            });
+
+            servicesHtml += `</div><div class="poster-footer" style="margin-top:auto;">VIA SCHEDULE MINISTRY</div></div>`;
+            previewContainer.insertAdjacentHTML('beforeend', servicesHtml);
+            
+            batchSundays.forEach((_, idx) => syncServiceData(idx));
+        }
     }
 
     function updateBatchCanvas(weekIdx, service, instId, value) {
@@ -703,95 +877,84 @@
 
     async function downloadSelectedPosters() {
         const checkedBoxes = Array.from(document.querySelectorAll('.week-checkbox:checked'));
-        
-        if (checkedBoxes.length === 0) {
-            return alert("Please select at least one week to download.");
-        }
+        if (checkedBoxes.length === 0) return alert("Please select at least one week to download.");
 
         for (let i = 0; i < checkedBoxes.length; i++) {
             const idx = parseInt(checkedBoxes[i].getAttribute('data-idx'));
             const canvas = document.getElementById(`batchCanvas-${idx}`);
             const rawDate = batchSundays[idx].toISOString().split('T')[0];
-            const filename = `Schedule_Poster_${rawDate}.png`;
-            
-            const rendered = await html2canvas(canvas, { scale: 2, useCORS: true, logging: false });
-            const link = document.createElement('a');
-            link.download = filename;
-            link.href = rendered.toDataURL('image/png');
-            link.click();
+            await executeDownload(canvas, `Schedule_Poster_${rawDate}.png`);
         }
     }
 
-    async function sendSelectedToAnnouncementPage() {
-        const checkedBoxes = Array.from(document.querySelectorAll('.week-checkbox:checked'));
-        
-        if (checkedBoxes.length === 0) {
-            return alert("Please select at least one week to send to the announcement page.");
-        }
+    async function downloadSinglePoster(elementId) {
+        const canvas = document.getElementById(elementId);
+        const targetMonth = document.getElementById('schedMonth').value;
+        await executeDownload(canvas, `Sunday_Services_${targetMonth}.png`);
+    }
 
-        const syncBtn = document.getElementById('syncBatchBtn');
+    async function executeDownload(canvasElement, fileName) {
+        const rendered = await html2canvas(canvasElement, { scale: 2, useCORS: true, logging: false });
+        const link = document.createElement('a');
+        link.download = fileName;
+        link.href = rendered.toDataURL('image/png');
+        link.click();
+    }
+
+    async function sendSelectedToAnnouncementPage(type) {
+        const syncBtn = type === 'band' ? document.getElementById('syncBatchBtn') : document.getElementById('syncServicesBtn');
         const hud = document.getElementById('statusHudBatch');
         const hudMsg = document.getElementById('batchHudMsg');
 
+        let compiledText = "";
+        let imagesArray = [];
+
         syncBtn.disabled = true;
         hud.style.display = 'flex';
-        hudMsg.innerText = "Processing selected weeks. Generating PNGs...";
+        hudMsg.innerText = "Processing canvas mapping assets...";
 
         try {
-            let compiledText = `*JAM MINISTRY TEAM SCHEDULE*\n\n`;
-            let imagesArray = [];
+            if (type === 'band') {
+                const checkedBoxes = Array.from(document.querySelectorAll('.week-checkbox:checked'));
+                if (checkedBoxes.length === 0) {
+                    syncBtn.disabled = false;
+                    hud.style.display = 'none';
+                    return alert("Select sheets to broadcast.");
+                }
 
-            // Process all checked canvases in sequential order based on dates
-            for (let i = 0; i < checkedBoxes.length; i++) {
-                const idx = parseInt(checkedBoxes[i].getAttribute('data-idx'));
-                const canvas = document.getElementById(`batchCanvas-${idx}`);
-                const rawDate = batchSundays[idx].toISOString().split('T')[0];
-                const displayDate = batchSundays[idx].toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+                compiledText = `*JAM MINISTRY TEAM SCHEDULE*\n\n`;
+                for (let i = 0; i < checkedBoxes.length; i++) {
+                    const idx = parseInt(checkedBoxes[i].getAttribute('data-idx'));
+                    const canvas = document.getElementById(`batchCanvas-${idx}`);
+                    const rawDate = batchSundays[idx].toISOString().split('T')[0];
+                    const displayDate = batchSundays[idx].toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+                    
+                    compiledText += `*${displayDate.toUpperCase()}*\n(See attached poster)\n\n`;
+                    const base64Data = (await html2canvas(canvas, { scale: 2, useCORS: true, logging: false })).toDataURL('image/png').split(",")[1];
+                    imagesArray.push({ fileName: `Schedule_Poster_${rawDate}.png`, fileType: "image/png", fileContent: base64Data });
+                }
+            } else {
+                const canvas = document.getElementById('servicesMonthlyPoster');
+                const targetMonth = document.getElementById('schedMonth').value;
+                compiledText = `*SUNDAY WORSHIP LEADERS ASSIGNED*\n\nHere's the schedule for ${targetMonth}:\n\n`;
                 
-                compiledText += `*${displayDate.toUpperCase()}*\n(See attached poster for assignments)\n\n`;
-
-                const renderedCanvas = await html2canvas(canvas, { scale: 2, useCORS: true, logging: false });
-                const base64Data = renderedCanvas.toDataURL('image/png').split(",")[1];
-                
-                imagesArray.push({
-                    fileName: `Schedule_Poster_${rawDate}.png`,
-                    fileType: "image/png",
-                    fileContent: base64Data
-                });
+                const base64Data = (await html2canvas(canvas, { scale: 2, useCORS: true, logging: false })).toDataURL('image/png').split(",")[1];
+                imagesArray.push({ fileName: `Sunday_Services_${targetMonth}.png`, fileType: "image/png", fileContent: base64Data });
             }
 
             compiledText += `_Generated via JIL WAN-MAN Page_`;
-
             localStorage.setItem("autoLineupCaption", compiledText);
+            localStorage.setItem("autoLineupPdfBatch", JSON.stringify(imagesArray));
+            localStorage.setItem("autoAnnouncementMode", "true");
 
-            localStorage.setItem(
-                "autoLineupPdfBatch",
-                JSON.stringify(imagesArray)
-            );
-
-            localStorage.setItem(
-                "autoAnnouncementMode",
-                "true"
-            );
-
-            hudMsg.innerHTML =
-                "🎉 <span style='color:var(--accent-success);font-weight:bold;'>Ready! Redirecting...</span>";
-
-            setTimeout(() => {
-                window.location.href = "announcement.html";
-            }, 1000
-        );
-
-            hudMsg.innerHTML = "🎉 <span style='color:var(--accent-success); font-weight:bold;'>Ready! Redirecting...</span>";
+            hudMsg.innerHTML = "🔗 <span style='color:var(--accent-success);font-weight:bold;'>Ready! Redirecting...</span>";
             setTimeout(() => { window.location.href = "announcement.html"; }, 1000);
 
         } catch (err) {
-            alert("Canvas rendering crash.");
+            alert("Canvas graphics pipeline crash.");
             syncBtn.disabled = false;
             hud.style.display = 'none';
         }
-
-  
     }
 </script>
 
