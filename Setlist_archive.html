@@ -279,6 +279,49 @@
         }
         .form-input { color: #0f172a; background: #fff; font-weight: 500; }
         .form-input:focus { border-color: var(--service-header); }
+
+        /* UI Dialog Modal Overrides */
+        .ui-dialog-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(11, 15, 25, 0.85);
+            backdrop-filter: blur(4px);
+            z-index: 5000;
+            align-items: center;
+            justify-content: center;
+        }
+        .ui-dialog-box {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            width: 90%;
+            max-width: 450px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+            animation: dialogFadeIn 0.2s ease-out;
+        }
+        .ui-dialog-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: #fff;
+        }
+        .ui-dialog-msg {
+            font-size: 14px;
+            color: var(--sub-text);
+            line-height: 1.5;
+            margin-bottom: 24px;
+        }
+        .ui-dialog-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+        @keyframes dialogFadeIn {
+            from { transform: scale(0.95); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
     </style>
 </head>
 <body>
@@ -320,6 +363,14 @@
         </div>
     </div>
 
+    <div id="uiDialogOverlay" class="ui-dialog-overlay">
+        <div class="ui-dialog-box">
+            <div id="uiDialogTitle" class="ui-dialog-title">Notification</div>
+            <div id="uiDialogMsg" class="ui-dialog-msg">Message here...</div>
+            <div id="uiDialogActions" class="ui-dialog-actions"></div>
+        </div>
+    </div>
+
     <div id="pdf-template" style="display:none;"></div>
 
     <script>
@@ -334,6 +385,46 @@
         let archiveCache = [];
         let libraryCache = {};
         let editingService = null;
+
+        // UI-friendly Alert & Confirm Prompts Replacement Engines
+        function uiAlert(message, title = "Notification") {
+            return new Promise((resolve) => {
+                document.getElementById('uiDialogTitle').innerText = title;
+                document.getElementById('uiDialogTitle').style.color = "var(--service-header)";
+                document.getElementById('uiDialogMsg').innerText = message;
+                const actions = document.getElementById('uiDialogActions');
+                actions.innerHTML = `<button class="btn btn-view" id="uiAlertBtn">OK</button>`;
+                document.getElementById('uiDialogOverlay').style.display = 'flex';
+                
+                document.getElementById('uiAlertBtn').onclick = function() {
+                    document.getElementById('uiDialogOverlay').style.display = 'none';
+                    resolve();
+                };
+            });
+        }
+
+        function uiConfirm(message, title = "Confirmation Required") {
+            return new Promise((resolve) => {
+                document.getElementById('uiDialogTitle').innerText = title;
+                document.getElementById('uiDialogTitle').style.color = "var(--danger)";
+                document.getElementById('uiDialogMsg').innerText = message;
+                const actions = document.getElementById('uiDialogActions');
+                actions.innerHTML = `
+                    <button class="btn btn-edit" id="uiConfirmCancel">CANCEL</button>
+                    <button class="btn btn-danger" id="uiConfirmYes">CONFIRM</button>
+                `;
+                document.getElementById('uiDialogOverlay').style.display = 'flex';
+                
+                document.getElementById('uiConfirmCancel').onclick = function() {
+                    document.getElementById('uiDialogOverlay').style.display = 'none';
+                    resolve(false);
+                };
+                document.getElementById('uiConfirmYes').onclick = function() {
+                    document.getElementById('uiDialogOverlay').style.display = 'none';
+                    resolve(true);
+                };
+            });
+        }
 
         async function init() {
             try {
@@ -357,77 +448,76 @@
             } catch (e) { document.getElementById('archive-container').innerText = "Sync failed."; }
         }
 
-        // New majority-based key detection logic
-    // Enhanced majority-based key detection logic with chord quality preservation
-    function detectOriginalKey(content) {
-        if (!content) return "Unknown";
+        // Enhanced majority-based key detection logic with chord quality preservation
+        function detectOriginalKey(content) {
+            if (!content) return "Unknown";
 
-        // 1. Extract all unique chords from the song (e.g., [C], [D], [Em])
-        const chordMatches = content.match(/\[([A-G][#b]?)(.*?)\]/g);
-        if (!chordMatches) return "N/A";
+            // 1. Extract all unique chords from the song (e.g., [C], [D], [Em])
+            const chordMatches = content.match(/\[([A-G][#b]?)(.*?)\]/g);
+            if (!chordMatches) return "N/A";
 
-        // Helper function to normalize chord names to match keyScales format (e.g., C, Am, Bdim)
-        function cleanChord(m) {
-            let inside = m.replace(/[\[\]]/g, ''); // Remove brackets
-            let rootMatch = inside.match(/^([A-G][#b]?)/);
-            if (!rootMatch) return "";
-            let root = rootMatch[1];
-            let normalizedRoot = flatMap[root] || root;
-            
-            let remainder = inside.substring(root.length);
-            if (remainder.startsWith('dim')) {
-                return normalizedRoot + 'dim';
-            } else if (remainder.startsWith('m') && !remainder.startsWith('maj')) {
-                return normalizedRoot + 'm';
-            } else {
-                return normalizedRoot;
-            }
-        }
-
-        // Get the root of the very first chord in the song to act as a tie-breaker
-        let firstChordMatch = chordMatches[0].match(/\[([A-G][#b]?)/);
-        let firstChordRoot = firstChordMatch ? (flatMap[firstChordMatch[1]] || firstChordMatch[1]) : null;
-
-        // Clean unique chords to their normalized forms (preserving 'm' and 'dim')
-        const uniqueChords = [...new Set(chordMatches.map(m => cleanChord(m)))].filter(Boolean);
-
-        // 2. Define the standard 7 chords for every major key
-        const keyScales = {
-            'C':  ['C', 'Dm', 'Em', 'F', 'G', 'Am', 'Bdim'],
-            'C#': ['C#', 'D#m', 'E#m', 'F#', 'G#', 'A#m', 'B#dim'],
-            'D':  ['D', 'Em', 'F#m', 'G', 'A', 'Bm', 'C#dim'],
-            'D#': ['D#', 'Fm', 'Gm', 'G#', 'A#', 'Cm', 'Ddim'],
-            'E':  ['E', 'F#m', 'G#m', 'A', 'B', 'C#m', 'D#dim'],
-            'F':  ['F', 'Gm', 'Am', 'Bb', 'C', 'Dm', 'Edim'],
-            'F#': ['F#', 'G#m', 'A#m', 'B', 'C#', 'D#m', 'E#dim'],
-            'G':  ['G', 'Am', 'Bm', 'C', 'D', 'Em', 'F#dim'],
-            'G#': ['G#', 'A#m', 'Cm', 'C#', 'D#', 'Fm', 'Gdim'],
-            'A':  ['A', 'Bm', 'C#m', 'D', 'E', 'F#m', 'G#dim'],
-            'A#': ['A#', 'Cm', 'Dm', 'D#', 'F', 'Gm', 'Adim'],
-            'B':  ['B', 'C#m', 'D#m', 'E', 'F#', 'G#m', 'A#dim']
-        };
-
-        let bestKey = "C";
-        let highestScore = -1;
-
-        // 3. Score each key based on how many of the song's chords fit into that key's scale
-        for (const [key, scale] of Object.entries(keyScales)) {
-            let score = 0;
-            uniqueChords.forEach(chord => {
-                if (scale.includes(chord)) {
-                    score++;
+            // Helper function to normalize chord names to match keyScales format (e.g., C, Am, Bdim)
+            function cleanChord(m) {
+                let inside = m.replace(/[\[\]]/g, ''); // Remove brackets
+                let rootMatch = inside.match(/^([A-G][#b]?)/);
+                if (!rootMatch) return "";
+                let root = rootMatch[1];
+                let normalizedRoot = flatMap[root] || root;
+                
+                let remainder = inside.substring(root.length);
+                if (remainder.startsWith('dim')) {
+                    return normalizedRoot + 'dim';
+                } else if (remainder.startsWith('m') && !remainder.startsWith('maj')) {
+                    return normalizedRoot + 'm';
+                } else {
+                    return normalizedRoot;
                 }
-            });
-
-            // Ties are broken by checking if the evaluated key matches the first chord's root note
-            if (score > highestScore || (score === highestScore && key === firstChordRoot)) {
-                highestScore = score;
-                bestKey = key;
             }
-        }
 
-        return bestKey;
-    }
+            // Get the root of the very first chord in the song to act as a tie-breaker
+            let firstChordMatch = chordMatches[0].match(/\[([A-G][#b]?)/);
+            let firstChordRoot = firstChordMatch ? (flatMap[firstChordMatch[1]] || firstChordMatch[1]) : null;
+
+            // Clean unique chords to their normalized forms (preserving 'm' and 'dim')
+            const uniqueChords = [...new Set(chordMatches.map(m => cleanChord(m)))].filter(Boolean);
+
+            // 2. Define the standard 7 chords for every major key
+            const keyScales = {
+                'C':  ['C', 'Dm', 'Em', 'F', 'G', 'Am', 'Bdim'],
+                'C#': ['C#', 'D#m', 'E#m', 'F#', 'G#', 'A#m', 'B#dim'],
+                'D':  ['D', 'Em', 'F#m', 'G', 'A', 'Bm', 'C#dim'],
+                'D#': ['D#', 'Fm', 'Gm', 'G#', 'A#', 'Cm', 'Ddim'],
+                'E':  ['E', 'F#m', 'G#m', 'A', 'B', 'C#m', 'D#dim'],
+                'F':  ['F', 'Gm', 'Am', 'Bb', 'C', 'Dm', 'Edim'],
+                'F#': ['F#', 'G#m', 'A#m', 'B', 'C#', 'D#m', 'E#dim'],
+                'G':  ['G', 'Am', 'Bm', 'C', 'D', 'Em', 'F#dim'],
+                'G#': ['G#', 'A#m', 'Cm', 'C#', 'D#', 'Fm', 'Gdim'],
+                'A':  ['A', 'Bm', 'C#m', 'D', 'E', 'F#m', 'G#dim'],
+                'A#': ['A#', 'Cm', 'Dm', 'D#', 'F', 'Gm', 'Adim'],
+                'B':  ['B', 'C#m', 'D#m', 'E', 'F#', 'G#m', 'A#dim']
+            };
+
+            let bestKey = "C";
+            let highestScore = -1;
+
+            // 3. Score each key based on how many of the song's chords fit into that key's scale
+            for (const [key, scale] of Object.entries(keyScales)) {
+                let score = 0;
+                uniqueChords.forEach(chord => {
+                    if (scale.includes(chord)) {
+                        score++;
+                    }
+                });
+
+                // Ties are broken by checking if the evaluated key matches the first chord's root note
+                if (score > highestScore || (score === highestScore && key === firstChordRoot)) {
+                    highestScore = score;
+                    bestKey = key;
+                }
+            }
+
+            return bestKey;
+        }
 
         function renderArchive() {
             const container = document.getElementById('archive-container');
@@ -586,11 +676,11 @@
 
                 libraryCache[searchKey] = updatedContent;
                 closeChordEditorModal();
-                alert(`Successfully saved layout modifications for "${songTitle}"!`);
+                await uiAlert(`Successfully saved layout modifications for "${songTitle}"!`, "Success");
                 renderArchive();
             } catch (e) {
                 console.error(e);
-                alert("Saved locally to cache window.");
+                await uiAlert("Saved locally to cache window.", "Cache Backup");
                 libraryCache[searchKey] = updatedContent;
                 closeChordEditorModal();
                 renderArchive();
@@ -634,7 +724,10 @@
         }
 
         async function executeDirectKeyShift(songTitle, origKey, targetKey, clickedBtn) {
-            if (origKey === targetKey) return alert("Song is already set to Key " + targetKey);
+            if (origKey === targetKey) {
+                await uiAlert("Song is already set to Key " + targetKey, "Notice");
+                return;
+            }
             
             const currentIdx = notes.indexOf(origKey);
             const targetIdx = notes.indexOf(targetKey);
@@ -648,14 +741,16 @@
             const originalContent = libraryCache[searchKey];
 
             if (!originalContent) {
-                return alert("Error: Original content blueprint map missing from workspace cache.");
+                await uiAlert("Error: Original content blueprint map missing from workspace cache.", "Data Missing");
+                return;
             }
 
             const transposedContent = originalContent.replace(/\[(.*?)\]/g, (match, chord) => {
                 return "[" + transpose(chord, steps) + "]";
             });
 
-            if (!confirm(`Permanently transpose "${songTitle}" from Key [${origKey}] to Key [${targetKey}]?`)) return;
+            const userConfirmed = await uiConfirm(`Permanently transpose "${songTitle}" from Key [${origKey}] to Key [${targetKey}]?`, "Confirm Key Shift");
+            if (!userConfirmed) return;
 
             showToast(`Transposing database elements to Key ${targetKey}...`);
             try {
@@ -671,11 +766,11 @@
                 });
                 
                 libraryCache[searchKey] = transposedContent;
-                alert(`Successfully altered layout formatting! "${songTitle}" is now configured in Key [${targetKey}].`);
+                await uiAlert(`Successfully altered layout formatting! "${songTitle}" is now configured in Key [${targetKey}].`, "Success");
                 renderArchive();
             } catch (error) {
                 console.error(error);
-                alert("Operation registered over database architecture maps.");
+                await uiAlert("Operation registered over database architecture maps.", "Complete");
                 location.reload();
             } finally {
                 hideToast();
@@ -699,7 +794,8 @@
         }
 
         async function removeSongLocally(sName, cat, title) {
-            if(!confirm(`Remove "${title}" from this setlist?`)) return;
+            const userConfirmed = await uiConfirm(`Remove "${title}" from this setlist?`, "Remove Song");
+            if(!userConfirmed) return;
             
             showToast("Removing song...");
             try {
@@ -709,12 +805,13 @@
                 archiveCache = archiveCache.filter(s => !(s.serviceName === sName && s.category === cat && s.title === title));
                 renderArchive();
             } catch (e) {
-                alert("Removal failed.");
+                await uiAlert("Removal failed.", "Error");
             } finally { hideToast(); }
         }
 
         async function deleteEntireSetlist(sName) {
-            if(!confirm(`Delete the entire setlist for ${sName}?`)) return;
+            const userConfirmed = await uiConfirm(`Delete the entire setlist for ${sName}?`, "Warning: Delete Everything");
+            if(!userConfirmed) return;
             
             showToast("Deleting setlist...");
             try {
@@ -725,7 +822,7 @@
                 editingService = null;
                 renderArchive();
             } catch (e) {
-                alert("Delete failed.");
+                await uiAlert("Delete failed.", "Error");
             } finally { hideToast(); }
         }
 
@@ -757,7 +854,7 @@
                 }
                 renderArchive();
             } catch (e) {
-                alert("Move failed.");
+                await uiAlert("Move failed.", "Error");
             } finally { hideToast(); }
         }
 
@@ -1018,7 +1115,10 @@
             if (!titleElement || !catElement) return;
 
             const cat = catElement.value; const title = titleElement.value.trim();
-            if (!title) return alert("Please enter a song title");
+            if (!title) {
+                await uiAlert("Please enter a song title", "Missing Information");
+                return;
+            }
 
             showToast("Adding song...");
             try {
@@ -1030,7 +1130,9 @@
                     archiveCache.push({ serviceName: sName, category: cat, title: title });
                     titleElement.value = "";
                     renderArchive();
-                } else { alert("Error: " + result.message); }
+                } else { 
+                    await uiAlert("Error: " + result.message, "Failure"); 
+                }
             } catch (e) {
                 archiveCache.push({ serviceName: sName, category: cat, title: title });
                 renderArchive();
