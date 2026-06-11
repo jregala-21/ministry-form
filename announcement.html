@@ -223,7 +223,10 @@
             text-align: left;
         }
 
-        .directory-table input[type="checkbox"], .schedule-toggle-container input[type="checkbox"] {
+        .directory-table input[type="checkbox"], 
+        .schedule-toggle-container input[type="checkbox"],
+        .global-select-bar input,
+        .ministry-select-grid input {
             width: 16px;
             height: 16px;
             accent-color: var(--accent);
@@ -245,9 +248,29 @@
         }
         .global-select-bar input {
             margin-right: 10px;
-            width: 16px;
-            height: 16px;
-            accent-color: var(--accent);
+        }
+
+        .ministry-select-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        .ministry-select-item {
+            background: #1a2333;
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            font-size: 13px;
+            font-weight: 500;
+        }
+        .ministry-select-item label {
+            margin-left: 8px;
+            cursor: pointer;
+            user-select: none;
+            color: var(--text-main);
         }
 
         .send-btn {
@@ -283,6 +306,29 @@
             font-size: 14px;
         }
 
+        /* Modal Layout Styles */
+        .custom-modal-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.65); display: flex; align-items: center; justify-content: center;
+            z-index: 3000; opacity: 0; pointer-events: none; transition: opacity 0.2s ease;
+        }
+        .custom-modal-overlay.modal-active { opacity: 1; pointer-events: auto; }
+        .custom-modal-box {
+            background: var(--card-bg); padding: 25px; border-radius: 16px; width: 90%; max-width: 380px;
+            border: 1px solid var(--border); text-align: center;
+            transform: scale(0.92); transition: transform 0.2s ease;
+        }
+        .custom-modal-overlay.modal-active .custom-modal-box { transform: scale(1); }
+        .custom-modal-text { font-size: 15px; color: var(--text-main); margin-bottom: 22px; line-height: 1.5; font-weight: 500; }
+        .custom-modal-actions { display: flex; gap: 10px; justify-content: center; }
+        .custom-modal-btn { padding: 9px 18px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 13px; transition: opacity 0.2s; }
+        .custom-modal-btn-primary { background: var(--accent); color: white; }
+        .custom-modal-btn-secondary { background: #1e293b; color: var(--text-main); border: 1px solid var(--border); }
+        .custom-modal-btn:hover { opacity: 0.9; }
+
+        @media (max-width: 650px) {
+            .ministry-select-grid { grid-template-columns: 1fr; }
+        }
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(-4px); }
             to { opacity: 1; transform: translateY(0); }
@@ -306,17 +352,37 @@
     </div>
 
     <div class="input-group">
-    <label class="section-label">File Attachments:</label>
-    <input type="file" id="fileInput" multiple>
-    <div id="fileListPreview" style="margin-top:8px; text-align:left; font-size:13px; color:var(--text-muted);"></div>
-</div>
+        <label class="section-label">File Attachments:</label>
+        <input type="file" id="fileInput" multiple>
+        <div id="fileListPreview" style="margin-top:8px; text-align:left; font-size:13px; color:var(--text-muted);"></div>
+    </div>
 
     <div class="input-group">
         <label class="section-label">Select Recipients:</label>
         
         <div class="global-select-bar">
             <input type="checkbox" id="selectAllBox" onchange="toggleSelectAll(this)">
-            <label for="selectAllBox" style="cursor:pointer; user-select:none;">Select All</label>
+            <label for="selectAllBox" style="cursor:pointer; user-select:none;">Select All Members</label>
+        </div>
+
+        <!-- Ministry Fast Checklists -->
+        <div class="ministry-select-grid">
+            <div class="ministry-select-item">
+                <input type="checkbox" id="chk-jam" onchange="toggleMinistryGroup('JAM', this)">
+                <label for="chk-jam">JAM Ministry</label>
+            </div>
+            <div class="ministry-select-item">
+                <input type="checkbox" id="chk-via" onchange="toggleMinistryGroup('VIA', this)">
+                <label for="chk-via">VIA Ministry</label>
+            </div>
+            <div class="ministry-select-item">
+                <input type="checkbox" id="chk-man" onchange="toggleMinistryGroup('MAN', this)">
+                <label for="chk-man">MAN Ministry</label>
+            </div>
+            <div class="ministry-select-item">
+                <input type="checkbox" id="chk-team" onchange="toggleMinistryGroup('TEAM', this)">
+                <label for="chk-team">TEAM Ministry</label>
+            </div>
         </div>
 
         <div id="emailContainer" class="scroller-box">
@@ -342,6 +408,14 @@
     <p id="status"></p>
 </div>
 
+<!-- Custom Layout Modal Layer -->
+<div id="customModal" class="custom-modal-overlay">
+    <div class="custom-modal-box">
+        <div id="customModalText" class="custom-modal-text"></div>
+        <div id="customModalActions" class="custom-modal-actions"></div>
+    </div>
+</div>
+
 <script>
     if (sessionStorage.getItem("bypassPassword") === "true") {
         sessionStorage.setItem("isAllowed", "true");
@@ -358,12 +432,34 @@
     let emailList = [];
     let autoLoadedPdf = null;
 
+    // Custom non-blocking Promise alert wrapper
+    function alert(message) {
+        return new Promise((resolve) => {
+            const overlay = document.getElementById('customModal');
+            const textContainer = document.getElementById('customModalText');
+            const actionsContainer = document.getElementById('customModalActions');
+            
+            textContainer.innerText = message;
+            actionsContainer.innerHTML = '';
+            
+            const okBtn = document.createElement('button');
+            okBtn.className = 'custom-modal-btn custom-modal-btn-primary';
+            okBtn.innerText = 'OK';
+            okBtn.onclick = () => {
+                overlay.classList.remove('modal-active');
+                resolve();
+            };
+            
+            actionsContainer.appendChild(okBtn);
+            overlay.classList.add('modal-active');
+        });
+    }
+
     function handleLogout() {
         sessionStorage.removeItem("isAllowed");
         window.location.href = "login.html";
     }
 
-    // FIXED: Container click handles structural evaluation natively now
     function toggleScheduleView() {
         const checkbox = document.getElementById("isScheduled");
         checkbox.checked = !checkbox.checked;
@@ -399,30 +495,28 @@
 
     async function loadEmailsFromSheet() {
         try {
-
             const response = await fetch(GET_EMAILS_URL);
             emailList = await response.json();
 
             renderEmailList();
 
-            const isAutoMode =
-                localStorage.getItem("autoAnnouncementMode") === "true";
-
+            const isAutoMode = localStorage.getItem("autoAnnouncementMode") === "true";
             if (isAutoMode) {
-
                 document.getElementById("selectAllBox").checked = true;
-
                 document.querySelectorAll(".emailCheck").forEach(cb => {
                     cb.checked = true;
                 });
-
+                // Synced master ministry boxes state if select all mode triggered automatically
+                document.getElementById("chk-jam").checked = true;
+                document.getElementById("chk-via").checked = true;
+                document.getElementById("chk-man").checked = true;
+                document.getElementById("chk-team").checked = true;
+                
                 localStorage.removeItem("autoAnnouncementMode");
             }
-
         } catch (error) {
             console.error("Error fetching emails:", error);
-            document.getElementById("emailContainer").innerText =
-                "❌ Failed to load members.";
+            document.getElementById("emailContainer").innerText = "❌ Failed to load members.";
         }
     }
 
@@ -435,7 +529,7 @@
             return;
         }
 
-        const groups = { "JAM": [], "VIA": [], "MAN": [], "DANCE": [], "OTHERS": [] };
+        const groups = { "JAM": [], "VIA": [], "MAN": [], "TEAM": [], "DANCE": [], "OTHERS": [] };
 
         emailList.forEach((item, index) => {
             const min = (item.ministry || "").toUpperCase().trim();
@@ -460,7 +554,7 @@
                 tableRowsHtml += `
                     <tr>
                         <td class="col-check">
-                            <input type="checkbox" class="emailCheck" value="${item.email}" data-index="${index}">
+                            <input type="checkbox" class="emailCheck" value="${item.email}" data-index="${index}" data-ministry="${category}">
                         </td>
                         <td class="col-name">${item.name}</td>
                     </tr>
@@ -475,6 +569,22 @@
     function toggleSelectAll(master) {
         const checkboxes = document.querySelectorAll(".emailCheck");
         checkboxes.forEach(cb => { cb.checked = master.checked; });
+        
+        // Match the ministry fast-check boxes to the Select All checkbox value
+        document.getElementById("chk-jam").checked = master.checked;
+        document.getElementById("chk-via").checked = master.checked;
+        document.getElementById("chk-man").checked = master.checked;
+        document.getElementById("chk-team").checked = master.checked;
+    }
+
+    function toggleMinistryGroup(ministryName, master) {
+        const checkboxes = document.querySelectorAll(`.emailCheck[data-ministry="${ministryName}"]`);
+        checkboxes.forEach(cb => { cb.checked = master.checked; });
+        
+        // Handle global select state evaluation logic smoothly
+        const allBoxes = document.querySelectorAll(".emailCheck");
+        const allChecked = Array.from(allBoxes).every(cb => cb.checked);
+        document.getElementById("selectAllBox").checked = allChecked;
     }
 
     function getBase64(file) {
@@ -504,20 +614,22 @@
 
         const selected = Array.from(document.querySelectorAll(".emailCheck:checked")).map(cb => cb.value);
 
-        // FIXED: Button gets locked out BEFORE running validation alerts to eliminate double submissions
         sendBtn.disabled = true;
 
         if (selected.length === 0) {
             sendBtn.disabled = false;
-            return alert("Please select at least one recipient.");
+            await alert("Please select at least one recipient.");
+            return;
         }
         if (!caption) {
             sendBtn.disabled = false;
-            return alert("Please enter a caption.");
+            await alert("Please enter a caption.");
+            return;
         }
         if (!targetTime) {
             sendBtn.disabled = false;
-            return alert("Please select a valid date and time.");
+            await alert("Please select a valid date and time.");
+            return;
         }
 
         status.style.color = "var(--warning)";
@@ -534,16 +646,13 @@
                 });
             }
         } else if (autoLoadedPdf) {
+            if (Array.isArray(autoLoadedPdf)) {
+                attachments.push(...autoLoadedPdf);
+            } else {
+                attachments.push(autoLoadedPdf);
+            }
+        }
 
-    if (Array.isArray(autoLoadedPdf)) {
-        attachments.push(...autoLoadedPdf);
-    } else {
-        attachments.push(autoLoadedPdf);
-    }
-
-}
-
-        // FIXED: Created a unique scheduleId/nonce to block server-side duplicate entry writes
         const uniqueId = "SCH-" + Date.now() + "-" + Math.random().toString(36).substr(2, 9);
 
         const schedulePayload = {
@@ -590,11 +699,13 @@
 
         if (selected.length === 0) {
             sendBtn.disabled = false;
-            return alert("Please select at least one recipient.");
+            await alert("Please select at least one recipient.");
+            return;
         }
         if (!caption) {
             sendBtn.disabled = false;
-            return alert("Please enter a caption.");
+            await alert("Please enter a caption.");
+            return;
         }
 
         status.style.color = "var(--text-muted)";
@@ -611,13 +722,11 @@
                 });
             }
         } else if (autoLoadedPdf) {
-
             if (Array.isArray(autoLoadedPdf)) {
                 attachments.push(...autoLoadedPdf);
             } else {
                 attachments.push(autoLoadedPdf);
             }
-
         }
 
         let successCount = 0;
@@ -660,6 +769,12 @@
         document.querySelectorAll(".emailCheck").forEach(cb => cb.checked = false);
         document.getElementById("selectAllBox").checked = false;
         
+        // Reset ministry checkbox views
+        document.getElementById("chk-jam").checked = false;
+        document.getElementById("chk-via").checked = false;
+        document.getElementById("chk-man").checked = false;
+        document.getElementById("chk-team").checked = false;
+        
         const scheduleCheckbox = document.getElementById("isScheduled");
         if(scheduleCheckbox.checked) {
             scheduleCheckbox.checked = false;
@@ -680,9 +795,7 @@
         const savedPdf = localStorage.getItem("autoLineupPdf");
 
         if (savedPdfBatch) {
-
             autoLoadedPdf = JSON.parse(savedPdfBatch);
-
             localStorage.removeItem("autoLineupPdfBatch");
 
             const fileInput = document.getElementById("fileInput");
@@ -695,16 +808,12 @@
             note.style.marginTop = "6px";
             note.style.fontWeight = "600";
             note.style.textAlign = "left";
-
-            note.innerHTML =
-                `📎 ${autoLoadedPdf.length} poster(s) automatically attached`;
+            note.innerHTML = `📎 ${autoLoadedPdf.length} poster(s) automatically attached`;
 
             fileInput.parentNode.appendChild(note);
 
         } else if (savedPdf) {
-
             autoLoadedPdf = [JSON.parse(savedPdf)];
-
             localStorage.removeItem("autoLineupPdf");
 
             const fileInput = document.getElementById("fileInput");
@@ -717,36 +826,32 @@
             note.style.marginTop = "6px";
             note.style.fontWeight = "600";
             note.style.textAlign = "left";
-
-            note.innerHTML =
-                `📎 1 poster automatically attached`;
+            note.innerHTML = `📎 1 poster automatically attached`;
 
             fileInput.parentNode.appendChild(note);
         }
     });
 
     document.getElementById("fileInput").addEventListener("change", function() {
-    const preview = document.getElementById("fileListPreview");
+        const preview = document.getElementById("fileListPreview");
 
-    if (this.files.length > 0) {
-        autoLoadedPdf = null;
+        if (this.files.length > 0) {
+            autoLoadedPdf = null;
+            const note = document.getElementById("pdfStagedNote");
+            if (note) note.remove();
 
-        const note = document.getElementById("pdfStagedNote");
-        if (note) note.remove();
+            this.style.borderColor = "var(--border)";
+            preview.innerHTML = "";
 
-        this.style.borderColor = "var(--border)";
-
-        preview.innerHTML = "";
-
-        Array.from(this.files).forEach(file => {
-            preview.innerHTML += `
-                <div>📎 ${file.name} (${(file.size / 1024).toFixed(1)} KB)</div>
-            `;
-        });
-    } else {
-        preview.innerHTML = "";
-    }
-});
+            Array.from(this.files).forEach(file => {
+                preview.innerHTML += `
+                    <div>📎 ${file.name} (${(file.size / 1024).toFixed(1)} KB)</div>
+                `;
+            });
+        } else {
+            preview.innerHTML = "";
+        }
+    });
 
     loadEmailsFromSheet();
 </script>
