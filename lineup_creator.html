@@ -85,6 +85,26 @@
         button:hover { opacity: 0.9; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
         .back-link { display: block; text-align: center; margin-top: 30px; text-decoration: none; color: #cbd5e1; font-size: 14px; }
 
+        /* Modal Layout Styles */
+        .custom-modal-overlay {
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center;
+            z-index: 2000; opacity: 0; pointer-events: none; transition: opacity 0.2s ease;
+        }
+        .custom-modal-overlay.modal-active { opacity: 1; pointer-events: auto; }
+        .custom-modal-box {
+            background: white; padding: 30px; border-radius: 16px; width: 90%; max-width: 400px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.25); text-align: center;
+            transform: scale(0.9); transition: transform 0.2s ease;
+        }
+        .custom-modal-overlay.modal-active .custom-modal-box { transform: scale(1); }
+        .custom-modal-text { font-size: 16px; color: #333; margin-bottom: 24px; line-height: 1.5; font-weight: 500; }
+        .custom-modal-actions { display: flex; gap: 12px; justify-content: center; }
+        .custom-modal-btn { padding: 10px 20px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 14px; transition: 0.2s; }
+        .custom-modal-btn-primary { background: var(--primary); color: white; }
+        .custom-modal-btn-secondary { background: #e5e7eb; color: #4b5563; }
+        .custom-modal-btn:hover { opacity: 0.9; }
+
         @media (max-width: 650px) {
             .main-grid { grid-template-columns: 1fr; }
             .full-width { grid-column: span 1; }
@@ -165,7 +185,15 @@
     <a href="index.html" class="back-link">← Back to Main Menu</a>
 </div>
 
-<script {is_ignored="true"}>
+<!-- Custom Layout Modal Layer -->
+<div id="customModal" class="custom-modal-overlay">
+    <div class="custom-modal-box">
+        <div id="customModalText" class="custom-modal-text"></div>
+        <div id="customModalActions" class="custom-modal-actions"></div>
+    </div>
+</div>
+
+<script>
     const { jsPDF } = window.jspdf;
     
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyNwfpSFDHB5Gs9Vs8h1UKOznsnDdxU_UREmDGQWDgPo3F9Ryl99mo6pg3nXfNVoKxw/exec";
@@ -174,6 +202,61 @@
     let libraryData = [];
 
     window.onload = fetchLibrary;
+
+    // Custom non-blocking Promise alert wrapper
+    function alert(message) {
+        return new Promise((resolve) => {
+            const overlay = document.getElementById('customModal');
+            const textContainer = document.getElementById('customModalText');
+            const actionsContainer = document.getElementById('customModalActions');
+            
+            textContainer.innerText = message;
+            actionsContainer.innerHTML = '';
+            
+            const okBtn = document.createElement('button');
+            okBtn.className = 'custom-modal-btn custom-modal-btn-primary';
+            okBtn.innerText = 'OK';
+            okBtn.onclick = () => {
+                overlay.classList.remove('modal-active');
+                resolve();
+            };
+            
+            actionsContainer.appendChild(okBtn);
+            overlay.classList.add('modal-active');
+        });
+    }
+
+    // Custom non-blocking Promise confirm wrapper
+    function confirm(message) {
+        return new Promise((resolve) => {
+            const overlay = document.getElementById('customModal');
+            const textContainer = document.getElementById('customModalText');
+            const actionsContainer = document.getElementById('customModalActions');
+            
+            textContainer.innerText = message;
+            actionsContainer.innerHTML = '';
+            
+            const cancelBtn = document.createElement('button');
+            cancelBtn.className = 'custom-modal-btn custom-modal-btn-secondary';
+            cancelBtn.innerText = 'Cancel';
+            cancelBtn.onclick = () => {
+                overlay.classList.remove('modal-active');
+                resolve(false);
+            };
+            
+            const confirmBtn = document.createElement('button');
+            confirmBtn.className = 'custom-modal-btn custom-modal-btn-primary';
+            confirmBtn.innerText = 'Confirm';
+            confirmBtn.onclick = () => {
+                overlay.classList.remove('modal-active');
+                resolve(true);
+            };
+            
+            actionsContainer.appendChild(cancelBtn);
+            actionsContainer.appendChild(confirmBtn);
+            overlay.classList.add('modal-active');
+        });
+    }
 
     async function fetchLibrary() {
         try {
@@ -282,7 +365,10 @@
     async function saveLineup() {
         const data = getFormValues();
         const btn = document.getElementById('saveBtn');
-        if (!data.date || !data.leader) return alert("Date and Leader are required.");
+        if (!data.date || !data.leader) {
+            await alert("Date and Leader are required.");
+            return;
+        }
         btn.innerText = "SAVING..."; btn.disabled = true;
         try {
             await fetch(SCRIPT_URL, { method: "POST", body: JSON.stringify({ action: "saveLineup", ...data }) });
@@ -332,19 +418,22 @@
             // Bypasses login.html checking mechanism when loading announcement layout
             sessionStorage.setItem("bypassPassword", "true");
 
-            alert("Lineup saved! Redirecting to Announcements... ✅");
+            await alert("Lineup saved! Redirecting to Announcements... ✅");
             window.location.href = "announcement.html";
         } catch (e) { 
             console.error(e);
-            alert("Save failed."); 
+            await alert("Save failed."); 
         } finally { 
             btn.innerText = "☁️ Save to Cloud"; btn.disabled = false; 
         }
     }
 
-    function downloadPDF() {
+    async function downloadPDF() {
         const data = getFormValues();
-        if (!data.date || !data.leader) return alert("Please provide Service Date and Leader.");
+        if (!data.date || !data.leader) {
+            await alert("Please provide Service Date and Leader.");
+            return;
+        }
         const doc = new jsPDF();
         doc.setFont("helvetica", "bold"); doc.setFontSize(22); doc.setTextColor(79, 70, 229);
         doc.text("SERVICE LINEUP", 20, 25);
@@ -377,17 +466,22 @@
         doc.save(`Lineup_${data.date}.pdf`);
     }
 
-    function copyLineup() {
+    async function copyLineup() {
         const data = getFormValues();
         const text = generateSafeCaptionText(data);
-        navigator.clipboard.writeText(text).then(() => alert("Copied! ✅"));
+        navigator.clipboard.writeText(text).then(async () => {
+            await alert("Copied! ✅");
+        });
     }
 
-    function clearForm() {
-        if(confirm("Clear all?")) document.querySelectorAll('input, textarea').forEach(el => {
-            el.value = '';
-            el.style.height = "42px";
-        });
+    async function clearForm() {
+        const isConfirmed = await confirm("Clear all?");
+        if (isConfirmed) {
+            document.querySelectorAll('input, textarea').forEach(el => {
+                el.value = '';
+                el.style.height = "42px";
+            });
+        }
     }
 </script>
 </body>
