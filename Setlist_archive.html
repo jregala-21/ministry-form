@@ -109,7 +109,7 @@
             flex-wrap: wrap;
             gap: 12px;
         }
-        .song-info { display: flex; align-items: center; flex-grow: 1; min-width: 250px; }
+        .song-info { display: flex; align-items: center; flex-grow: 1; min-width: 0; }
         .song-title-text { font-weight: 600; font-size: 15px; color: #f8fafc; }
 
         .key-transpose-row {
@@ -221,6 +221,19 @@
         .btn-danger { background: var(--danger); color: white; }
         .btn-danger:hover { background: #e11d48; }
 
+        /* Dynamic Icon-only variant mapping */
+        .btn-icon-only {
+            width: 40px;
+            height: 40px;
+            padding: 0;
+            justify-content: center;
+            border-radius: 10px;
+        }
+        .btn-icon-only i {
+            font-size: 14px;
+            margin: 0;
+        }
+
         .remove-btn { 
             color: #64748b; 
             background: none; 
@@ -236,7 +249,7 @@
         }
         .remove-btn:hover { color: var(--danger); background: rgba(244,63,94,0.1); }
         
-        .full-modal { display: none; position: fixed; inset: 0; background: var(--bg); z-index: 2000; flex-direction: column; }
+        .full-modal { display: none; position: fixed; inset: 0; background: var(--bg); z-index: 5200; flex-direction: column; }
         .modal-nav { padding: 16px 24px; background: var(--card-bg); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
         #contentContainer { flex-grow: 1; overflow-y: auto; padding: 32px 24px; }
 
@@ -280,6 +293,173 @@
         .form-input { color: #0f172a; background: #fff; font-weight: 500; }
         .form-input:focus { border-color: var(--service-header); }
 
+        .edit-modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(11, 15, 25, 0.92);
+            backdrop-filter: blur(10px);
+            z-index: 4500;
+            padding: 18px;
+            overflow-y: auto;
+            align-items: center;
+            justify-content: center;
+        }
+        .edit-modal-card {
+            width: min(100%, 760px);
+            max-height: min(100vh - 36px, 960px);
+            background: rgba(15, 23, 42, 0.98);
+            border: 1px solid rgba(148, 163, 184, 0.14);
+            border-radius: 18px;
+            box-shadow: 0 24px 90px rgba(0, 0, 0, 0.4);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        .edit-modal-header {
+            padding: 18px 22px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            background: rgba(30, 41, 59, 0.94);
+            border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+        }
+        .edit-modal-title {
+            font-size: 1.1rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            color: #f8fafc;
+        }
+        .edit-modal-subtitle {
+            color: var(--sub-text);
+            font-size: 0.95rem;
+        }
+        .edit-modal-body {
+            padding: 18px 22px;
+            overflow: auto;
+            display: grid;
+            gap: 18px;
+        }
+        .edit-song-card {
+            position: relative;
+            background: rgba(20, 27, 45, 0.78);
+            border: 1px solid rgba(148, 163, 184, 0.12);
+            border-radius: 14px;
+            padding: 16px;
+            display: grid;
+            gap: 14px;
+        }
+        .edit-song-header {
+            display: block;
+            padding-right: 60px;
+        }
+        .edit-song-header > div:first-child {
+            min-width: 0;
+        }
+        .edit-song-title {
+            font-weight: 700;
+            color: #f8fafc;
+            word-break: break-word;
+            overflow-wrap: anywhere;
+            max-width: 100%;
+        }
+        .edit-song-meta {
+            font-size: 0.85rem;
+            color: var(--sub-text);
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+            margin-top: 8px;
+        }
+        .edit-song-actions {
+            position: absolute;
+            top: 14px;
+            right: 14px;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        .edit-song-actions .btn {
+            flex: 0 0 auto;
+            min-width: 0;
+            padding: 0;
+            border: none;
+            background: transparent;
+        }
+        .icon-btn {
+            width: 40px;
+            min-width: 40px;
+            height: 40px;
+            padding: 0;
+            border-radius: 50%;
+            justify-content: center;
+            align-items: center;
+            display: inline-flex;
+            font-size: 1rem;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.12);
+            color: var(--text-main);
+            transition: all 0.2s ease;
+        }
+        .icon-btn .fa-solid {
+            margin: 0;
+        }
+        .icon-btn:hover {
+            background: rgba(255,255,255,0.14);
+            transform: translateY(-1px);
+        }
+        .icon-btn:focus {
+            outline: 2px solid rgba(99, 102, 241, 0.45);
+            outline-offset: 2px;
+        }
+        .key-select-group {
+            display: grid;
+            gap: 10px;
+        }
+        .key-select-group label {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--sub-text);
+        }
+        .key-select-group select {
+            width: 100%;
+            appearance: none;
+            background: var(--btn-bg);
+            color: var(--text-main);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 12px 16px;
+            font-size: 0.95rem;
+            cursor: pointer;
+        }
+        .edit-modal-footer {
+            padding: 16px 22px 20px;
+            border-top: 1px solid rgba(148, 163, 184, 0.12);
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        @media (max-width: 720px) {
+            body { padding: 14px 12px; }
+            .service-header-row { padding: 16px 16px; }
+            .song-item { padding: 14px 16px; }
+            .key-transpose-row { padding: 16px 16px; }
+            .edit-modal-card { max-height: calc(100vh - 32px); }
+        }
+        @media (max-width: 520px) {
+            .header { flex-direction: column; align-items: flex-start; gap: 14px; }
+            .service-header-row { flex-direction: column; align-items: stretch; }
+            .controls { width: 100%; display: flex; flex-direction: row; justify-content: flex-start; gap: 8px; }
+            .song-info { min-width: 0; }
+            .edit-song-actions { flex-direction: column; }
+            .edit-modal-header { flex-direction: column; align-items: stretch; }
+            .edit-modal-footer { justify-content: stretch; }
+        }
+
         /* UI Dialog Modal Overrides */
         .ui-dialog-overlay {
             display: none;
@@ -287,7 +467,7 @@
             inset: 0;
             background: rgba(11, 15, 25, 0.85);
             backdrop-filter: blur(4px);
-            z-index: 5000;
+            z-index: 5600;
             align-items: center;
             justify-content: center;
         }
@@ -360,6 +540,22 @@
                 <i class="fa-solid fa-circle-info"></i> Edit raw contents directly. Chords must be wrapped in standard brackets like <b>[G]</b> or <b>[D#m]</b> inline with the text.
             </div>
             <textarea id="chordEditorTextarea" class="chord-editor-textarea" spellcheck="false"></textarea>
+        </div>
+    </div>
+
+    <div id="editSetlistModal" class="edit-modal-overlay">
+        <div class="edit-modal-card">
+            <div class="edit-modal-header">
+                <div>
+                    <div class="edit-modal-title"><i class="fa-solid fa-pencil"></i> Edit Setlist</div>
+                    <div id="editModalSubtitle" class="edit-modal-subtitle">Open the setlist and transpose the selected songs with a clean dropdown UI.</div>
+                </div>
+                <button onclick="closeEditModal()" class="btn btn-danger"><i class="fa-solid fa-xmark"></i> Close</button>
+            </div>
+            <div id="editModalBody" class="edit-modal-body"></div>
+            <div class="edit-modal-footer">
+                <!-- <button class="btn btn-edit" onclick="closeEditModal()"><i class="fa-solid fa-check"></i> Done</button> -->
+            </div>
         </div>
     </div>
 
@@ -607,27 +803,22 @@
                 block.innerHTML = `
                     <div class="service-header-row">
                         <span class="service-name"><i class="fa-regular fa-calendar-days" style="color:var(--service-header);"></i> ${sName}</span>
-                        <div class="controls" style="display:flex; gap:8px;">
-                            ${isEditing ? 
-                                `<button class="btn btn-view" onclick="showAddForm('${sId}')"><i class="fa-solid fa-plus"></i> ADD SONG</button>
-                                 <button class="btn btn-danger" onclick="deleteEntireSetlist('${sName.replace(/'/g, "\\'")}')"><i class="fa-solid fa-trash"></i> DELETE ALL</button>
-                                 <button class="btn btn-edit" onclick="toggleEditMode(null)">DONE</button>` :
-                                `<button class="btn btn-view" onclick="openPreviewAll('${sName.replace(/'/g, "\\'")}')"><i class="fa-solid fa-music"></i> CHORDS</button>
-                                 <button class="btn btn-pdf" onclick="exportToPDF('${sName.replace(/'/g, "\\'")}')"><i class="fa-solid fa-file-pdf"></i> PDF</button>
-                                 <button class="btn btn-edit" onclick="toggleEditMode('${sName.replace(/'/g, "\\'")}')"><i class="fa-solid fa-pen-to-square"></i> EDIT</button>`
-                            }
+                        <div class="controls" style="display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end;">
+                            <button class="btn btn-view btn-icon-only" title="Chords" onclick="openPreviewAll('${sName.replace(/'/g, "\\'")}')"><i class="fa-solid fa-music"></i></button>
+                            <button class="btn btn-pdf btn-icon-only" title="PDF" onclick="exportToPDF('${sName.replace(/'/g, "\\'")}')"><i class="fa-solid fa-file-pdf"></i></button>
+                            <button class="btn btn-view btn-icon-only" title="Add Song" onclick="showAddForm('${sId}')"><i class="fa-solid fa-plus"></i></button>
+                            <button class="btn btn-edit btn-icon-only" title="Edit" onclick="openEditModal('${sName.replace(/'/g, "\\'")}')"><i class="fa-solid fa-pen-to-square"></i></button>
                         </div>
                     </div>
-
-                    <div id="add-form-${sId}" style="display:none; padding: 20px; background: rgba(0,0,0,0.2); border-bottom: 1px solid var(--border);">
-                        <div style="display: flex; gap: 12px; flex-direction: column;">
+                    <div id="add-form-${sId}" style="display:none; padding: 16px 24px 16px; background: rgba(255,255,255,0.04); border-bottom: 1px solid var(--border);">
+                        <div style="display:flex; gap: 12px; flex-direction: column;">
                             <select id="cat-select-${sId}" class="form-select">
                                 ${flowCategories.map(c => `<option value="${c}">${c}</option>`).join('')}
                             </select>
-                            <input type="text" id="title-input-${sId}" class="form-input" list="song-suggestions" placeholder="Type Song Title...">
-                            <div style="display:flex; gap:8px;">
-                                <button class="btn btn-view" style="flex:1;" onclick="addSongLocally('${sName.replace(/'/g, "\\'")}', '${sId}')">INSERT INTO LIST</button>
-                                <button class="btn btn-danger" onclick="cancelAdd('${sId}')">CANCEL</button>
+                            <input type="text" id="title-input-${sId}" class="form-input" list="song-suggestions" placeholder="Type song title...">
+                            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                                <button class="btn btn-view" style="flex:1; min-width:140px;" onclick="addSongLocally('${sName.replace(/'/g, "\\'")}', '${sId}')">INSERT INTO LIST</button>
+                                <button class="btn btn-danger" style="flex:1; min-width:140px;" onclick="cancelAdd('${sId}')">CANCEL</button>
                             </div>
                         </div>
                     </div>
@@ -651,6 +842,93 @@
             };
             
             document.getElementById("chordEditorModal").style.display = "flex";
+        }
+
+        function renderEditModal() {
+            const body = document.getElementById('editModalBody');
+            const title = document.getElementById('editModalSubtitle');
+            if (!body) return;
+
+            const serviceName = editingService;
+            if (!serviceName) {
+                body.innerHTML = `<div style="color:var(--sub-text); padding:22px; text-align:center;">Select a setlist to edit.</div>`;
+                title.innerText = 'Open the setlist and transpose the selected songs with a clean dropdown UI.';
+                return;
+            }
+
+            const songs = archiveCache.filter(item => item.serviceName === serviceName);
+            title.innerText = `Editing "${serviceName}" — select a target key and apply changes per song.`;
+
+            if (!songs.length) {
+                body.innerHTML = `<div style="color:var(--sub-text); padding:22px; text-align:center;">No songs are currently assigned to this setlist.</div>`;
+                return;
+            }
+
+            const grouped = songs.reduce((acc, song) => {
+                acc[song.category] = acc[song.category] || [];
+                acc[song.category].push(song);
+                return acc;
+            }, {});
+
+            body.innerHTML = Object.entries(grouped).map(([category, items]) => {
+                return `
+                    <div style="display:grid; gap:12px;">
+                        <div style="font-size:0.95rem; color:var(--service-header); font-weight:700; text-transform:uppercase; letter-spacing:0.08em;">${category}</div>
+                        ${items.map((song, index) => {
+                            const searchKey = song.title.trim().toLowerCase();
+                            const origKey = detectOriginalKey(libraryCache[searchKey] || "");
+                            const uniqueId = `${serviceName.replace(/[^a-zA-Z0-9]/g, '')}-${category}-${index}`;
+                            return `
+                                <div class="edit-song-card">
+                                    <div class="edit-song-header">
+                                        <div>
+                                            <div class="edit-song-title">${song.title}</div>
+                                            <div class="edit-song-meta"><span>${category}</span><span>Current key: <strong>${origKey}</strong></span></div>
+                                        </div>
+                                        <div class="edit-song-actions">
+                                            <button class="icon-btn" title="Edit chords" onclick="openChordTextEditor('${song.title.replace(/'/g, "\\'")}')"><i class="fa-solid fa-file-pen"></i></button>
+                                            <button class="icon-btn" title="Remove song" onclick="removeSongLocally('${serviceName.replace(/'/g, "\\'")}', '${category}', '${song.title.replace(/'/g, "\\'")}')"><i class="fa-solid fa-trash-can"></i></button>
+                                        </div>
+                                    </div>
+                                    <div class="key-select-group">
+                                        <label for="target-select-${uniqueId}">Choose target key</label>
+                                        <select id="target-select-${uniqueId}" onchange="handleKeyDropdownChange('${song.title.replace(/'/g, "\\'")}', '${origKey}', this)">
+                                            <option value="">Transpose to...</option>
+                                            ${notes.map(note => `<option value="${note}">${note}</option>`).join('')}
+                                        </select>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                `;
+            }).join('');
+        }
+
+
+        function handleKeyDropdownChange(songTitle, origKey, selectEl) {
+            const targetKey = selectEl.value;
+            if (!targetKey) return;
+            if (targetKey === origKey) {
+                uiAlert(`Song is already in Key ${targetKey}`, 'No Change');
+                selectEl.value = '';
+                return;
+            }
+            executeDirectKeyShift(songTitle, origKey, targetKey);
+            selectEl.value = '';
+        }
+
+        function openEditModal(sName) {
+            editingService = sName;
+            renderEditModal();
+            document.getElementById('editSetlistModal').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeEditModal() {
+            editingService = null;
+            document.getElementById('editSetlistModal').style.display = 'none';
+            document.body.style.overflow = '';
         }
 
         function closeChordEditorModal() {
@@ -678,12 +956,18 @@
                 closeChordEditorModal();
                 await uiAlert(`Successfully saved layout modifications for "${songTitle}"!`, "Success");
                 renderArchive();
+                if (document.getElementById('editSetlistModal').style.display === 'flex') {
+                    renderEditModal();
+                }
             } catch (e) {
                 console.error(e);
                 await uiAlert("Saved locally to cache window.", "Cache Backup");
                 libraryCache[searchKey] = updatedContent;
                 closeChordEditorModal();
                 renderArchive();
+                if (document.getElementById('editSetlistModal').style.display === 'flex') {
+                    renderEditModal();
+                }
             } finally {
                 hideToast();
             }
@@ -768,6 +1052,9 @@
                 libraryCache[searchKey] = transposedContent;
                 await uiAlert(`Successfully altered layout formatting! "${songTitle}" is now configured in Key [${targetKey}].`, "Success");
                 renderArchive();
+                if (document.getElementById('editSetlistModal').style.display === 'flex') {
+                    renderEditModal();
+                }
             } catch (error) {
                 console.error(error);
                 await uiAlert("Operation registered over database architecture maps.", "Complete");
@@ -789,8 +1076,11 @@
         }
 
         function toggleEditMode(sName) {
-            editingService = (editingService === sName) ? null : sName;
-            renderArchive();
+            if (!sName) {
+                closeEditModal();
+                return;
+            }
+            openEditModal(sName);
         }
 
         async function removeSongLocally(sName, cat, title) {
@@ -804,6 +1094,9 @@
 
                 archiveCache = archiveCache.filter(s => !(s.serviceName === sName && s.category === cat && s.title === title));
                 renderArchive();
+                if (document.getElementById('editSetlistModal').style.display === 'flex') {
+                    renderEditModal();
+                }
             } catch (e) {
                 await uiAlert("Removal failed.", "Error");
             } finally { hideToast(); }
