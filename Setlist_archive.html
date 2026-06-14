@@ -21,6 +21,8 @@
             --sub-text: #94a3b8;
             --communion-purple: #a78bfa;
             --btn-bg: #1e293b;
+            --seq-badge-bg: rgba(99, 102, 241, 0.15);
+            --seq-badge-txt: #a5b4fc;
         }
         
         body { 
@@ -111,6 +113,28 @@
         }
         .song-info { display: flex; align-items: center; flex-grow: 1; min-width: 0; }
         .song-title-text { font-weight: 600; font-size: 15px; color: #f8fafc; }
+
+        .sequence-display-row {
+            padding: 4px 24px 12px;
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .seq-pill {
+            font-size: 11px;
+            font-weight: 700;
+            background: var(--seq-badge-bg);
+            color: var(--seq-badge-txt);
+            padding: 3px 10px;
+            border-radius: 6px;
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            text-transform: uppercase;
+        }
+        .seq-arrow {
+            font-size: 10px;
+            color: var(--sub-text);
+        }
 
         .key-transpose-row {
             padding: 16px 24px;
@@ -221,7 +245,6 @@
         .btn-danger { background: var(--danger); color: white; }
         .btn-danger:hover { background: #e11d48; }
 
-        /* Dynamic Icon-only variant mapping */
         .btn-icon-only {
             width: 40px;
             height: 40px;
@@ -460,7 +483,6 @@
             .edit-modal-footer { justify-content: stretch; }
         }
 
-        /* UI Dialog Modal Overrides */
         .ui-dialog-overlay {
             display: none;
             position: fixed;
@@ -554,7 +576,6 @@
             </div>
             <div id="editModalBody" class="edit-modal-body"></div>
             <div class="edit-modal-footer">
-                <!-- <button class="btn btn-edit" onclick="closeEditModal()"><i class="fa-solid fa-check"></i> Done</button> -->
             </div>
         </div>
     </div>
@@ -582,7 +603,6 @@
         let libraryCache = {};
         let editingService = null;
 
-        // UI-friendly Alert & Confirm Prompts Replacement Engines
         function uiAlert(message, title = "Notification") {
             return new Promise((resolve) => {
                 document.getElementById('uiDialogTitle').innerText = title;
@@ -644,17 +664,14 @@
             } catch (e) { document.getElementById('archive-container').innerText = "Sync failed."; }
         }
 
-        // Enhanced majority-based key detection logic with chord quality preservation
         function detectOriginalKey(content) {
             if (!content) return "Unknown";
 
-            // 1. Extract all unique chords from the song (e.g., [C], [D], [Em])
             const chordMatches = content.match(/\[([A-G][#b]?)(.*?)\]/g);
             if (!chordMatches) return "N/A";
 
-            // Helper function to normalize chord names to match keyScales format (e.g., C, Am, Bdim)
             function cleanChord(m) {
-                let inside = m.replace(/[\[\]]/g, ''); // Remove brackets
+                let inside = m.replace(/[\[\]]/g, ''); 
                 let rootMatch = inside.match(/^([A-G][#b]?)/);
                 if (!rootMatch) return "";
                 let root = rootMatch[1];
@@ -670,14 +687,11 @@
                 }
             }
 
-            // Get the root of the very first chord in the song to act as a tie-breaker
             let firstChordMatch = chordMatches[0].match(/\[([A-G][#b]?)/);
             let firstChordRoot = firstChordMatch ? (flatMap[firstChordMatch[1]] || firstChordMatch[1]) : null;
 
-            // Clean unique chords to their normalized forms (preserving 'm' and 'dim')
             const uniqueChords = [...new Set(chordMatches.map(m => cleanChord(m)))].filter(Boolean);
 
-            // 2. Define the standard 7 chords for every major key
             const keyScales = {
                 'C':  ['C', 'Dm', 'Em', 'F', 'G', 'Am', 'Bdim'],
                 'C#': ['C#', 'D#m', 'E#m', 'F#', 'G#', 'A#m', 'B#dim'],
@@ -696,7 +710,6 @@
             let bestKey = "C";
             let highestScore = -1;
 
-            // 3. Score each key based on how many of the song's chords fit into that key's scale
             for (const [key, scale] of Object.entries(keyScales)) {
                 let score = 0;
                 uniqueChords.forEach(chord => {
@@ -705,7 +718,6 @@
                     }
                 });
 
-                // Ties are broken by checking if the evaluated key matches the first chord's root note
                 if (score > highestScore || (score === highestScore && key === firstChordRoot)) {
                     highestScore = score;
                     bestKey = key;
@@ -713,6 +725,34 @@
             }
 
             return bestKey;
+        }
+
+        // Extracts structural song sections (e.g. Verse 1, Chorus) into an object map
+        function extractSongSections(content) {
+            if (!content) return null;
+            const lines = content.split('\n');
+            const sections = {};
+            let currentSectionName = null;
+            let currentSectionLines = [];
+
+            lines.forEach(line => {
+                const trimmed = line.trim();
+                if (trimmed.length > 0 && (trimmed.includes(':') || (trimmed.split(' ').length <= 2 && !trimmed.includes('[')))) {
+                    if (currentSectionName && currentSectionLines.length > 0) {
+                        sections[currentSectionName.toLowerCase()] = currentSectionLines.join('\n');
+                    }
+                    currentSectionName = trimmed.replace(':', '').trim();
+                    currentSectionLines = [];
+                } else {
+                    if (currentSectionName) {
+                        currentSectionLines.push(line);
+                    }
+                }
+            });
+            if (currentSectionName && currentSectionLines.length > 0) {
+                sections[currentSectionName.toLowerCase()] = currentSectionLines.join('\n');
+            }
+            return Object.keys(sections).length > 0 ? sections : null;
         }
 
         function renderArchive() {
@@ -762,6 +802,20 @@
                         const origKey = detectOriginalKey(songContent);
                         const uniqueIdPrefix = `transpose-${sId}-${cat}-${idx}`;
 
+                        // Structural rendering arrangement setup
+                        let sequenceHtml = "";
+                        if (s.sequence && s.sequence.trim().length > 0) {
+                            const sequenceParts = s.sequence.split(',').map(p => p.trim());
+                            sequenceHtml = `<div class="sequence-display-row">`;
+                            sequenceParts.forEach((part, pIdx) => {
+                                sequenceHtml += `<span class="seq-pill">${part}</span>`;
+                                if (pIdx < sequenceParts.length - 1) {
+                                    sequenceHtml += `<span class="seq-arrow"><i class="fa-solid fa-chevron-right"></i></span>`;
+                                }
+                            });
+                            sequenceHtml += `</div>`;
+                        }
+
                         listHtml += `
                             <div class="song-group-wrapper">
                                 <div class="song-item">
@@ -778,6 +832,7 @@
                                         ` : ''}
                                     </div>
                                 </div>
+                                ${sequenceHtml}
                                 ${isEditing && origKey !== "N/A" && origKey !== "Unknown" ? `
                                     <div class="key-transpose-row">
                                         <div class="key-row-meta">
@@ -857,7 +912,7 @@
             }
 
             const songs = archiveCache.filter(item => item.serviceName === serviceName);
-            title.innerText = `Editing "${serviceName}" — select a target key and apply changes per song.`;
+            title.innerText = `Editing "${serviceName}" — select a target key, define order sequence flow maps, and apply changes per song.`;
 
             if (!songs.length) {
                 body.innerHTML = `<div style="color:var(--sub-text); padding:22px; text-align:center;">No songs are currently assigned to this setlist.</div>`;
@@ -876,8 +931,27 @@
                         <div style="font-size:0.95rem; color:var(--service-header); font-weight:700; text-transform:uppercase; letter-spacing:0.08em;">${category}</div>
                         ${items.map((song, index) => {
                             const searchKey = song.title.trim().toLowerCase();
-                            const origKey = detectOriginalKey(libraryCache[searchKey] || "");
+                            const songContent = libraryCache[searchKey] || "";
+                            const origKey = detectOriginalKey(songContent);
                             const uniqueId = `${serviceName.replace(/[^a-zA-Z0-9]/g, '')}-${category}-${index}`;
+                            
+                            // Discover structural identifiers dynamically inside content blocks
+                            const availableSections = extractSongSections(songContent);
+                            let structuralSelectorHtml = "";
+                            if (availableSections) {
+                                structuralSelectorHtml = `
+                                    <div style="margin-top: 10px; display: grid; gap: 6px;">
+                                        <label style="font-size: 0.8rem; text-transform: uppercase; color: var(--sub-text);">Quick Arrangement Builder:</label>
+                                        <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                                            ${Object.keys(availableSections).map(sec => `
+                                                <button class="btn btn-edit" style="padding: 4px 8px; font-size: 11px;" onclick="appendSequenceTerm('${uniqueId}', '${sec.toUpperCase()}')">+ ${sec.toUpperCase()}</button>
+                                            `).join('')}
+                                            <button class="btn btn-danger" style="padding: 4px 8px; font-size: 11px;" onclick="clearSequenceField('${uniqueId}')">Clear</button>
+                                        </div>
+                                    </div>
+                                `;
+                            }
+
                             return `
                                 <div class="edit-song-card">
                                     <div class="edit-song-header">
@@ -890,12 +964,22 @@
                                             <button class="icon-btn" title="Remove song" onclick="removeSongLocally('${serviceName.replace(/'/g, "\\'")}', '${category}', '${song.title.replace(/'/g, "\\'")}')"><i class="fa-solid fa-trash-can"></i></button>
                                         </div>
                                     </div>
-                                    <div class="key-select-group">
+                                    
+                                    <div class="key-select-group" style="margin-top: 10px;">
                                         <label for="target-select-${uniqueId}">Choose target key</label>
                                         <select id="target-select-${uniqueId}" onchange="handleKeyDropdownChange('${song.title.replace(/'/g, "\\'")}', '${origKey}', this)">
                                             <option value="">Transpose to...</option>
                                             ${notes.map(note => `<option value="${note}">${note}</option>`).join('')}
                                         </select>
+                                    </div>
+
+                                    <div class="key-select-group" style="margin-top: 10px;">
+                                        <label for="sequence-input-${uniqueId}">Custom Arrangement Sequence</label>
+                                        <div style="display: flex; gap: 8px;">
+                                            <input type="text" id="sequence-input-${uniqueId}" class="form-input" style="background:#0f172a; color:#fff;" placeholder="e.g. VERSE 1, CHORUS, VERSE 2, CHORUS, BRIDGE, CHORUS" value="${song.sequence || ''}">
+                                            <button class="btn btn-view" onclick="saveSongSequence('${serviceName.replace(/'/g, "\\'")}', '${category}', '${song.title.replace(/'/g, "\\'")}', '${uniqueId}')">Apply Flow</button>
+                                        </div>
+                                        ${structuralSelectorHtml}
                                     </div>
                                 </div>
                             `;
@@ -905,6 +989,65 @@
             }).join('');
         }
 
+        function appendSequenceTerm(uniqueId, term) {
+            const input = document.getElementById(`sequence-input-${uniqueId}`);
+            if (!input) return;
+            let currentVal = input.value.trim();
+            if (currentVal.length === 0) {
+                input.value = term;
+            } else {
+                input.value = currentVal + ", " + term;
+            }
+        }
+
+        function clearSequenceField(uniqueId) {
+            const input = document.getElementById(`sequence-input-${uniqueId}`);
+            if (input) input.value = "";
+        }
+
+        async function saveSongSequence(serviceName, category, songTitle, uniqueId) {
+            const inputElement = document.getElementById(`sequence-input-${uniqueId}`);
+            if (!inputElement) return;
+            const sequenceValue = inputElement.value.trim();
+
+            showToast("Updating sequence mapping alignment...");
+            try {
+                const payload = {
+                    action: "saveSetlist", // Employs existing endpoint append rules
+                    serviceName: serviceName,
+                    category: category,
+                    songTitle: songTitle,
+                    sequence: sequenceValue
+                };
+
+                await fetch(ARCHIVE_URL, {
+                    method: "POST",
+                    body: JSON.stringify(payload)
+                });
+
+                // Update runtime execution target configurations arrays locally
+                archiveCache.forEach(item => {
+                    if (item.serviceName === serviceName && item.category === category && item.title === songTitle) {
+                        item.sequence = sequenceValue;
+                    }
+                });
+
+                hideToast();
+                await uiAlert(`Arrangement flow sequence applied for "${songTitle}" successfully!`, "Sequence Configured");
+                renderArchive();
+                renderEditModal();
+            } catch (e) {
+                console.error(e);
+                archiveCache.forEach(item => {
+                    if (item.serviceName === serviceName && item.category === category && item.title === songTitle) {
+                        item.sequence = sequenceValue;
+                    }
+                });
+                hideToast();
+                renderArchive();
+                renderEditModal();
+            }
+        }
 
         function handleKeyDropdownChange(songTitle, origKey, selectEl) {
             const targetKey = selectEl.value;
@@ -1142,13 +1285,35 @@
                 for (let s of serviceSongs) {
                      await fetch(ARCHIVE_URL, {
                         method: "POST",
-                        body: JSON.stringify({ action: "saveSetlist", serviceName: sName, category: cat, songTitle: s.title })
+                        body: JSON.stringify({ action: "saveSetlist", serviceName: sName, category: cat, songTitle: s.title, sequence: s.sequence || "" })
                      });
                 }
                 renderArchive();
             } catch (e) {
                 await uiAlert("Move failed.", "Error");
             } finally { hideToast(); }
+        }
+
+        // Expanded line parsing logic with sequential repetition properties
+        function processContentWithSequence(content, sequenceStr) {
+            if (!content) return "";
+            if (!sequenceStr || sequenceStr.trim().length === 0) return content;
+
+            const sectionsMap = extractSongSections(content);
+            if (!sectionsMap) return content;
+
+            const targetOrder = sequenceStr.split(',').map(s => s.trim().toLowerCase());
+            let compiledContent = "";
+
+            targetOrder.forEach(sectionKey => {
+                if (sectionsMap[sectionKey]) {
+                    compiledContent += `\n${sectionKey.toUpperCase()}:\n` + sectionsMap[sectionKey] + `\n`;
+                } else if (sectionKey.length > 0) {
+                    compiledContent += `\n${sectionKey.toUpperCase()}:\n[Section missing or empty]\n`;
+                }
+            });
+
+            return compiledContent.trim();
         }
 
         async function exportToPDF(sName) {
@@ -1192,10 +1357,16 @@
                         yPos += 14;
 
                         const searchKey = song.title.trim().toLowerCase();
-                        const songData = libraryCache[searchKey];
+                        let songData = libraryCache[searchKey];
 
                         if (songData) {
-                            const content = typeof songData === 'string' ? songData : (songData.content || songData.chords || "");
+                            let content = typeof songData === 'string' ? songData : (songData.content || songData.chords || "");
+                            
+                            // Re-sequence lines dynamically if arrangement rules exist
+                            if (song.sequence && song.sequence.trim().length > 0) {
+                                content = processContentWithSequence(content, song.sequence);
+                            }
+
                             const lines = content.split('\n');
 
                             lines.forEach(line => {
@@ -1312,13 +1483,19 @@
                     html += `<div style="margin-top:25px; border-bottom: 2px solid var(--service-header); padding-bottom:6px; color:var(--service-header); font-weight:bold; text-transform:uppercase; font-size:13px; letter-spacing:0.05em;">${cat}</div>`;
                     catSongs.forEach(s => {
                         const searchKey = s.title.trim().toLowerCase();
-                        const content = libraryCache[searchKey];
+                        let content = libraryCache[searchKey];
+                        const keyBadge = content ? detectOriginalKey(content) : "N/A";
+
+                        // Route structural repetition updates cleanly prior to final preview parsing
+                        if (content && s.sequence && s.sequence.trim().length > 0) {
+                            content = processContentWithSequence(content, s.sequence);
+                        }
 
                         html += `
                             <div style="margin-top:16px; margin-bottom:30px; padding: 20px; background: rgba(20, 27, 45, 0.6); border-radius: 12px; border:1px solid var(--border);">
                                 <h3 style="margin-top:0; color:#fff; font-size:16px; margin-bottom:14px; display:flex; justify-content:space-between;">
                                     <span>${s.title}</span>
-                                    <span style="font-size:12px; color:var(--chord-color)">Key: ${detectOriginalKey(content)}</span>
+                                    <span style="font-size:12px; color:var(--chord-color)">Key: ${keyBadge}</span>
                                 </h3>
                                 ${content ? parseChords(content) : "<i style='color:var(--sub-text); font-size:14px;'>[Lyrics/Chords not found in library]</i>"}
                             </div>`;
@@ -1373,7 +1550,6 @@
                 chordGrid = chordGrid.padEnd(maxLen, " ");
                 lyricGrid = lyricGrid.padEnd(maxLen, " ");
 
-                // Convert spaces to &nbsp; to prevent the browser from skipping spaces or shifting elements around
                 let finalChordLine = "";
                 let finalLyricLine = "";
                 
@@ -1415,19 +1591,19 @@
 
             showToast("Adding song...");
             try {
-                const payload = { action: "saveSetlist", serviceName: sName, category: cat, songTitle: title };
+                const payload = { action: "saveSetlist", serviceName: sName, category: cat, songTitle: title, sequence: "" };
                 const resp = await fetch(ARCHIVE_URL, { method: "POST", body: JSON.stringify(payload) });
                 const result = await resp.json();
 
                 if (result.result === "success" || result.result === "exists") {
-                    archiveCache.push({ serviceName: sName, category: cat, title: title });
+                    archiveCache.push({ serviceName: sName, category: cat, title: title, sequence: "" });
                     titleElement.value = "";
                     renderArchive();
                 } else { 
                     await uiAlert("Error: " + result.message, "Failure"); 
                 }
             } catch (e) {
-                archiveCache.push({ serviceName: sName, category: cat, title: title });
+                archiveCache.push({ serviceName: sName, category: cat, title: title, sequence: "" });
                 renderArchive();
             } finally { hideToast(); }
         }
