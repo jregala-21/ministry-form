@@ -163,6 +163,68 @@
 
         .input-group:last-child { margin-bottom: 0; }
 
+        .service-section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 0;
+            cursor: pointer;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .service-section-label {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--accent-glow);
+        }
+
+        .service-section-toggle {
+            width: 32px;
+            height: 32px;
+            border: 1px solid var(--border-ui);
+            border-radius: 999px;
+            background: transparent;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s ease;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .service-section-toggle.closed {
+            transform: rotate(180deg);
+        }
+
+        .service-section-body.closed {
+            display: none;
+        }
+
+        .service-select-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        .service-select-row label {
+            font-size: 13px;
+            color: var(--text-main);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .service-select-row input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--accent-glow);
+            cursor: pointer;
+        }
+
         .toggle-group {
             display: flex;
             align-items: center;
@@ -612,6 +674,10 @@
                 <div id="servicesFormsContainer" style="display:flex; flex-direction:column; gap:12px;"></div>
                 <div class="action-block">
                     <div class="btn-row">
+                        <button class="btn btn-download" onclick="selectAllServiceDates(true)">☑️ Select All Dates</button>
+                        <button class="btn btn-download" onclick="selectAllServiceDates(false)">⬜ Deselect All Dates</button>
+                    </div>
+                    <div class="btn-row">
                         <button class="btn btn-download" onclick="downloadSinglePoster('servicesMonthlyPoster')">📥 Download Leaders</button>
                         <button class="btn btn-download" onclick="downloadSelectedPosters('backups')">📥 Download Backups</button>
                     </div>
@@ -762,8 +828,18 @@
             const dateLabel = sunday.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
             let html = `
                 <div class="form-section">
-                    <h3 style="color:var(--accent-purple)">${dateLabel}</h3>
-                    <div class="input-group">
+                    <div class="service-section-header" onclick="toggleServiceSection(${idx})">
+                        <span class="service-section-label">${dateLabel}</span>
+                        <button type="button" class="service-section-toggle" id="service-section-toggle-${idx}" aria-label="Toggle date inputs">▼</button>
+                    </div>
+                    <div class="service-section-body open" id="service-section-body-${idx}">
+                        <div class="service-select-row">
+                            <label for="select-service-${idx}" onclick="event.stopPropagation()">
+                                <input type="checkbox" id="select-service-${idx}" class="service-date-checkbox" data-idx="${idx}" checked onchange="syncServiceData(${idx})">
+                                Select this date for poster generation
+                            </label>
+                        </div>
+                        <div class="input-group">
                         <div class="toggle-group">
                             <input type="checkbox" id="allow-dup-${idx}" checked onchange="toggleBackupVisibility(${idx}); syncServiceData(${idx})">
                             <label for="allow-dup-${idx}" style="text-transform:none; cursor:pointer;">Allow same backups across services</label>
@@ -806,6 +882,22 @@
         });
 
         batchSundays.forEach((_, idx) => toggleBackupVisibility(idx));
+    }
+
+    function toggleServiceSection(idx) {
+        const body = document.getElementById(`service-section-body-${idx}`);
+        const button = document.getElementById(`service-section-toggle-${idx}`);
+        if (!body || !button) return;
+        const isClosed = body.classList.toggle('closed');
+        button.classList.toggle('closed', isClosed);
+    }
+
+    function selectAllServiceDates(value) {
+        document.querySelectorAll('.service-date-checkbox').forEach(cb => {
+            cb.checked = value;
+            const idx = parseInt(cb.dataset.idx, 10);
+            if (!Number.isNaN(idx)) syncServiceData(idx);
+        });
     }
 
     function toggleBackupVisibility(idx) {
@@ -976,19 +1068,19 @@
                         <div class="service-column">
                             <div class="service-title">1st Service</div>
                             <div class="roster-list">
-                                <div class="roster-row"><span class="roster-role">Standby 1</span><span id="b${idx}-pw-b1" class="roster-name">Unassigned</span></div>
-                                <div class="roster-row"><span class="roster-role">Standby 2</span><span id="b${idx}-pw-b2" class="roster-name">Unassigned</span></div>
-                                <div class="roster-row"><span class="roster-role">Standby 3</span><span id="b${idx}-pw-b3" class="roster-name">Unassigned</span></div>
-                                <div class="roster-row"><span class="roster-role">Standby 4</span><span id="b${idx}-pw-b4" class="roster-name">Unassigned</span></div>
+                                <div class="roster-row"><span class="roster-role">Backup 1</span><span id="b${idx}-pw-b1" class="roster-name">Unassigned</span></div>
+                                <div class="roster-row"><span class="roster-role">Backup 2</span><span id="b${idx}-pw-b2" class="roster-name">Unassigned</span></div>
+                                <div class="roster-row"><span class="roster-role">Backup 3</span><span id="b${idx}-pw-b3" class="roster-name">Unassigned</span></div>
+                                <div class="roster-row"><span class="roster-role">Backup 4</span><span id="b${idx}-pw-b4" class="roster-name">Unassigned</span></div>
                             </div>
                         </div>
                         <div class="service-column">
                             <div class="service-title">2nd Service</div>
                             <div class="roster-list">
-                                <div class="roster-row"><span class="roster-role">Standby 1</span><span id="b${idx}-vic-b1" class="roster-name">Unassigned</span></div>
-                                <div class="roster-row"><span class="roster-role">Standby 2</span><span id="b${idx}-vic-b2" class="roster-name">Unassigned</span></div>
-                                <div class="roster-row"><span class="roster-role">Standby 3</span><span id="b${idx}-vic-b3" class="roster-name">Unassigned</span></div>
-                                <div class="roster-row"><span class="roster-role">Standby 4</span><span id="b${idx}-vic-b4" class="roster-name">Unassigned</span></div>
+                                <div class="roster-row"><span class="roster-role">Backup 1</span><span id="b${idx}-vic-b1" class="roster-name">Unassigned</span></div>
+                                <div class="roster-row"><span class="roster-role">Backup 2</span><span id="b${idx}-vic-b2" class="roster-name">Unassigned</span></div>
+                                <div class="roster-row"><span class="roster-role">Backup 3</span><span id="b${idx}-vic-b3" class="roster-name">Unassigned</span></div>
+                                <div class="roster-row"><span class="roster-role">Backup 4</span><span id="b${idx}-vic-b4" class="roster-name">Unassigned</span></div>
                             </div>
                         </div>
                     </div>
@@ -1016,6 +1108,12 @@
         btnNode.classList.add('active');
     }
 
+    function getSelectedServiceIndices() {
+        return Array.from(document.querySelectorAll('.service-date-checkbox:checked'))
+            .map(cb => parseInt(cb.dataset.idx, 10))
+            .filter(idx => !Number.isNaN(idx));
+    }
+
     async function downloadSelectedPosters(mode) {
         if(mode === 'band') {
             const checkedBoxes = Array.from(document.querySelectorAll('.week-checkbox:checked'));
@@ -1027,7 +1125,9 @@
                 await executeDownload(canvas, `Schedule_Poster_${rawDate}.png`);
             }
         } else if (mode === 'backups') {
-            for (let idx = 0; idx < batchSundays.length; idx++) {
+            const selectedIndices = getSelectedServiceIndices();
+            if (selectedIndices.length === 0) return alert("Please select at least one service date to download backups.");
+            for (const idx of selectedIndices) {
                 const canvas = document.getElementById(`servicesBackupPoster-${idx}`);
                 if(canvas) {
                     const rawDate = batchSundays[idx].toISOString().split('T')[0];
@@ -1087,14 +1187,15 @@
             } else {
                 const canvas = document.getElementById('servicesMonthlyPoster');
                 const targetMonth = document.getElementById('schedMonth').value;
+                const selectedIndices = getSelectedServiceIndices();
                 compiledText = `*SUNDAY WORSHIP LEADERS & BACKUPS BUNDLE*\n\nSchedules for ${targetMonth}:\n\n`;
                 
                 const base64Data = (await html2canvas(canvas, { scale: 2, useCORS: true, logging: false })).toDataURL('image/png').split(",")[1];
                 imagesArray.push({ fileName: `Sunday_Leaders_${targetMonth}.png`, fileType: "image/png", fileContent: base64Data });
 
-                const backupCards = document.querySelectorAll('.unique-backup-poster');
-                for(let idx = 0; idx < backupCards.length; idx++) {
-                    const bCanvas = backupCards[idx];
+                for (const idx of selectedIndices) {
+                    const bCanvas = document.getElementById(`servicesBackupPoster-${idx}`);
+                    if(!bCanvas) continue;
                     const rawDate = batchSundays[idx].toISOString().split('T')[0];
                     const bData = (await html2canvas(bCanvas, { scale: 2, useCORS: true, logging: false })).toDataURL('image/png').split(",")[1];
                     imagesArray.push({ fileName: `Sunday_Backups_${rawDate}.png`, fileType: "image/png", fileContent: bData });
