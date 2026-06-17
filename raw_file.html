@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JIL TAGUIG RAW FILES</title>
+    <title>Google Drive Workspace - Fast Stream Edition</title>
     <style>
         :root {
             --bg-main: #0f172a;
@@ -297,7 +297,7 @@
             </div>
 
             <div id="inputContainer">
-                <input type="file" id="fileInput">
+                <input type="file" id="fileInput" multiple>
             </div>
 
             <div class="execution-block">
@@ -309,6 +309,25 @@
             <div id="progressContainer" class="progress-wrapper">
                 <div id="progressBar" class="progress-bar"></div>
                 <div id="progressText" class="progress-text">0%</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="customAlertModal" class="modal-overlay" style="z-index: 1100;">
+        <div class="upload-card" style="max-width: 360px; text-align: center;">
+            <h3 id="customAlertTitle" style="margin-top: 0; color: var(--accent-blue); font-size: 18px;">Notification</h3>
+            <p id="customAlertMessage" style="font-size: 14px; color: var(--text-primary); margin: 15px 0; line-height: 1.5; text-align: left;"></p>
+            <button class="submit-btn" onclick="closeCustomAlert()" style="width: 100%;">OK</button>
+        </div>
+    </div>
+
+    <div id="customConfirmModal" class="modal-overlay" style="z-index: 1100;">
+        <div class="upload-card" style="max-width: 360px; text-align: center;">
+            <h3 id="customConfirmTitle" style="margin-top: 0; color: var(--accent-red); font-size: 18px;">Confirm Action</h3>
+            <p id="customConfirmMessage" style="font-size: 14px; color: var(--text-primary); margin: 15px 0; line-height: 1.5; text-align: left;"></p>
+            <div class="execution-block" style="margin-top: 20px;">
+                <button id="customConfirmBtn" class="submit-btn" style="background-color: var(--accent-red); color: var(--bg-main);">Confirm</button>
+                <button class="type-btn" onclick="closeCustomConfirm()" style="margin: 0; max-height: 44px; display: flex; align-items: center; justify-content: center;">Cancel</button>
             </div>
         </div>
     </div>
@@ -326,10 +345,49 @@
     let isPanelCollapsed = true;
     let lastSavedWidthPercent = 55; 
 
+    // Global promise resolver placeholder for the custom confirmation system
+    let currentConfirmResolver = null;
+
     window.onload = function() { 
         loadFolderContents(); 
         initializeSplitterDragEngine();
     };
+
+    /* CUSTOM MODAL INTERFACING METHODS */
+    function showCustomAlert(message, title = "Notification") {
+        document.getElementById('customAlertTitle').innerText = title;
+        document.getElementById('customAlertMessage').innerText = message;
+        document.getElementById('customAlertModal').style.display = 'flex';
+    }
+
+    function closeCustomAlert() {
+        document.getElementById('customAlertModal').style.display = 'none';
+    }
+
+    function showCustomConfirm(message, title = "Confirm Action") {
+        return new Promise((resolve) => {
+            document.getElementById('customConfirmTitle').innerText = title;
+            document.getElementById('customConfirmMessage').innerText = message;
+            document.getElementById('customConfirmModal').style.display = 'flex';
+            
+            const confirmBtn = document.getElementById('customConfirmBtn');
+            confirmBtn.onclick = function() {
+                document.getElementById('customConfirmModal').style.display = 'none';
+                currentConfirmResolver = null;
+                resolve(true);
+            };
+            
+            currentConfirmResolver = resolve;
+        });
+    }
+
+    function closeCustomConfirm() {
+        document.getElementById('customConfirmModal').style.display = 'none';
+        if (currentConfirmResolver) {
+            currentConfirmResolver(false);
+            currentConfirmResolver = null;
+        }
+    }
 
     /* RE-INJECTED LIVE DRAG SPLITTER INITIALIZATION GRAPH ENGINE */
     function initializeSplitterDragEngine() {
@@ -405,8 +463,12 @@
         resetProgressBar();
     }
 
-    function closeUploadModal() {
-        if(uploadAbortionEngine) { if(!confirm("Upload stream running. Close console and cancel operations?")) return; cancelUploads(); }
+    async function closeUploadModal() {
+        if(uploadAbortionEngine) { 
+            const userConfirms = await showCustomConfirm("Upload stream running. Close console and cancel operations?", "Abort Upload Stream?");
+            if (!userConfirms) return; 
+            cancelUploads(); 
+        }
         document.getElementById('uploadModal').style.display = 'none';
         document.getElementById('eyeIcon').innerText = "👁";
     }
@@ -429,7 +491,7 @@
         resetProgressBar();
         if (mode === 'file') {
             fileBtn.classList.add('active'); folderBtn.classList.remove('active');
-            container.innerHTML = '<input type="file" id="fileInput">';
+            container.innerHTML = '<input type="file" id="fileInput" multiple>';
         } else {
             folderBtn.classList.add('active'); fileBtn.classList.remove('active');
             container.innerHTML = '<input type="file" id="fileInput" webkitdirectory directory multiple>';
@@ -553,7 +615,6 @@
         let delay = 0;
         selectedCheckboxes.forEach(cb => {
             if (cb.getAttribute('data-type') === 'file') {
-                // Staggered triggers guarantee modern web-browsers do not block file initialization popups
                 setTimeout(() => {
                     downloadSingleFile(cb.getAttribute('data-id'));
                 }, delay);
@@ -566,11 +627,12 @@
         window.open(`https://drive.google.com/uc?export=download&id=${id}`, '_blank');
     }
 
-    function executeBulkDeletion() {
+    async function executeBulkDeletion() {
         const selectedCheckboxes = document.querySelectorAll('.item-list .item-checkbox:checked');
         if (selectedCheckboxes.length === 0) return;
 
-        if (!confirm(`Permanently destroy the ${selectedCheckboxes.length} selected item(s)?`)) return;
+        const userConfirms = await showCustomConfirm(`Permanently destroy the ${selectedCheckboxes.length} selected item(s)?`, "Bulk Deletion");
+        if (!userConfirms) return;
 
         const itemsToDelete = [];
         selectedCheckboxes.forEach(cb => {
@@ -592,28 +654,38 @@
             if (res.status === 'success') { 
                 loadFolderContents(currentFolderId); 
             } else { 
-                alert("Operation failed: " + res.message); 
+                showCustomAlert("Operation failed: " + res.message, "Pipeline Error"); 
                 explorerStatus.style.display = "none"; 
             }
         }).catch(err => { 
-            alert("Trace connection failure."); 
+            showCustomAlert("Trace connection failure.", "Connection Error"); 
             explorerStatus.style.display = "none"; 
         });
     }
 
-    function deleteItem(itemId, itemType, itemName) {
-        if (!confirm(`Permanently delete ${itemType}: "${itemName}"?`)) return;
+    async function deleteItem(itemId, itemType, itemName) {
+        const userConfirms = await showCustomConfirm(`Permanently delete ${itemType}: "${itemName}"?`, "Purge Target");
+        if (!userConfirms) return;
+        
         const explorerStatus = document.getElementById('explorerStatus');
-        explorerStatus.style.display = "block"; explorerStatus.innerText = `Destroying ${itemName}...`;
+        explorerStatus.style.display = "block"; 
+        explorerStatus.innerText = `Destroying ${itemName}...`;
 
         fetch(WEB_APP_URL, {
             method: 'POST',
             body: JSON.stringify({ action: 'delete', id: itemId, type: itemType }),
             headers: { 'Content-Type': 'text/plain;charset=utf-8' }
         }).then(response => response.json()).then(res => {
-            if (res.status === 'success') { loadFolderContents(currentFolderId); } 
-            else { alert("Dropped: " + res.message); explorerStatus.style.display = "none"; }
-        }).catch(err => { alert("Trace broken."); explorerStatus.style.display = "none"; });
+            if (res.status === 'success') { 
+                loadFolderContents(currentFolderId); 
+            } else { 
+                showCustomAlert("Dropped: " + res.message, "Deletion Failed"); 
+                explorerStatus.style.display = "none"; 
+            }
+        }).catch(err => { 
+            showCustomAlert("Trace broken.", "Network Error"); 
+            explorerStatus.style.display = "none"; 
+        });
     }
 
     function showInlinePreview(file) {
@@ -628,8 +700,6 @@
         let fileId = file.id;
         let cleanUrl = file.url || "";
         
-        // Pictures are now safely processed via Google's /preview player sandbox.
-        // This stops cookies, frame rules, and cross-origin blocks from breaking the stream.
         if (cleanUrl.includes('/view')) {
             cleanUrl = cleanUrl.replace('/view', '/preview');
         } else if (cleanUrl.includes('id=')) {
@@ -797,7 +867,7 @@
             statusDiv.innerHTML = "<span style='color:var(--accent-green); font-weight:bold;'>🎉 Folder Structure Sync Complete!</span>";
             fileInput.value = ""; uploadBtn.disabled = false; cancelBtn.style.display = 'none';
             uploadAbortionEngine = null;
-            setTimeout(() => { closeUploadModal(); resetProgressBar(); }, 1500);
+            setTimeout(() => { document.getElementById('uploadModal').style.display = 'none'; document.getElementById('eyeIcon').innerText = "👁"; resetProgressBar(); }, 1500);
             loadFolderContents(currentFolderId);
         }
     }
