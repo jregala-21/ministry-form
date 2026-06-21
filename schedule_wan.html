@@ -970,24 +970,11 @@
         }
 
         const allowDup = document.getElementById(`allow-dup-${idx}`).checked;
+        // Cross-service backup duplicates are allowed, so no conflict check is needed here.
         if (!allowDup && serviceKey === 'pw') {
-            for(let b = 1; b <= 4; b++) {
-                const crossEl = document.getElementById(`input-vic-b${b}-${idx}`);
-                if(crossEl && crossEl.value.trim() === val) {
-                    alert('Assignment Conflict: This person is already assigned to a 2nd Service Backup slot.');
-                    backupEl.value = '';
-                    return;
-                }
-            }
+            // no-op: allow same person on pw and vic backup slots across services
         } else if (!allowDup && serviceKey === 'vic') {
-            for(let b = 1; b <= 4; b++) {
-                const crossEl = document.getElementById(`input-pw-b${b}-${idx}`);
-                if(crossEl && crossEl.value.trim() === val) {
-                    alert('Assignment Conflict: This person is already assigned to a 1st Service Backup slot.');
-                    backupEl.value = '';
-                    return;
-                }
-            }
+            // no-op: allow same person on vic and pw backup slots across services
         }
     }
 
